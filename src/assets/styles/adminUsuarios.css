@@ -1,72 +1,116 @@
 .admin-usuarios-container {
-  max-width: 800px;
-  margin: 40px auto;
-  padding: 20px;
-  background: #f5f5f5;
+  max-width: 1000px;
+  margin: auto;
+  padding: 2rem;
+  background-color: #fff;
   border-radius: 12px;
-  box-shadow: 0 0 12px rgba(0,0,0,0.1);
-  font-family: Arial, sans-serif;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-.admin-usuarios-container h2 {
+h2 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
 }
 
-.admin-form {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
+.form-usuario {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
 }
 
-.admin-form input,
-.admin-form select {
-  padding: 8px;
+.form-usuario input,
+.form-usuario select {
+  padding: 0.6rem;
   border: 1px solid #ccc;
   border-radius: 6px;
+  flex: 1 1 200px;
 }
 
-.admin-form button {
-  grid-column: span 4;
-  padding: 10px;
+.btn-crear,
+.btn-volver {
   background-color: #28a745;
   color: white;
   border: none;
+  padding: 0.6rem 1.2rem;
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
 }
 
-.admin-form button:hover {
+.btn-volver {
+  background-color: #6c757d;
+}
+
+.btn-crear:hover {
   background-color: #218838;
 }
 
-.admin-usuarios-lista {
-  list-style: none;
-  padding: 0;
+.btn-volver:hover {
+  background-color: #5a6268;
 }
 
-.admin-usuarios-lista li {
-  background: white;
-  border: 1px solid #ddd;
-  margin-bottom: 10px;
-  padding: 12px;
-  border-radius: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.tabla-responsive {
+  overflow-x: auto;
 }
 
-.admin-usuarios-lista li button {
-  padding: 6px 10px;
-  background-color: #dc3545;
-  color: white;
+.tabla-usuarios {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-usuarios th,
+.tabla-usuarios td {
+  border: 1px solid #dee2e6;
+  padding: 0.8rem;
+  text-align: center;
+}
+
+.tabla-usuarios th {
+  background-color: #f8f9fa;
+}
+
+.btn-editar,
+.btn-eliminar {
+  padding: 0.4rem 0.8rem;
+  margin: 0.2rem;
   border: none;
   border-radius: 6px;
+  font-weight: bold;
   cursor: pointer;
 }
 
-.admin-usuarios-lista li button:hover {
-  background-color: #c82333;
+.btn-editar {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-editar:hover {
+  background-color: #0056b3;
+}
+
+.btn-eliminar {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-eliminar:hover {
+  background-color: #bd2130;
+}
+
+@media (max-width: 768px) {
+  .form-usuario {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .form-usuario input,
+  .form-usuario select,
+  .btn-crear,
+  .btn-volver {
+    width: 100%;
+    max-width: 100%;
+  }
 }
