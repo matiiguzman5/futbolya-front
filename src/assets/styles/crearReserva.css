@@ -1,0 +1,63 @@
+.crear-reserva-container {
+  max-width: 600px;
+  margin: 40px auto;
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+}
+
+.crear-reserva-container h2 {
+  text-align: center;
+  color: #007ac1;
+  margin-bottom: 20px;
+}
+
+.buscador {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 20px;
+  border-radius: 25px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.crear-reserva-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.crear-reserva-form label {
+  font-weight: 500;
+}
+
+.crear-reserva-form select,
+.crear-reserva-form input,
+.crear-reserva-form textarea {
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.crear-reserva-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.crear-reserva-form button {
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.crear-reserva-form button:hover {
+  background-color: #005dc1;
+}

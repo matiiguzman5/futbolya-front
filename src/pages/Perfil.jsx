@@ -66,10 +66,15 @@ const Perfil = () => {
     : '/default-profile.png';
 
   return (
+
     <div className="perfil-container">
-      <button className="volver-btn" onClick={() => window.location.href = '/Home'}>
-        ⬅ Volver al Home
-      </button>
+
+      <div className='btnVolver'>
+        <button onClick={() => window.location.href = '/Home'}>
+          ⬅ Volver al Home
+        </button>
+      </div>
+        
 
       <h2 className="perfil-nombre">{jugador.nombre.toUpperCase()}</h2>
 

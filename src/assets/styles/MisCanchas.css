@@ -1,0 +1,83 @@
+.mis-canchas-container {
+  max-width: 1000px;
+  margin: 30px auto;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.form-canchas input,
+.form-canchas textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.btns-form {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-crear {
+  background-color: #007bff;
+  color: white;
+  width: 100%;
+}
+
+.btn-cancelar {
+  background-color: #6c757d;
+  color: white;
+}
+
+.lista-canchas {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.cancha-card {
+  display: flex;
+  justify-content: space-between;
+  background-color: #f1f1f1;
+  padding: 15px;
+  border-radius: 8px;
+  align-items: center;
+}
+
+.acciones {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-editar {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.btn-eliminar {
+  background-color: #dc3545;
+  color: white;
+}
+
+.volver-btn {
+  color: #333;
+  padding: 50px 16px;
+  margin-left: 60px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+

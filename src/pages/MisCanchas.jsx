@@ -1,0 +1,143 @@
+import React, { useEffect, useState } from 'react';
+import '../assets/styles/MisCanchas.css';
+
+const MisCanchas = () => {
+  const [canchas, setCanchas] = useState([]);
+  const [form, setForm] = useState(initialFormState());
+  const [editandoId, setEditandoId] = useState(null);
+  const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    obtenerCanchas();
+  }, []);
+
+  function initialFormState() {
+    return {
+      nombre: '', tipo: '', superficie: '', estado: '',
+      horarioApertura: '08:00', horarioCierre: '23:00',
+      bloquesMantenimiento: '', diasNoDisponibles: '',
+      logReparaciones: '', estadoEquipamiento: '',
+      notasEspeciales: '', proximoMantenimiento: ''
+    };
+  }
+
+  const obtenerCanchas = async () => {
+    const res = await fetch('https://localhost:7055/api/Canchas/mis-canchas', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    setCanchas(data);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const stringToTicks = (timeStr) => {
+    const [h, m] = timeStr.split(':').map(Number);
+    return ((h * 60 + m) * 60 * 10000000);
+  };
+
+  const ticksToTime = (ticks) => {
+    const totalMinutes = Math.floor(ticks / 600000000);
+    const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+    const minutes = String(totalMinutes % 60).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const method = editandoId ? 'PUT' : 'POST';
+    const url = editandoId
+      ? `https://localhost:7055/api/Canchas/${editandoId}`
+      : 'https://localhost:7055/api/Canchas';
+
+    const payload = {
+  ...form,
+  horarioApertura: form.horarioApertura + ":00",
+  horarioCierre: form.horarioCierre + ":00",
+  proximoMantenimiento: form.proximoMantenimiento || null
+};
+
+    await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    setForm(initialFormState());
+    setEditandoId(null);
+    obtenerCanchas();
+  };
+
+  const handleEliminar = async (id) => {
+    if (!window.confirm('¿Eliminar esta cancha?')) return;
+    await fetch(`https://localhost:7055/api/Canchas/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    obtenerCanchas();
+  };
+
+  const handleEditar = (cancha) => {
+    setForm({
+      ...cancha,
+      horarioApertura: ticksToTime(cancha.horarioApertura.ticks),
+      horarioCierre: ticksToTime(cancha.horarioCierre.ticks)
+    });
+    setEditandoId(cancha.id);
+  };
+
+  return (
+    <div className="mis-canchas-container">
+      <button className="volver-btn" onClick={() => window.location.href = '/home'}>
+        ⬅ Volver al Home
+      </button>
+
+      <h2>Mis Canchas</h2>
+
+      <form className="form-canchas" onSubmit={handleSubmit}>
+        <input name="nombre" value={form.nombre} onChange={handleChange} placeholder="Nombre" required />
+        <input name="tipo" value={form.tipo} onChange={handleChange} placeholder="Tipo" />
+        <input name="superficie" value={form.superficie} onChange={handleChange} placeholder="Superficie" />
+        <input name="estado" value={form.estado} onChange={handleChange} placeholder="Estado" />
+        <input type="time" name="horarioApertura" value={form.horarioApertura} onChange={handleChange} />
+        <input type="time" name="horarioCierre" value={form.horarioCierre} onChange={handleChange} />
+        <input type="date" name="proximoMantenimiento" value={form.proximoMantenimiento} onChange={handleChange} />
+        <textarea name="notasEspeciales" value={form.notasEspeciales} onChange={handleChange} placeholder="Notas especiales" />
+
+        <div className="btns-form">
+          <button type="submit" className="btn btn-crear">{editandoId ? 'Actualizar' : 'Crear'} cancha</button>
+          {editandoId && (
+            <button type="button" className="btn btn-cancelar" onClick={() => { setEditandoId(null); setForm(initialFormState()); }}>
+              Cancelar
+            </button>
+          )}
+        </div>
+      </form>
+
+      <div className="lista-canchas">
+        {canchas.map(c => (
+          <div key={c.id} className="cancha-card">
+            <div>
+              <strong>{c.nombre}</strong> | Tipo: {c.tipo} | Superficie: {c.superficie}<br />
+              Estado: {c.estado} |  Apertura: {c.horarioApertura?.slice(0,5)} | Cierre: {c.horarioCierre?.slice(0,5)}<br />
+              Próximo Mantenimiento: {c.proximoMantenimiento?.split('T')[0] || 'N/A'}<br />
+              Notas: {c.notasEspeciales || 'Ninguna'}
+            </div>
+            <div className="acciones">
+              <button className="btn btn-editar" onClick={() => handleEditar(c)}>Editar</button>
+              <button className="btn btn-eliminar" onClick={() => handleEliminar(c.id)}>Eliminar</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default MisCanchas;

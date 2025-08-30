@@ -1,0 +1,53 @@
+.mis-reservas-container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+  font-family: sans-serif;
+}
+
+.titulo {
+  text-align: center;
+}
+
+.btn-volver {
+  background-color: #2e86de;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.reserva-card,
+.reserva-card-pasada {
+  border: 1px solid #ccc;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.reserva-card.activa {
+  background-color: #e9fbe7;
+  border: 1px solid #3cb371;
+}
+
+.botones-acciones {
+  margin-top: 10px;
+}
+
+.btn-salir {
+  background-color: orange;
+  border: none;
+  padding: 6px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.btn-cancelar {
+  background-color: crimson;
+  color: white;
+  border: none;
+  margin-left: 10px;
+  padding: 6px;
+  cursor: pointer;
+}

@@ -18,6 +18,7 @@ const Login = () => {
       if (token) {
         localStorage.setItem('token', token);
         localStorage.setItem('usuario', JSON.stringify(usuario));
+        localStorage.setItem('rol', usuario.rol);
         navigate('/home');
       } else {
         alert('Inicio de sesión sin token recibido.');
