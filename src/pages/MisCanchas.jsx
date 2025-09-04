@@ -101,14 +101,80 @@ const MisCanchas = () => {
       <h2>Mis Canchas</h2>
 
       <form className="form-canchas" onSubmit={handleSubmit}>
-        <input name="nombre" value={form.nombre} onChange={handleChange} placeholder="Nombre" required />
-        <input name="tipo" value={form.tipo} onChange={handleChange} placeholder="Tipo" />
-        <input name="superficie" value={form.superficie} onChange={handleChange} placeholder="Superficie" />
-        <input name="estado" value={form.estado} onChange={handleChange} placeholder="Estado" />
-        <input type="time" name="horarioApertura" value={form.horarioApertura} onChange={handleChange} />
-        <input type="time" name="horarioCierre" value={form.horarioCierre} onChange={handleChange} />
-        <input type="date" name="proximoMantenimiento" value={form.proximoMantenimiento} onChange={handleChange} />
-        <textarea name="notasEspeciales" value={form.notasEspeciales} onChange={handleChange} placeholder="Notas especiales" />
+        <div className="form-group">
+          <label htmlFor="nombre">Nombre</label>
+          <input
+            id="nombre"
+            name="nombre"
+            value={form.nombre}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="tipo">Tipo</label>
+          <select
+            id="tipo"
+            name="tipo"
+            value={form.tipo}
+            onChange={handleChange}
+            required
+          >
+            <option value="">-- Selecciona un tipo --</option>
+            <option value="futbol-5">Fútbol 5</option>
+            <option value="futbol-7">Fútbol 7</option>
+            <option value="futbol-11">Fútbol 11</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label htmlFor="superficie">Superficie</label>
+          <select
+            id="superficie"
+            name="superficie"
+            value={form.superficie}
+            onChange={handleChange}
+            required
+          >
+            <option value="">-- Selecciona una superficie --</option>
+            <option value="futbol-5">Sintetico</option>
+            <option value="futbol-7">Cesped</option>
+          </select>
+        </div>
+        {/* <input name="estado" value={form.estado} onChange={handleChange} placeholder="Estado" /> */}
+     <div className="form-group">
+        <label htmlFor="horarioApertura">Horario de apertura</label>
+        <input
+          type="time"
+          id="horarioApertura"
+          name="horarioApertura"
+          value={form.horarioApertura}
+          onChange={handleChange}
+          required
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="horarioCierre">Horario de cierre</label>
+        <input
+          type="time"
+          id="horarioCierre"
+          name="horarioCierre"
+          value={form.horarioCierre}
+          onChange={handleChange}
+          required
+        />
+      </div>
+        {/* <input type="date" name="proximoMantenimiento" value={form.proximoMantenimiento} onChange={handleChange} /> */}
+        <div className="form-group">
+          <label htmlFor="notasEspeciales">Notas especiales</label>
+          <textarea
+            id="notasEspeciales"
+            name="notasEspeciales"
+            value={form.notasEspeciales}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
         <div className="btns-form">
           <button type="submit" className="btn btn-crear">{editandoId ? 'Actualizar' : 'Crear'} cancha</button>

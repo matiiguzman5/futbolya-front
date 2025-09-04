@@ -8,6 +8,7 @@
 }
 
 .form-canchas input,
+.form-canchas select,
 .form-canchas textarea {
   width: 100%;
   padding: 10px;
@@ -16,6 +17,10 @@
   border-radius: 8px;
 }
 
+.form-canchas label{
+display: block; /* Para que el margin funcione bien */
+  margin-bottom: 8px;
+}
 .btns-form {
   display: flex;
   gap: 10px;
