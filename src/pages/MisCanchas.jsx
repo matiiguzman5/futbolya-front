@@ -99,7 +99,7 @@ const MisCanchas = () => {
       </button>
 
       <h2>Mis Canchas</h2>
-
+{/* PASA UN ERROR QUE TIRA DE JSON OTRO DIA SE MIRA, MATI SI ESTAS LEYENDO FIJATE VOS Q SABES MAS DEL TEMA */}
       <form className="form-canchas" onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="nombre">Nombre</label>
