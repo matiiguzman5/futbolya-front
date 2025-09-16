@@ -68,8 +68,10 @@ const cerrarSesion = () => {
       <div className="home-content">
         <header className="home-header">
   <div className="header-left">
+  <Link to="/Home">
     <img src="/IconoFYa.jpeg" alt="Logo" className="logo" />
-  </div>
+  </Link>
+</div>
   <nav className="header-center">
     <a href="#">Cambiar</a>
     <a href="#">Sedes</a>
