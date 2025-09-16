@@ -121,9 +121,9 @@ const MisCanchas = () => {
             required
           >
             <option value="">-- Selecciona un tipo --</option>
-            <option value="futbol-5">Fútbol 5</option>
-            <option value="futbol-7">Fútbol 7</option>
-            <option value="futbol-11">Fútbol 11</option>
+            <option value="Futbol-5">Fútbol 5</option>
+            <option value="Futbol-7">Fútbol 7</option>
+            <option value="Futbol-11">Fútbol 11</option>
           </select>
         </div>
         <div className="form-group">
@@ -136,8 +136,8 @@ const MisCanchas = () => {
             required
           >
             <option value="">-- Selecciona una superficie --</option>
-            <option value="futbol-5">Sintetico</option>
-            <option value="futbol-7">Cesped</option>
+            <option value="Sintetico">Sintetico</option>
+            <option value="Cesped">Cesped</option>
           </select>
         </div>
         {/* <input name="estado" value={form.estado} onChange={handleChange} placeholder="Estado" /> */}
