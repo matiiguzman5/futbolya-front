@@ -32,6 +32,12 @@ const Perfil = () => {
     const archivo = e.target.files[0];
     if (!archivo) return;
 
+    // Validación de tipo
+    if (!["image/jpeg", "image/png"].includes(archivo.type)) {
+      alert("Solo se permiten imágenes JPG o PNG.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append('archivo', archivo);
 
@@ -83,7 +89,12 @@ const Perfil = () => {
       <div className="perfil-subir-foto">
         <label className="btn-subir-foto">
           Cambiar foto
-          <input type="file" onChange={handleFotoChange} hidden />
+          <input 
+            type="file" 
+            accept=".jpg,.jpeg,.png" 
+            onChange={handleFotoChange} 
+            hidden 
+          />
         </label>
         {fotoCargando && <p>Subiendo imagen...</p>}
       </div>
