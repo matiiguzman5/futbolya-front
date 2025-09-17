@@ -121,9 +121,9 @@ const MisCanchas = () => {
             required
           >
             <option value="">-- Selecciona un tipo --</option>
-            <option value="Futbol-5">Fútbol 5</option>
-            <option value="Futbol-7">Fútbol 7</option>
-            <option value="Futbol-11">Fútbol 11</option>
+            <option value="F5">Fútbol 5</option>
+            <option value="F7">Fútbol 7</option>
+            <option value="F11">Fútbol 11</option>
           </select>
         </div>
         <div className="form-group">
@@ -172,7 +172,7 @@ const MisCanchas = () => {
             name="notasEspeciales"
             value={form.notasEspeciales}
             onChange={handleChange}
-            required
+           
           />
         </div>
 
