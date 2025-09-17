@@ -73,7 +73,7 @@ const cerrarSesion = () => {
   </Link>
 </div>
   <nav className="header-center">
-    <a href="#">Cambiar</a>
+    <a href="#">Cambiar</a> 
     <a href="#">Sedes</a>
     <Link to="/perfil">Perfil</Link>
     {esAdmin && <Link to="/admin-usuarios">Administrar</Link>}

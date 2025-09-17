@@ -42,7 +42,7 @@ const CrearReserva = () => {
 
     const payload = {
       canchaId: parseInt(canchaId),
-      fechaHora: new Date(fechaHora).toISOString(),
+      fechaHora: fechaHora,
       observaciones,
       clienteNombre: usuario.nombre,
       clienteTelefono: usuario.telefono || "No informado",
@@ -76,13 +76,26 @@ const CrearReserva = () => {
     }
   };
 
-  const manejarFecha = (e) => {
-    const valor = e.target.value;
-    const fecha = new Date(valor);
-    fecha.setMinutes(0);
-    fecha.setSeconds(0);
-    setFechaHora(fecha.toISOString().slice(0, 16));
-  };
+const manejarFecha = (e) => {
+  const valor = e.target.value; // Ej: "2025-09-16T03:15"
+  const [fecha, hora] = valor.split("T");
+  let [horas, minutos] = hora.split(":").map(Number);
+
+  if (minutos < 30 && minutos > 0) {
+    minutos = 30;
+  } else if (minutos){
+    horas += 1;
+    minutos = 0;
+  }
+  
+
+  const horasStr = String(horas).padStart(2, "0");
+  const minutosStr = String(minutos).padStart(2, "0");
+
+  const nuevaFecha = `${fecha}T${horasStr}:${minutosStr}`;
+  setFechaHora(nuevaFecha);
+};
+
 
   return (
     <div className="crear-reserva-container">
