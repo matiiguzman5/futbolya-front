@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../assets/styles/crearReserva.css';
 
 const CrearReserva = () => {
@@ -7,6 +8,7 @@ const CrearReserva = () => {
   const [fechaHora, setFechaHora] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [busqueda, setBusqueda] = useState('');
+  const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
   const usuario = JSON.parse(localStorage.getItem('usuario'));
@@ -121,6 +123,7 @@ const CrearReserva = () => {
         />
 
         <button type="submit">Reservar</button>
+        <button className="btn-volver" onClick={() => navigate('/home')}>← Volver al Home</button>
       </form>
     </div>
   );
