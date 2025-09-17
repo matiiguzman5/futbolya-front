@@ -157,9 +157,9 @@ const cerrarSesion = () => {
           <a href="#">MÉTODOS DE PAGO</a>
         </div>
         <div className="footer-icons">
-          <span>📘</span>
-          <span>🐦</span>
-          <span>📸</span>
+          <a href="https://www.facebook.com" target='_blank' rel="noopener noreferrer"><img src="/facebook.png" alt="" style={{ width: "30px", height: "30px" }}/></a>
+          <a href="https://www.instagram.com" target='_blank' rel="noopener noreferrer"><img src="/instagram.png" alt="" style={{ width: "30px", height: "30px" }}/></a>
+          <a href="https://www.x.com" target='_blank' rel="noopener noreferrer"><img src="/twitter.png" alt="" style={{ width: "30px", height: "30px" }}/></a>
         </div>
       </footer>
     </div>
