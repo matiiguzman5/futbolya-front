@@ -73,9 +73,9 @@ const cerrarSesion = () => {
   </Link>
 </div>
   <nav className="header-center">
-    <a href="#">Cambiar</a>
+    <a href="#">Cambiar</a> 
     <a href="#">Sedes</a>
-    <Link to="/perfil">Perfil</Link>
+    {usuario?.rol !== 'establecimiento' && <Link to="/perfil">Perfil</Link>}
     {esAdmin && <Link to="/admin-usuarios">Administrar</Link>}
     {esEstablecimiento && <Link to="/abm-canchas">Administrar Canchas</Link>}
     {usuario?.rol !== 'establecimiento' && <Link to="/mis-reservas">Mis Reservas</Link>}

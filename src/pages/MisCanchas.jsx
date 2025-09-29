@@ -30,9 +30,14 @@ const MisCanchas = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+  const { name, value } = e.target;
+
+  if (name === "horarioCierre" && value === "00:00") {
+    setForm(prev => ({ ...prev, [name]: "23:59" }));
+  } else {
     setForm(prev => ({ ...prev, [name]: value }));
-  };
+  }
+};
 
   const stringToTicks = (timeStr) => {
     const [h, m] = timeStr.split(':').map(Number);
@@ -40,39 +45,80 @@ const MisCanchas = () => {
   };
 
   const ticksToTime = (ticks) => {
-    const totalMinutes = Math.floor(ticks / 600000000);
-    const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
-    const minutes = String(totalMinutes % 60).padStart(2, '0');
-    return `${hours}:${minutes}`;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const method = editandoId ? 'PUT' : 'POST';
-    const url = editandoId
-      ? `https://localhost:7055/api/Canchas/${editandoId}`
-      : 'https://localhost:7055/api/Canchas';
-
-    const payload = {
-  ...form,
-  horarioApertura: form.horarioApertura + ":00",
-  horarioCierre: form.horarioCierre + ":00",
-  proximoMantenimiento: form.proximoMantenimiento || null
+  const totalMinutes = Math.floor(ticks / 600000000);
+  const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+  const minutes = String(totalMinutes % 60).padStart(2, '0');
+  return `${hours}:${minutes}`;
 };
 
-    await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
+// Acepta: {ticks}, number (ticks), "HH:mm:ss", "HH:mm", ISO, etc.
+// Devuelve siempre "HH:mm" y convierte "00:00" → "23:59"
+const normalizeTime = (raw, fallback = '08:00') => {
+  if (!raw) return fallback;
 
-    setForm(initialFormState());
-    setEditandoId(null);
-    obtenerCanchas();
+  // Objeto con propiedad ticks
+  if (typeof raw === 'object' && raw !== null && 'ticks' in raw) {
+    const hhmm = ticksToTime(raw.ticks);
+    return hhmm === '00:00' ? '23:59' : hhmm;
+  }
+
+  // Número (ticks)
+  if (typeof raw === 'number') {
+    const hhmm = ticksToTime(raw);
+    return hhmm === '00:00' ? '23:59' : hhmm;
+  }
+
+  // String: buscar HH:mm
+  if (typeof raw === 'string') {
+    const m = raw.match(/(\d{2}):(\d{2})/); // toma HH:mm de "HH:mm" o "HH:mm:ss"
+    if (m) {
+      const hhmm = `${m[1]}:${m[2]}`;
+      return hhmm === '00:00' ? '23:59' : hhmm;
+    }
+  }
+
+  return fallback;
+};
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  const method = editandoId ? 'PUT' : 'POST';
+  const url = editandoId
+    ? `https://localhost:7055/api/Canchas/${editandoId}`
+    : 'https://localhost:7055/api/Canchas';
+
+  const payload = {
+    ...form,
+    horarioApertura: form.horarioApertura + ":00",
+    horarioCierre: form.horarioCierre + ":00",
+    proximoMantenimiento: form.proximoMantenimiento || null
   };
+
+  const res = await fetch(url, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (res.ok) {
+    if (editandoId) {
+      alert(`✅ La cancha "${form.nombre}" fue actualizada correctamente.`);
+    } else {
+      alert(`✅ La cancha "${form.nombre}" fue creada correctamente.`);
+    }
+  } else {
+    alert("❌ Hubo un error al guardar la cancha. Inténtalo de nuevo.");
+  }
+
+  setForm(initialFormState());
+  setEditandoId(null);
+  obtenerCanchas();
+};
+
+
 
   const handleEliminar = async (id) => {
     if (!window.confirm('¿Eliminar esta cancha?')) return;
@@ -84,13 +130,13 @@ const MisCanchas = () => {
   };
 
   const handleEditar = (cancha) => {
-    setForm({
-      ...cancha,
-      horarioApertura: ticksToTime(cancha.horarioApertura.ticks),
-      horarioCierre: ticksToTime(cancha.horarioCierre.ticks)
-    });
-    setEditandoId(cancha.id);
-  };
+  setForm({
+    ...cancha,
+    horarioApertura: normalizeTime(cancha.horarioApertura, '08:00'),
+    horarioCierre:   normalizeTime(cancha.horarioCierre,   '23:00'),
+  });
+  setEditandoId(cancha.id);
+};
 
   return (
     <div className="mis-canchas-container">
@@ -121,9 +167,9 @@ const MisCanchas = () => {
             required
           >
             <option value="">-- Selecciona un tipo --</option>
-            <option value="Futbol-5">Fútbol 5</option>
-            <option value="Futbol-7">Fútbol 7</option>
-            <option value="Futbol-11">Fútbol 11</option>
+            <option value="F5">Fútbol 5</option>
+            <option value="F7">Fútbol 7</option>
+            <option value="F11">Fútbol 11</option>
           </select>
         </div>
         <div className="form-group">
@@ -172,7 +218,7 @@ const MisCanchas = () => {
             name="notasEspeciales"
             value={form.notasEspeciales}
             onChange={handleChange}
-            required
+           
           />
         </div>
 
