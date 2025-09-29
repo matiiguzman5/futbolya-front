@@ -1,63 +1,137 @@
 .crear-reserva-container {
-  max-width: 600px;
+  max-width: 650px;
   margin: 40px auto;
   background-color: #fff;
   padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 
-.crear-reserva-container h2 {
+.crear-reserva-container h2,
+.crear-reserva-container h3 {
   text-align: center;
   color: #007ac1;
   margin-bottom: 20px;
 }
 
-.buscador {
-  width: 100%;
-  padding: 10px 12px;
-  margin-bottom: 20px;
-  border-radius: 25px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
+/* Cards */
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
-.crear-reserva-form {
+.card {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  padding: 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: #007ac1;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+
+.card h4 {
+  color: #007ac1;
+  margin: 8px 0;
+}
+
+/* Horas grid */
+.horas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.hora-btn {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #007bff;
+  background: white;
+  color: #007bff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hora-btn:hover {
+  background: #007bff;
+  color: white;
+}
+
+.hora-btn.active {
+  background: #0056b3;
+  color: white;
+}
+
+/* Botones de navegación */
+.nav-buttons {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   gap: 15px;
+  margin-top: 15px;
 }
 
-.crear-reserva-form label {
-  font-weight: 500;
-}
-
-.crear-reserva-form select,
-.crear-reserva-form input,
-.crear-reserva-form textarea {
-  padding: 10px;
-  font-size: 1rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-.crear-reserva-form textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.crear-reserva-form button {
+.nav-buttons button {
+  flex: 1;
   padding: 12px;
   font-size: 1rem;
   font-weight: bold;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-back {
+  background-color: #6c757d;
+  color: white;
+}
+.btn-back:hover {
+  background-color: #5a6268;
+}
+
+.btn-next {
   background-color: #007bff;
   color: white;
+}
+.btn-next:hover {
+  background-color: #0056b3;
+}
+
+/* Día activo */
+.btn-next.active {
+  background-color: #0056b3;
+  color: #fff;
+}
+
+.btn-confirm {
+  background-color: #28a745;
+  color: white;
+}
+.btn-confirm:hover {
+  background-color: #218838;
+}
+
+.btn-volver {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
   border: none;
   border-radius: 30px;
+  background: #17a2b8;
+  color: white;
+  font-weight: bold;
   cursor: pointer;
   transition: 0.3s;
 }
-
-.crear-reserva-form button:hover {
-  background-color: #005dc1;
+.btn-volver:hover {
+  background: #117a8b;
 }

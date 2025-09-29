@@ -1,252 +1,251 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/styles/crearReserva.css';
 
-const norm = (s) =>
-  (s ?? '')
-    .toString()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
-
 const CrearReserva = () => {
+  const [step, setStep] = useState(1);
+
+  const [establecimientos, setEstablecimientos] = useState([]);
+  const [establecimientoId, setEstablecimientoId] = useState('');
   const [canchas, setCanchas] = useState([]);
   const [canchaId, setCanchaId] = useState('');
   const [fechaHora, setFechaHora] = useState('');
   const [observaciones, setObservaciones] = useState('');
-  const [busqueda, setBusqueda] = useState('');
 
-  // estados para el panel de sugerencias del BUSCADOR (no del select)
-  const [isOpen, setIsOpen] = useState(false);
-  const [highlighted, setHighlighted] = useState(0);
-  const suggestRef = useRef(null);
+  const [dias, setDias] = useState([]);
+  const [diaSeleccionado, setDiaSeleccionado] = useState('');
+  const [horaSeleccionada, setHoraSeleccionada] = useState('');
 
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const usuario = JSON.parse(localStorage.getItem('usuario'));
 
+  // 🔹 Traer establecimientos
   useEffect(() => {
-    const fetchCanchas = async () => {
+    const fetchEstablecimientos = async () => {
       try {
-        const res = await fetch('https://localhost:7055/api/Canchas/disponibles', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await fetch('https://localhost:7055/api/Usuarios/establecimientos');
         const data = await res.json();
-        setCanchas(data || []);
+        setEstablecimientos(data || []);
       } catch (error) {
-        console.error('Error al obtener canchas:', error);
+        console.error('Error al obtener establecimientos:', error);
       }
     };
-    fetchCanchas();
+    fetchEstablecimientos();
   }, []);
 
-  // Sugerencias para el buscador (no afecta las opciones del select)
-  const sugerencias = useMemo(() => {
-    const q = norm(busqueda);
-    if (!q) return [];
-    return canchas.filter((c) => {
-      const nombre = norm(c?.nombre);
-      const ubic   = norm(c?.ubicacion);
-      const estado = norm(c?.estado);
-      const tipo   = norm(c?.tipo);
-      const sup    = norm(c?.superficie);
-      return (
-        nombre.includes(q) ||
-        ubic.includes(q)   ||
-        estado.includes(q) ||
-        tipo.includes(q)   ||
-        sup.includes(q)
-      );
-    }).slice(0, 12);
-  }, [canchas, busqueda]);
-
-  const openSugerencias = () => {
-    setIsOpen(true);
-    setHighlighted(0);
-  };
-
-  const closeSugerencias = () => setIsOpen(false);
-
-  const seleccionarSugerencia = (c) => {
-    setBusqueda(c?.nombre ?? '');
-    setCanchaId(String(c?.id ?? '')); // autocompleta el SELECT
-    closeSugerencias();
-  };
-
-  const onKeyDownBusqueda = (e) => {
-    if (!isOpen && (e.key === 'ArrowDown' || e.key === 'Enter')) {
-      openSugerencias();
-      return;
-    }
-    if (!isOpen) return;
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setHighlighted((h) => Math.min(h + 1, sugerencias.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setHighlighted((h) => Math.max(h - 1, 0));
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      const c = sugerencias[highlighted];
-      if (c) seleccionarSugerencia(c);
-    } else if (e.key === 'Escape') {
-      closeSugerencias();
-    }
-  };
-
-  // Cerrar sugerencias si clickeás fuera
+  // 🔹 Generar próximos 5 días
   useEffect(() => {
-    const handler = (e) => {
-      if (suggestRef.current && !suggestRef.current.contains(e.target)) {
-        closeSugerencias();
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    const hoy = new Date();
+    const opciones = [];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(hoy);
+      d.setDate(hoy.getDate() + i);
+      opciones.push({
+        fecha: d.toISOString().split("T")[0], // YYYY-MM-DD
+        label: i === 0 ? "Hoy" : i === 1 ? "Mañana" : d.toLocaleDateString('es-ES', { weekday: 'long' })
+      });
+    }
+    setDias(opciones);
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // 🔹 Generar horas (09:00 a 23:00)
+  const generarHoras = () => {
+    const horas = [];
+    for (let h = 9; h <= 23; h++) {
+      horas.push(`${h.toString().padStart(2, '0')}:00`);
+    }
+    return horas;
+  };
 
-    if (!canchaId) {
-      alert('Seleccioná una cancha de la lista.');
+  // 🔹 Traer canchas disponibles
+  const fetchCanchasDisponibles = async (id, fechaHora) => {
+    try {
+      const res = await fetch(
+        `https://localhost:7055/api/Canchas/de/${id}/disponibles?fechaHora=${fechaHora}`
+      );
+      const data = await res.json();
+      setCanchas(data || []); // solo las libres entran acá
+    } catch (error) {
+      console.error('Error al obtener canchas disponibles:', error);
+    }
+  };
+
+
+  // 🔹 Confirmar reserva
+const handleSubmit = async () => {
+  // Convertir la fecha/hora seleccionada a objeto Date
+  const fechaSeleccionada = new Date(`${diaSeleccionado}T${horaSeleccionada}:00`);
+
+  const payload = {
+    canchaId: parseInt(canchaId),
+    fechaHora: fechaSeleccionada.toISOString(),   // 👈 enviamos en UTC correcto
+    observaciones,
+    clienteNombre: usuario.nombre,
+    clienteTelefono: usuario.telefono || 'No informado',
+    clienteEmail: usuario.Correo,
+    estadoPago: 'pendiente',
+    esFrecuente: false
+  };
+
+  try {
+    const res = await fetch('https://localhost:7055/api/Reservas', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      alert(`Error: ${err}`);
       return;
     }
 
-    const canchaSeleccionada = canchas.find(c => String(c.id) === String(canchaId));
+    alert('Reserva creada correctamente');
+    navigate('/home');
+  } catch (error) {
+    console.error('Error al crear reserva:', error);
+  }
+};
 
-    const payload = {
-      canchaId: parseInt(canchaId),
-      fechaHora: fechaHora,
-      observaciones,
-      clienteNombre: usuario?.nombre,
-      clienteTelefono: usuario?.telefono || "No informado",
-      clienteEmail: usuario?.Correo,
-      estadoPago: "pendiente",
-      esFrecuente: false
-    };
 
-    try {
-      const res = await fetch('https://localhost:7055/api/Reservas', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
+  // Paso 1: Establecimiento
+  const PasoEstablecimiento = () => (
+    <div>
+      <h3>Elegí un establecimiento</h3>
+      <div className="cards">
+        {establecimientos.map((est) => (
+          <div
+            key={est.id}
+            className="card"
+            onClick={() => {
+              setEstablecimientoId(est.id);
+              setStep(2);
+            }}
+          >
+            <img src={est.fotoPerfil || '/default-club.jpg'} alt="foto" />
+            <h4>{est.nombre}</h4>
+            <p>{est.correo}</p>
+            <p>Canchas: {est.canchas.length}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
-      if (!res.ok) {
-        const err = await res.text();
-        alert(`Error: ${err}`);
-        return;
-      }
+  // Paso 2: Fecha y hora
+  const PasoFechaHora = () => (
+    <div>
+      <h3>Elegí la fecha y hora</h3>
 
-      alert(`La reserva "${canchaSeleccionada?.nombre || 'desconocida'}" fue creada exitosamente`);
-      navigate('/home');
-    } catch (error) {
-      console.error('Error al crear reserva:', error);
-    }
-  };
+      {/* Botones de días */}
+      <div className="nav-buttons">
+        {dias.map((d) => (
+          <button
+            key={d.fecha}
+            className={`btn-next ${diaSeleccionado === d.fecha ? "active" : ""}`}
+            onClick={() => {
+              setDiaSeleccionado(d.fecha);
+              setHoraSeleccionada('');
+            }}
+          >
+            {d.label}
+          </button>
+        ))}
+      </div>
 
-  const manejarFecha = (e) => {
-    const valor = e.target.value; // "YYYY-MM-DDTHH:mm"
-    const [fecha, hora] = valor.split("T");
-    let [horas, minutos] = hora.split(":").map(Number);
+      {/* Botones de horas */}
+      {diaSeleccionado && (
+        <div className="horas-grid">
+          {generarHoras().map((hora) => (
+            <button
+              key={hora}
+              className={`hora-btn ${horaSeleccionada === hora ? "active" : ""}`}
+              onClick={() => setHoraSeleccionada(hora)}
+            >
+              {hora}
+            </button>
+          ))}
+        </div>
+      )}
 
-    if (minutos < 30 && minutos > 0) {
-      minutos = 30;
-    } else if (minutos) {
-      horas += 1;
-      minutos = 0;
-    }
+      {/* Navegación */}
+      <div className="nav-buttons">
+        <button className="btn-back" onClick={() => setStep(1)}>← Atrás</button>
+        <button
+          className="btn-next"
+          onClick={() => {
+            const fechaHora = `${diaSeleccionado}T${horaSeleccionada}`;
+            fetchCanchasDisponibles(establecimientoId, fechaHora); // 👈 acá pedís solo libres
+            setFechaHora(fechaHora);
+            setStep(3);
+          }}
+          disabled={!diaSeleccionado || !horaSeleccionada}
+        >
+          Siguiente →
+        </button>
+      </div>
+    </div>
+  );
 
-    const horasStr = String(horas).padStart(2, "0");
-    const minutosStr = String(minutos).padStart(2, "0");
-    setFechaHora(`${fecha}T${horasStr}:${minutosStr}`);
-  };
+  // Paso 3: Cancha
+  const PasoCancha = () => (
+    <div>
+      <h3>Elegí la cancha</h3>
+      <div className="cards">
+        {canchas.map((c) => (
+          <div
+            key={c.id}
+            className="card"
+            onClick={() => {
+              setCanchaId(c.id);
+              setStep(4);
+            }}
+          >
+            <h4>{c.nombre}</h4>
+            <p>{c.tipo} - {c.superficie}</p>
+            <p>Precio: ${c.precioBaseHora}</p>
+          </div>
+        ))}
+      </div>
+      <div className="nav-buttons">
+        <button className="btn-back" onClick={() => setStep(2)}>← Atrás</button>
+      </div>
+    </div>
+  );
+
+  // Paso 4: Confirmar
+  const PasoConfirmar = () => (
+    <div>
+      <h3>Confirmar reserva</h3>
+      <p><b>Establecimiento:</b> {establecimientos.find(e => e.id === parseInt(establecimientoId))?.nombre}</p>
+      <p><b>Fecha y hora:</b> {fechaHora}</p>
+      <p><b>Cancha:</b> {canchas.find(c => c.id === parseInt(canchaId))?.nombre}</p>
+      <textarea
+        placeholder="Observaciones"
+        value={observaciones}
+        onChange={(e) => setObservaciones(e.target.value)}
+      />
+      <div className="nav-buttons">
+        <button className="btn-back" onClick={() => setStep(3)}>← Atrás</button>
+        <button className="btn-confirm" onClick={handleSubmit}>Confirmar ✅</button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="crear-reserva-container">
       <h2>Crear Nueva Reserva</h2>
-
-      {/* BUSCADOR con panel de sugerencias */}
-      <div className="buscador-wrap" ref={suggestRef}>
-        <input
-          className="buscador"
-          type="text"
-          placeholder="Buscar cancha por nombre, ubicación, tipo, superficie o estado"
-          value={busqueda}
-          onChange={(e) => { setBusqueda(e.target.value); openSugerencias(); }}
-          onFocus={openSugerencias}
-          onKeyDown={onKeyDownBusqueda}
-          aria-autocomplete="list"
-          aria-expanded={isOpen}
-          aria-controls="sugerencias-canchas"
-          aria-activedescendant={isOpen ? `sug-${highlighted}` : undefined}
-        />
-
-        {isOpen && (
-          <ul id="sugerencias-canchas" className="sug-panel">
-            {sugerencias.length === 0 && (
-              <li className="sug-empty">No se encontraron canchas</li>
-            )}
-            {sugerencias.map((c, idx) => (
-              <li
-                id={`sug-${idx}`}
-                key={c.id}
-                className={`sug-option ${idx === highlighted ? 'is-active' : ''}`}
-                onMouseEnter={() => setHighlighted(idx)}
-                onMouseDown={(e) => { e.preventDefault(); seleccionarSugerencia(c); }}
-                role="option"
-                aria-selected={idx === highlighted}
-                title={`${c?.nombre ?? ''} · ${c?.tipo ?? ''} · ${c?.superficie ?? ''}${c?.ubicacion ? ' · ' + c.ubicacion : ''}`}
-              >
-                <div className="sug-title">{c.nombre}</div>
-                <div className="sug-sub">
-                  {c.tipo} · {c.superficie}{c.ubicacion ? ` · ${c.ubicacion}` : ''}{c.estado ? ` · ${c.estado}` : ''}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <form className="crear-reserva-form" onSubmit={handleSubmit}>
-        <label>Cancha:</label>
-        <select
-          value={canchaId}
-          onChange={(e) => setCanchaId(e.target.value)}
-          required
-        >
-          <option value="">Seleccione una cancha</option>
-          {canchas.map((cancha) => (
-            <option key={cancha.id} value={cancha.id}>
-              {cancha.nombre} - {cancha.tipo} - {cancha.superficie}
-            </option>
-          ))}
-        </select>
-
-        <label>Fecha y hora:</label>
-        <input
-          type="datetime-local"
-          value={fechaHora}
-          onChange={manejarFecha}
-          required
-        />
-
-        <label>Observaciones:</label>
-        <textarea
-          value={observaciones}
-          onChange={(e) => setObservaciones(e.target.value)}
-          placeholder="Opcional"
-        />
-
-        <button type="submit">Reservar</button>
-        <button className="btn-volver" onClick={() => navigate('/home')}>← Volver al Home</button>
-      </form>
+      {step === 1 && <PasoEstablecimiento />}
+      {step === 2 && <PasoFechaHora />}
+      {step === 3 && <PasoCancha />}
+      {step === 4 && <PasoConfirmar />}
+      <button className="btn-volver" onClick={() => navigate('/home')}>
+        ← Volver al Home
+      </button>
     </div>
   );
 };
