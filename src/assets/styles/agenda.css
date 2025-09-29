@@ -1,0 +1,169 @@
+/* Contenedor general */
+.agenda-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+/* Botón volver */
+.btn-volver {
+  display: inline-block;
+  background: linear-gradient(90deg, #2563eb, #1d4ed8);
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+}
+
+.btn-volver:hover {
+  background: linear-gradient(90deg, #1d4ed8, #1e40af);
+  transform: translateY(-2px);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Título */
+.agenda-titulo {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+
+/* Card donde va el calendario */
+.agenda-card {
+  background-color: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+}
+
+/* Select de canchas */
+.select-canchas {
+  display: block;
+  margin: 0 auto 1.5rem auto;
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.select-canchas:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* Eventos dentro del calendario */
+.fc-event {
+  border-radius: 10px !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  padding: 6px !important;
+  text-align: center;
+}
+
+/* Colores personalizados por estado */
+.fc-event.estado-pagado {
+  background-color: #16a34a !important; /* verde */
+  color: white !important;
+}
+
+.fc-event.estado-pendiente {
+  background-color: #dc2626 !important; /* rojo */
+  color: white !important;
+}
+
+/* agenda.css */
+.fc .fc-toolbar-chunk:first-child {
+  display: flex;
+  gap: 8px; /* separación entre prev/next y hoy */
+  align-items: center;
+}
+
+/* ---------------- MODAL ---------------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #1f2937;
+}
+
+.modal-content p {
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.modal-close {
+  margin-top: 1rem;
+  display: inline-block;
+  background: linear-gradient(90deg, #ef4444, #b91c1c);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+  background: linear-gradient(90deg, #dc2626, #991b1b);
+  transform: translateY(-2px);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Animación modal */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------------- AJUSTE TOOLBAR ---------------- */
+/* Evita que se pisen prev/next con "Hoy" */
+.fc .fc-toolbar-chunk:first-child {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.fc .fc-toolbar-chunk:first-child .fc-button-group {
+  display: flex;
+  gap: 6px;
+}
+
+.fc-event {
+  cursor: pointer !important;
+}

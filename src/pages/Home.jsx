@@ -68,20 +68,32 @@ const cerrarSesion = () => {
       <div className="home-content">
         <header className="home-header">
   <div className="header-left">
-  <Link to="/Home">
-    <img src="/IconoFYa.jpeg" alt="Logo" className="logo" />
-  </Link>
-</div>
+    <Link to="/Home">
+      <img src="/IconoFYa.jpeg" alt="Logo" className="logo" />
+    </Link>
+    {/* Info del usuario */}
+    <div className="user-info">
+      <span className="user-nombre">{usuario?.nombre || "Usuario"}</span>
+      <span className="user-rol">{usuario?.rol || "Rol"}</span>
+    </div>
+  </div>
+
   <nav className="header-center">
-    <a href="#">Cambiar</a> 
+    <a href="#">Cambiar</a>
     <a href="#">Sedes</a>
-    {usuario?.rol !== 'establecimiento' && <Link to="/perfil">Perfil</Link>}
+    {usuario?.rol !== "establecimiento" && <Link to="/perfil">Perfil</Link>}
     {esAdmin && <Link to="/admin-usuarios">Administrar</Link>}
     {esEstablecimiento && <Link to="/abm-canchas">Administrar Canchas</Link>}
-    {usuario?.rol !== 'establecimiento' && <Link to="/mis-reservas">Mis Reservas</Link>}
+    {esEstablecimiento && <Link to="/agendaCanchas">Agenda Semanal</Link>}
+    {usuario?.rol !== "establecimiento" && (
+      <Link to="/mis-reservas">Mis Reservas</Link>
+    )}
   </nav>
+
   <div className="header-right">
-    <button className="btnlogout" onClick={cerrarSesion}>Cerrar sesión</button>
+    <button className="btnlogout" onClick={cerrarSesion}>
+      Cerrar sesión
+    </button>
   </div>
 </header>
 
