@@ -278,3 +278,22 @@ html, body {
   font-weight: 600;
   font-size: 1rem;
 }
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+  color: white;
+  line-height: 1.2;
+}
+
+.user-nombre {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.user-rol {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  font-style: italic;
+}

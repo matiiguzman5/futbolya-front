@@ -11,6 +11,7 @@ import CrearReserva from './pages/CrearReserva';
 import MisReservas from './pages/MisReservas';
 import ProteccionRuta from './ProteccionRuta';
 import './assets/styles/global.css';
+import AgendaReservas from './pages/AgendaReservas';
 
 
 
@@ -48,7 +49,13 @@ const App = () => (
           <MisCanchas />
         </ProteccionRuta>
       } />
-
+      
+      <Route path="/agendaCanchas" element={
+      <ProteccionRuta rolesPermitidos={['establecimiento']}>
+      <AgendaReservas />
+      </ProteccionRuta>
+      } />
+    
       {/* Privada para administrador */}
       <Route path="/admin-usuarios" element={
         <ProteccionRuta rolesPermitidos={['administrador']}>
