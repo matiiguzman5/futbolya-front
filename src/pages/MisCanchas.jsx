@@ -89,9 +89,9 @@ const normalizeTime = (raw, fallback = '08:00') => {
 
   const payload = {
     ...form,
-    horarioApertura: form.horarioApertura + ":00",
-    horarioCierre: form.horarioCierre + ":00",
-    proximoMantenimiento: form.proximoMantenimiento || null
+    estado: form.estado,
+    precioBaseHora: Number(form.precioBaseHora),
+    precioFinDeSemana: Number(form.precioFinDeSemana),
   };
 
   const res = await fetch(url, {
@@ -140,9 +140,9 @@ const normalizeTime = (raw, fallback = '08:00') => {
 
   return (
     <div className="mis-canchas-container">
-      <button className="volver-btn" onClick={() => window.location.href = '/home'}>
+      {/* <button className="volver-btn" onClick={() => window.location.href = '/home'}>
         ⬅ Volver al Home
-      </button>
+      </button> */}
 
       <h2>Mis Canchas</h2>
 {/* PASA UN ERROR QUE TIRA DE JSON OTRO DIA SE MIRA, MATI SI ESTAS LEYENDO FIJATE VOS Q SABES MAS DEL TEMA */}
@@ -186,41 +186,50 @@ const normalizeTime = (raw, fallback = '08:00') => {
             <option value="Cesped">Cesped</option>
           </select>
         </div>
-        {/* <input name="estado" value={form.estado} onChange={handleChange} placeholder="Estado" /> */}
-     <div className="form-group">
-        <label htmlFor="horarioApertura">Horario de apertura</label>
-        <input
-          type="time"
-          id="horarioApertura"
-          name="horarioApertura"
-          value={form.horarioApertura}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="horarioCierre">Horario de cierre</label>
-        <input
-          type="time"
-          id="horarioCierre"
-          name="horarioCierre"
-          value={form.horarioCierre}
-          onChange={handleChange}
-          required
-        />
-      </div>
-        {/* <input type="date" name="proximoMantenimiento" value={form.proximoMantenimiento} onChange={handleChange} /> */}
         <div className="form-group">
-          <label htmlFor="notasEspeciales">Notas especiales</label>
-          <textarea
-            id="notasEspeciales"
-            name="notasEspeciales"
-            value={form.notasEspeciales}
+          <label htmlFor="estado">Estado</label>
+          <select
+            id="estado"
+            name="estado"
+            value={form.estado}
             onChange={handleChange}
-           
+            required
+          >
+            <option value="">-- Selecciona un estado --</option>
+            <option value="Disponible">Disponible</option>
+            <option value="No disponible">No disponible</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label htmlFor="precioBaseHora">Precio base por hora</label>
+          <input
+            type="number"
+            id="precioBaseHora"
+            name="precioBaseHora"
+            value={form.precioBaseHora}
+            onChange={handleChange}
+            required
           />
         </div>
+
+        <div className="form-group">
+          <label htmlFor="precioFinDeSemana">Precio fin de semana</label>
+          <input
+            type="number"
+            id="precioFinDeSemana"
+            name="precioFinDeSemana"
+            value={form.precioFinDeSemana}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+
+        
+        {/* <input name="estado" value={form.estado} onChange={handleChange} placeholder="Estado" /> */}
+
+        {/* <input type="date" name="proximoMantenimiento" value={form.proximoMantenimiento} onChange={handleChange} /> */}
+
 
         <div className="btns-form">
           <button type="submit" className="btn btn-crear">{editandoId ? 'Actualizar' : 'Crear'} cancha</button>
@@ -237,9 +246,8 @@ const normalizeTime = (raw, fallback = '08:00') => {
           <div key={c.id} className="cancha-card">
             <div>
               <strong>{c.nombre}</strong> | Tipo: {c.tipo} | Superficie: {c.superficie}<br />
-              Estado: {c.estado} |  Apertura: {c.horarioApertura?.slice(0,5)} | Cierre: {c.horarioCierre?.slice(0,5)}<br />
-              Próximo Mantenimiento: {c.proximoMantenimiento?.split('T')[0] || 'N/A'}<br />
-              Notas: {c.notasEspeciales || 'Ninguna'}
+              Estado: {c.estado}
+              Precio base: ${c.precioBaseHora} | Fin de semana: ${c.precioFinDeSemana}
             </div>
             <div className="acciones">
               <button className="btn btn-editar" onClick={() => handleEditar(c)}>Editar</button>
