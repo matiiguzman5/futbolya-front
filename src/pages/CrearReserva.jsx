@@ -79,7 +79,7 @@ const handleSubmit = async () => {
 
   const payload = {
     canchaId: parseInt(canchaId),
-    fechaHora: fechaSeleccionada.toISOString(),   // 👈 enviamos en UTC correcto
+    fechaHora: fechaSeleccionada.toISOString(),
     observaciones,
     clienteNombre: usuario.nombre,
     clienteTelefono: usuario.telefono || 'No informado',
@@ -243,9 +243,9 @@ const handleSubmit = async () => {
       {step === 2 && <PasoFechaHora />}
       {step === 3 && <PasoCancha />}
       {step === 4 && <PasoConfirmar />}
-      <button className="btn-volver" onClick={() => navigate('/home')}>
+      {/*<button className="btn-volver" onClick={() => navigate('/home')}>
         ← Volver al Home
-      </button>
+      </button>*/}
     </div>
   );
 };

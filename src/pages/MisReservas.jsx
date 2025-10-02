@@ -1,33 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/styles/misReservas.css';
+import ValorarModal from '../components/ValorarModal';
 
 const MisReservas = () => {
   const [reservasActivas, setReservasActivas] = useState([]);
   const [reservasPasadas, setReservasPasadas] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [reservaSeleccionada, setReservaSeleccionada] = useState(null);
 
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
 
   const obtenerReservas = async () => {
     if (!token) return;
-
     try {
       const res = await fetch('https://localhost:7055/api/reservas/mis', {
         headers: { Authorization: `Bearer ${token}` }
       });
-
       if (!res.ok) {
         console.error("Error al obtener reservas:", res.status);
         return;
       }
-
       const data = await res.json();
       const ahora = new Date();
-
       const activas = data.filter(r => new Date(r.fecha) > ahora);
       const pasadas = data.filter(r => new Date(r.fecha) <= ahora);
-
 
       setReservasActivas(activas);
       setReservasPasadas(pasadas);
@@ -54,14 +52,12 @@ const MisReservas = () => {
 
       const response = await fetch(endpoint, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.ok) {
         alert(`Reserva ${reservaId} - ${accion} realizada.`);
-        obtenerReservas(); 
+        obtenerReservas();
       } else {
         const error = await response.text();
         alert(`Error: ${error}`);
@@ -75,7 +71,6 @@ const MisReservas = () => {
   return (
     <div className="mis-reservas-container">
       <h2 className="titulo">Mis Reservas</h2>
-      <button className="btn-volver" onClick={() => navigate('/home')}>← Volver al Home</button>
 
       <section>
         <h3>Activas</h3>
@@ -111,10 +106,26 @@ const MisReservas = () => {
               Cliente: {reserva.clienteNombre}<br />
               Pago: {reserva.estadoPago}<br />
               Observaciones: {reserva.observaciones || "Ninguna"}
+
+              <div className="botones-acciones">
+                <button
+                  className="btn-salir"
+                  onClick={() => { setReservaSeleccionada(reserva.id); setShowModal(true); }}
+                >
+                  Valorar Jugadores
+                </button>
+              </div>
             </div>
           ))
         )}
       </section>
+
+      {showModal && (
+        <ValorarModal
+          reservaId={reservaSeleccionada}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </div>
   );
 };
