@@ -49,13 +49,17 @@ const App = () => (
           <MisCanchas />
         </ProteccionRuta>
       } />
+      <Route path="/establecimiento" element={
+        <ProteccionRuta rolesPermitidos={['establecimiento']}>
+          <MisCanchas />
+        </ProteccionRuta>
+      } />
       
       <Route path="/agendaCanchas" element={
-      <ProteccionRuta rolesPermitidos={['establecimiento']}>
-      <AgendaReservas />
-      </ProteccionRuta>
+        <ProteccionRuta rolesPermitidos={['establecimiento']}>
+          <AgendaReservas />
+        </ProteccionRuta>
       } />
-    
       {/* Privada para administrador */}
       <Route path="/admin-usuarios" element={
         <ProteccionRuta rolesPermitidos={['administrador']}>
