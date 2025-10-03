@@ -61,7 +61,7 @@ body {
   gap: 20px;
   padding: 0 40px;
   justify-items: center;
-  flex-grow: 1;
+  align-content: start;
 }
 
 .partido-card,

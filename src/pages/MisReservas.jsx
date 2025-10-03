@@ -1,23 +1,33 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../assets/styles/misReservas.css';
 import '../assets/styles/home.css';
-import AppHeader from '../components/AppHeader';
-import AppFooter from '../components/AppFooter';
+import '../assets/styles/misReservas.css';
 import ShareReserva from '../components/ShareReserva';
+import ValorarModal from '../components/ValorarModal';
 
 const MisReservas = () => {
   const [reservasActivas, setReservasActivas] = useState([]);
   const [reservasPasadas, setReservasPasadas] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [reservaSeleccionada, setReservaSeleccionada] = useState(null);
 
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
-  const usuario = JSON.parse(localStorage.getItem('usuario'));
-  const esAdmin = usuario?.rol === 'administrador';
-  const esEstablecimiento = usuario?.rol === 'establecimiento';
+
+  const obtenerFecha = (reserva) => {
+    const valor = reserva.fechaHora || reserva.fecha;
+    if (!valor) {
+      return null;
+    }
+
+    const fecha = new Date(valor);
+    return Number.isNaN(fecha.getTime()) ? null : fecha;
+  };
 
   const obtenerReservas = useCallback(async () => {
-    if (!token) return;
+    if (!token) {
+      return;
+    }
 
     try {
       const res = await fetch('https://localhost:7055/api/reservas/mis', {
@@ -32,8 +42,15 @@ const MisReservas = () => {
       const data = await res.json();
       const ahora = new Date();
 
-      const activas = data.filter((r) => new Date(r.fecha) > ahora);
-      const pasadas = data.filter((r) => new Date(r.fecha) <= ahora);
+      const activas = data.filter((reserva) => {
+        const fecha = obtenerFecha(reserva);
+        return fecha ? fecha > ahora : false;
+      });
+
+      const pasadas = data.filter((reserva) => {
+        const fecha = obtenerFecha(reserva);
+        return fecha ? fecha <= ahora : false;
+      });
 
       setReservasActivas(activas);
       setReservasPasadas(pasadas);
@@ -46,17 +63,16 @@ const MisReservas = () => {
     obtenerReservas();
   }, [obtenerReservas]);
 
-  const cerrarSesion = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('usuario');
-    window.location.href = '/login';
-  };
-
   const confirmarAccion = async (accion, reservaId) => {
-    const confirm1 = window.confirm(`\u00bfEstas seguro que deseas ${accion} esta reserva?`);
-    if (!confirm1) return;
-    const confirm2 = window.confirm('Esta accion no se puede deshacer. \u00bfConfirmas?');
-    if (!confirm2) return;
+    const confirm1 = window.confirm(`Estas seguro que deseas ${accion} esta reserva?`);
+    if (!confirm1) {
+      return;
+    }
+
+    const confirm2 = window.confirm('Esta accion no se puede deshacer. Confirmas?');
+    if (!confirm2) {
+      return;
+    }
 
     try {
       const endpoint =
@@ -85,17 +101,24 @@ const MisReservas = () => {
   };
 
   const formatearFecha = (reserva) => {
-    const fecha = reserva.fechaHora || reserva.fecha;
-    if (!fecha) return 'Sin fecha';
+    const fecha = obtenerFecha(reserva);
+    if (!fecha) {
+      return 'Sin fecha';
+    }
 
     try {
-      return new Date(fecha).toLocaleString('es-AR', {
+      return fecha.toLocaleString('es-AR', {
         dateStyle: 'full',
         timeStyle: 'short'
       });
     } catch (error) {
-      return new Date(fecha).toLocaleString('es-AR');
+      return fecha.toLocaleString('es-AR');
     }
+  };
+
+  const abrirModalValoracion = (reservaId) => {
+    setReservaSeleccionada(reservaId);
+    setShowModal(true);
   };
 
   const renderReservaCard = (reserva, tipo) => {
@@ -145,37 +168,40 @@ const MisReservas = () => {
           </div>
         </div>
 
-        {esActiva && (
-          <footer className="reserva-card-footer">
-            <div className="botones-acciones">
+        <footer className="reserva-card-footer">
+          <div className="botones-acciones">
+            {esActiva ? (
+              <>
+                <button
+                  className="btn-salir"
+                  onClick={() => confirmarAccion('salir del partido', reserva.id)}
+                >
+                  Salir del partido
+                </button>
+                <button
+                  className="btn-cancelar"
+                  onClick={() => confirmarAccion('cancelar la reserva', reserva.id)}
+                >
+                  Cancelar reserva
+                </button>
+                <ShareReserva reserva={reserva} />
+              </>
+            ) : (
               <button
                 className="btn-salir"
-                onClick={() => confirmarAccion('salir del partido', reserva.id)}
+                onClick={() => abrirModalValoracion(reserva.id)}
               >
-                Salir del partido
+                Valorar jugadores
               </button>
-              <button
-                className="btn-cancelar"
-                onClick={() => confirmarAccion('cancelar la reserva', reserva.id)}
-              >
-                Cancelar reserva
-              </button>
-              <ShareReserva reserva={reserva} />
-            </div>
-          </footer>
-        )}
+            )}
+          </div>
+        </footer>
       </article>
     );
   };
 
   return (
     <div className="home-wrapper">
-      <AppHeader
-        usuario={usuario}
-        esAdmin={esAdmin}
-        esEstablecimiento={esEstablecimiento}
-        onLogout={cerrarSesion}
-      />
       <div className="home-content">
         <div className="mis-reservas-container">
           <header className="mis-reservas-header">
@@ -219,7 +245,13 @@ const MisReservas = () => {
           </section>
         </div>
       </div>
-      <AppFooter />
+
+      {showModal && (
+        <ValorarModal
+          reservaId={reservaSeleccionada}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </div>
   );
 };

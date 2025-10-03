@@ -76,9 +76,9 @@ const Perfil = () => {
     <div className="perfil-container">
 
       <div className='btnVolver'>
-        <button onClick={() => window.location.href = '/Home'}>
+        {/*<button onClick={() => window.location.href = '/Home'}>
           ⬅ Volver al Home
-        </button>
+        </button>*/}
       </div>
         
 

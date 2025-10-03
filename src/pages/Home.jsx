@@ -1,8 +1,6 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../assets/styles/home.css';
 import { Link } from 'react-router-dom';
-import AppHeader from '../components/AppHeader';
-import AppFooter from '../components/AppFooter';
 
 const Home = () => {
   const [reservas, setReservas] = useState([]);
@@ -11,17 +9,25 @@ const Home = () => {
   const reservasPorPagina = 4;
 
   const usuario = JSON.parse(localStorage.getItem('usuario'));
-  const esAdmin = usuario?.rol === 'administrador';
-  const esEstablecimiento = usuario?.rol === 'establecimiento';
 
   useEffect(() => {
     const fetchReservas = async () => {
       const token = localStorage.getItem('token');
-      const res = await fetch('https://localhost:7055/api/reservas/disponibles', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      setReservas(data);
+      try {
+        const res = await fetch('https://localhost:7055/api/reservas/disponibles', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          console.error('Error al obtener reservas:', res.status);
+          return;
+        }
+
+        const data = await res.json();
+        setReservas(data);
+      } catch (error) {
+        console.error('Error en fetchReservas:', error);
+      }
     };
 
     fetchReservas();
@@ -51,39 +57,29 @@ const Home = () => {
         return;
       }
 
-      alert('¡Te uniste a la reserva!');
+      alert('Te uniste a la reserva.');
       window.location.reload();
     } catch (error) {
-      alert('Hubo un error al unirse');
+      alert('Hubo un error al unirse.');
     }
-  };
-
-  const cerrarSesion = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('usuario');
-    window.location.href = '/login';
   };
 
   return (
     <div className="home-wrapper">
-      <AppHeader
-        usuario={usuario}
-        esAdmin={esAdmin}
-        esEstablecimiento={esEstablecimiento}
-        onLogout={cerrarSesion}
-      />
       <div className="home-content">
+        {/* Buscador */}
         <div className="home-search">
           <div className="search-container">
             <input
               type="text"
-              placeholder="Buscar por nombre o ubicación..."
+              placeholder="Buscar por nombre o ubicacion..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
         </div>
 
+        {/* Boton Crear Reserva */}
         <div className="crear-reserva-container">
           <Link to="/crear-reserva" className="btn-crear-reserva">
             Crear Reserva
@@ -92,6 +88,7 @@ const Home = () => {
 
         <h3 style={{ textAlign: 'center' }}>Reservas Disponibles</h3>
 
+        {/* Lista de reservas */}
         <div className="partidos-grid">
           {reservasPaginadas.length === 0 ? (
             <p style={{ textAlign: 'center', marginTop: '20px' }}>
@@ -105,7 +102,7 @@ const Home = () => {
                   <strong>
                     {reserva.nombreCancha} ({reserva.tipo})
                   </strong>
-                  <p>Ubicación: {reserva.ubicacion}</p>
+                  <p>Ubicacion: {reserva.ubicacion}</p>
                   <p>Fecha: {new Date(reserva.fechaHora).toLocaleString('es-AR')}</p>
                   <p>Jugadores: {reserva.anotados} / {reserva.capacidad}</p>
                   <p>Observaciones: {reserva.observaciones || 'Ninguna'}</p>
@@ -126,6 +123,7 @@ const Home = () => {
           )}
         </div>
 
+        {/* Paginacion */}
         <div className="paginacion">
           {[...Array(totalPaginas)].map((_, i) => (
             <button
@@ -138,7 +136,6 @@ const Home = () => {
           ))}
         </div>
       </div>
-      <AppFooter />
     </div>
   );
 };
