@@ -129,6 +129,7 @@ const handleSubmit = async () => {
             <img src={est.fotoPerfil || '/default-club.jpg'} alt="foto" />
             <h4>{est.nombre}</h4>
             <p>{est.correo}</p>
+            <p>Ubicación: {est.ubicacion || "No informada"}</p>
             <p>Canchas: {est.canchas.length}</p>
           </div>
         ))}

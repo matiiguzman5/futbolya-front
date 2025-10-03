@@ -96,14 +96,22 @@ const Home = () => {
                   <p>Observaciones: {reserva.observaciones || 'Ninguna'}</p>
                   <p>Estado de Pago: {reserva.estadoPago}</p>
 
-                  {usuario?.rol === 'jugador' && reserva.anotados < reserva.capacidad && (
-                    <button
-                      onClick={() => manejarUnirse(reserva.id)}
-                      className="btn-crear-reserva"
-                      style={{ marginTop: '10px' }}
-                    >
-                      Unirse
-                    </button>
+                  {usuario?.rol === 'jugador' && (
+                    reserva.yaEstoyUnido ? (
+                      <p style={{ color: 'green', marginTop: '10px' }}>
+                        ✅ Ya estás unido a esta reserva
+                      </p>
+                    ) : (
+                      reserva.anotados < reserva.capacidad && (
+                        <button
+                          onClick={() => manejarUnirse(reserva.id)}
+                          className="btn-crear-reserva"
+                          style={{ marginTop: '10px' }}
+                        >
+                          Unirse
+                        </button>
+                      )
+                    )
                   )}
                 </div>
               </div>
