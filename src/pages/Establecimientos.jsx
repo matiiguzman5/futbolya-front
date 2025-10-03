@@ -52,6 +52,8 @@ const Establecimientos = () => {
                   <strong>{e.nombre}</strong>
                   <p>Correo: {e.correo}</p>
                   <p>Teléfono: {e.telefono || "No informado"}</p>
+                  <p>Ubicación: {e.ubicacion || "No informada"}</p>
+
 
                   {/* Totales por tipo */}
                   <p>

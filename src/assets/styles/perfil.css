@@ -1,95 +1,158 @@
 .perfil-container {
-  max-width: 600px;
-  margin: 60px auto 40px;
+  max-width: 700px;
+  margin: 60px auto;
   padding: 20px;
-  background: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #fff;
   border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   text-align: center;
-  position: relative;
 }
 
 .perfil-nombre {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: bold;
-  color: #333;
   margin-bottom: 10px;
 }
 
 .perfil-foto {
-  width: 140px;
-  height: 140px;
-  object-fit: cover;
+  width: 130px;
+  height: 130px;
   border-radius: 50%;
   border: 3px solid #2196f3;
+  object-fit: cover;
   margin-bottom: 10px;
-}
-
-.perfil-subir-foto {
-  margin-top: 10px;
 }
 
 .btn-subir-foto {
-  background-color: #2196f3;
+  background: #2196f3;
   color: white;
-  padding: 6px 14px;
-  border-radius: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-  transition: background-color 0.3s ease;
+  display: inline-block;
+  margin-top: 8px;
 }
-
 .btn-subir-foto:hover {
-  background-color: #1976d2;
+  background: #1976d2;
 }
 
-.perfil-info-lista {
-  list-style: none;
-  padding: 0;
-  margin-top: 20px;
+.perfil-info {
+  margin-top: 15px;
+  text-align: left;
+}
+.perfil-info p {
+  font-size: 16px;
+  margin: 6px 0;
 }
 
-.perfil-info-item {
+.perfil-estadisticas {
+  margin: 20px 0;
+}
+
+.stat-card {
   display: flex;
   align-items: center;
-  background-color: #f7f7f7;
-  margin-bottom: 10px;
-  padding: 12px 16px;
+  background: #f7f7f7;
+  padding: 12px;
   border-radius: 12px;
+  margin-bottom: 10px;
+}
+.stat-card img {
+  width: 28px;
+  height: 28px;
+  margin-right: 10px;
+}
+
+.btn-editar {
+  background: #008CBA;
+  color: white;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 15px;
+}
+.btn-editar:hover {
+  background: #007bb5;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-contenido {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90%;
+  text-align: center;
+}
+.modal-contenido input {
+  width: 100%;
+  margin: 8px 0;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+.modal-botones {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+.btn-guardar {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-cancelar {
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.valoraciones-titulo {
+  margin-top: 25px;
+  font-size: 20px;
   text-align: left;
 }
 
-.perfil-info-item img {
-  width: 30px;
-  height: 30px;
-  margin-right: 12px;
+.valoracion-card {
+  background: #f9f9f9;
+  border-left: 4px solid #2196f3;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  text-align: left;
+}
+.valoracion-card small {
+  color: #666;
+  font-size: 13px;
 }
 
-.perfil-info-item strong {
-  color: #333;
-  font-size: 16px;
-}
-
-.perfil-info-item p {
-  margin: 4px 0 0;
-  font-size: 15px;
-  color: #555;
+.sin-valoraciones {
+  color: #888;
+  font-style: italic;
+  text-align: left;
+  margin-top: 8px;
 }
 
 .footer-perfil {
   margin-top: 30px;
   font-size: 13px;
   color: #888;
-}
-
-.btnVolver {
-  position: relative;
-  top: 3px;
-  margin-left: 1px;
-  background: transparent;
-  border: none;
-  color: #2196f3;
-  font-size: 17px;
-  cursor: pointer;
-  text-decoration: underline;
 }
