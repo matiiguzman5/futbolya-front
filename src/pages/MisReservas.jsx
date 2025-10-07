@@ -201,7 +201,7 @@ const MisReservas = () => {
   };
 
   return (
-    <div className="home-wrapper">
+    <div className="home-wrapper page-shell">
       <div className="home-content">
         <div className="mis-reservas-container">
           <header className="mis-reservas-header">
@@ -257,3 +257,4 @@ const MisReservas = () => {
 };
 
 export default MisReservas;
+

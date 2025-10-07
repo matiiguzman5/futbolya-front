@@ -64,7 +64,7 @@ const Perfil = () => {
   };
 
   if (!jugador) {
-    return <div className="perfil-container">Cargando...</div>;
+    return <div className="perfil-container page-shell">Cargando...</div>;
   }
 
   const imagenPerfil = jugador.fotoPerfil
@@ -73,7 +73,7 @@ const Perfil = () => {
 
   return (
 
-    <div className="perfil-container">
+    <div className="perfil-container page-shell">
 
       <div className='btnVolver'>
         {/*<button onClick={() => window.location.href = '/Home'}>
@@ -128,3 +128,4 @@ const Perfil = () => {
 };
 
 export default Perfil;
+

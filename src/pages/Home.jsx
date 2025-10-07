@@ -65,7 +65,7 @@ const Home = () => {
   };
 
   return (
-    <div className="home-wrapper">
+    <div className="home-wrapper page-shell">
       <div className="home-content">
         {/* Buscador */}
         <div className="home-search">
@@ -141,3 +141,4 @@ const Home = () => {
 };
 
 export default Home;
+

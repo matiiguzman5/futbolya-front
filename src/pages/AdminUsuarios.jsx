@@ -205,7 +205,7 @@ const AdminUsuarios = () => {
   };
 
   return (
-    <div className="admin-usuarios-container">
+    <div className="admin-usuarios-container page-shell">
       <h2>Gestion de Usuarios</h2>
 
       <div className="form-usuario">
@@ -282,4 +282,5 @@ const AdminUsuarios = () => {
   );
 };
 
-export default AdminUsuarios;
+export default AdminUsuarios;
+

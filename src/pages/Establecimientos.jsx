@@ -29,7 +29,7 @@ const Establecimientos = () => {
     canchas.filter((cancha) => cancha.tipo === tipo).length;
 
   return (
-    <div className="home-wrapper">
+    <div className="home-wrapper page-shell">
       <div className="home-content">
         <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
           Establecimientos disponibles
@@ -83,3 +83,4 @@ const Establecimientos = () => {
 };
 
 export default Establecimientos;
+

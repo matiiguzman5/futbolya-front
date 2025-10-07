@@ -139,7 +139,7 @@ const normalizeTime = (raw, fallback = '08:00') => {
 };
 
   return (
-    <div className="mis-canchas-container">
+    <div className="mis-canchas-container page-shell">
       {/* <button className="volver-btn" onClick={() => window.location.href = '/home'}>
         ⬅ Volver al Home
       </button> */}
@@ -261,3 +261,4 @@ const normalizeTime = (raw, fallback = '08:00') => {
 };
 
 export default MisCanchas;
+

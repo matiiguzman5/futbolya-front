@@ -1,55 +1,54 @@
 .admin-usuarios-container {
-  max-width: 1000px;
-  margin: auto;
-  padding: 2rem;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 32px;
+  margin: 32px auto 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 
-h2 {
+.admin-usuarios-container h2 {
+  margin: 0;
   text-align: center;
-  margin-bottom: 1.5rem;
+  font-size: clamp(1.8rem, 3vw, 2.3rem);
+  color: var(--color-text);
 }
 
 .form-usuario {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
+  gap: 16px;
   justify-content: center;
-  margin-bottom: 1.5rem;
 }
 
 .form-usuario input,
 .form-usuario select {
-  padding: 0.6rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  flex: 1 1 200px;
+  flex: 1 1 220px;
 }
 
 .btn-crear,
 .btn-volver {
-  background-color: #28a745;
-  color: white;
+  background: linear-gradient(120deg, var(--color-primary), var(--color-secondary));
+  color: #ffffff;
   border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
+  padding: 12px 24px;
+  border-radius: var(--radius-round);
   cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.2s ease;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-volver {
-  background-color: #6c757d;
+  background: rgba(148, 163, 184, 0.25);
+  color: var(--color-text);
 }
 
-.btn-crear:hover {
-  background-color: #218838;
-}
-
+.btn-crear:hover,
 .btn-volver:hover {
-  background-color: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .tabla-responsive {
@@ -59,48 +58,60 @@ h2 {
 .tabla-usuarios {
   width: 100%;
   border-collapse: collapse;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
 }
 
 .tabla-usuarios th,
 .tabla-usuarios td {
-  border: 1px solid #dee2e6;
-  padding: 0.8rem;
+  padding: 0.85rem;
   text-align: center;
+  color: var(--color-text);
 }
 
 .tabla-usuarios th {
-  background-color: #f8f9fa;
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.tabla-usuarios tr:nth-child(even) {
+  background: var(--color-surface-alt);
 }
 
 .btn-editar,
 .btn-eliminar {
-  padding: 0.4rem 0.8rem;
+  padding: 0.5rem 1rem;
   margin: 0.2rem;
   border: none;
-  border-radius: 6px;
-  font-weight: bold;
+  border-radius: var(--radius-round);
+  font-weight: 600;
   cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
 .btn-editar {
-  background-color: #007bff;
-  color: white;
-}
-
-.btn-editar:hover {
-  background-color: #0056b3;
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--color-primary);
 }
 
 .btn-eliminar {
-  background-color: #dc3545;
-  color: white;
+  background: rgba(220, 53, 69, 0.18);
+  color: #dc3545;
 }
 
+.btn-editar:hover,
 .btn-eliminar:hover {
-  background-color: #bd2130;
+  transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {
+  .admin-usuarios-container {
+    padding: 24px;
+  }
+
   .form-usuario {
     flex-direction: column;
     align-items: center;
@@ -111,6 +122,5 @@ h2 {
   .btn-crear,
   .btn-volver {
     width: 100%;
-    max-width: 100%;
   }
 }
