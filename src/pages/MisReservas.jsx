@@ -27,6 +27,7 @@ const MisReservas = () => {
       const activas = data.filter(r => new Date(r.fecha) > ahora);
       const pasadas = data.filter(r => new Date(r.fecha) <= ahora);
 
+
       setReservasActivas(activas);
       setReservasPasadas(pasadas);
     } catch (error) {
