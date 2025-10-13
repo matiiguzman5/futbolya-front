@@ -87,8 +87,6 @@ const Home = () => {
             </div>
         )}
 
-
-
         <h3 style={{ textAlign: 'center' }}>Reservas Disponibles</h3>
 
         {/* Lista de reservas */}
