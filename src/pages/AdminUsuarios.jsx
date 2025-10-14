@@ -79,7 +79,7 @@ const AdminUsuarios = () => {
           <option value="establecimiento">Establecimiento</option>
           <option value="administrador">Administrador</option>
         </select>
-        <button className="btn-crear" style={{ maxWidth: '40%' }} onClick={editandoId ? guardarEdicion : crearUsuario}>
+        <button className="btn-volver" style={{ maxWidth: '40%' }} onClick={editandoId ? guardarEdicion : crearUsuario}>
           {editandoId ? 'Guardar' : 'Crear'}
         </button>
         <button className="btn-volver" style={{ maxWidth: '40%' }} onClick={() => navigate('/home')}>Volver</button>
