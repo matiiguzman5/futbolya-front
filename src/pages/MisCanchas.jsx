@@ -89,9 +89,8 @@ const normalizeTime = (raw, fallback = '08:00') => {
 
   const payload = {
     ...form,
-    estado: form.estado,
-    precioBaseHora: Number(form.precioBaseHora),
-    precioFinDeSemana: Number(form.precioFinDeSemana),
+    estado: "Disponible",
+    precio: Number(form.precio),
   };
 
   const res = await fetch(url, {
@@ -187,38 +186,12 @@ const normalizeTime = (raw, fallback = '08:00') => {
           </select>
         </div>
         <div className="form-group">
-          <label htmlFor="estado">Estado</label>
-          <select
-            id="estado"
-            name="estado"
-            value={form.estado}
-            onChange={handleChange}
-            required
-          >
-            <option value="">-- Selecciona un estado --</option>
-            <option value="Disponible">Disponible</option>
-            <option value="No disponible">No disponible</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label htmlFor="precioBaseHora">Precio base por hora</label>
+          <label htmlFor="precio">Precio de la cancha</label>
           <input
             type="number"
-            id="precioBaseHora"
-            name="precioBaseHora"
-            value={form.precioBaseHora}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="precioFinDeSemana">Precio fin de semana</label>
-          <input
-            type="number"
-            id="precioFinDeSemana"
-            name="precioFinDeSemana"
-            value={form.precioFinDeSemana}
+            id="precio"
+            name="precio"
+            value={form.precio}
             onChange={handleChange}
             required
           />
