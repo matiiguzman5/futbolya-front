@@ -208,7 +208,7 @@ const handleSubmit = async () => {
           >
             <h4>{c.nombre}</h4>
             <p>{c.tipo} - {c.superficie}</p>
-            <p>Precio: ${c.precioBaseHora}</p>
+            <p>Precio: ${c.precio}</p>
           </div>
         ))}
       </div>
