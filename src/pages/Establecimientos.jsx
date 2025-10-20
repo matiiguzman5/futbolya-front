@@ -84,10 +84,10 @@ const Establecimientos = () => {
                   alt="Establecimiento"
                 />
                 <div className="info">
-                  <strong>{e.nombre}</strong>
-                  <p>Correo: {e.correo}</p>
-                  <p>Teléfono: {e.telefono || "No informado"}</p>
-                  <p>Ubicación: {e.ubicacion || "No informada"}</p>
+                  <strong>{establecimiento.nombre}</strong>
+                  <p>Correo: {establecimiento.correo}</p>
+                  <p>Teléfono: {establecimiento.telefono || "No informado"}</p>
+                  <p>Ubicación: {establecimiento.ubicacion || "No informada"}</p>
 
 
                   <p>
@@ -110,7 +110,7 @@ const Establecimientos = () => {
                     onClick={() => handleOpenModal(establecimiento)}
                     aria-haspopup="dialog"
                   >
-                    Ver mas
+                    Ver más
                   </button>
                 </div>
               </div>
