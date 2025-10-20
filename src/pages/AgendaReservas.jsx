@@ -55,7 +55,7 @@ const AgendaReservas = () => {
   }, [canchaId]);
 
   return (
-    <div className="agenda-container">
+    <div className="agenda-container page-shell">
       {/* Botón volver */}
       <button onClick={() => navigate("/home")} className="btn-volver">
         ← Volver
@@ -168,3 +168,4 @@ const AgendaReservas = () => {
 };
 
 export default AgendaReservas;
+

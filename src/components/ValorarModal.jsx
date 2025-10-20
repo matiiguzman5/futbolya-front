@@ -15,15 +15,19 @@ const ValorarModal = ({ reservaId, onClose }) => {
         const res = await fetch(`https://localhost:7055/api/reservas/${reservaId}/jugadores`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+
         if (res.ok) {
           const data = await res.json();
           setJugadores(data.jugadores || []);
         }
-      } catch (err) {
-        console.error("Error al obtener jugadores:", err);
+      } catch (error) {
+        console.error("Error al obtener jugadores:", error);
       }
     };
-    if (reservaId) fetchJugadores();
+
+    if (reservaId) {
+      fetchJugadores();
+    }
   }, [reservaId, token]);
 
   const enviarValoracion = async () => {
@@ -48,18 +52,23 @@ const ValorarModal = ({ reservaId, onClose }) => {
       });
 
       if (res.ok) {
+<<<<<<< HEAD
         alert("✅ Valoración enviada correctamente");
+=======
+        alert("Valoracion enviada.");
+>>>>>>> fork/main
         onClose();
       } else {
         const error = await res.text();
-        alert("❌ Error: " + error);
+        alert(`Error: ${error}`);
       }
     } catch (error) {
-      alert("❌ No se pudo enviar la valoración");
+      alert("No se pudo enviar la valoracion.");
     }
   };
 
   return (
+<<<<<<< HEAD
     <AnimatePresence>
       <div className="modal-overlay" onClick={onClose}>
         <motion.div
@@ -103,6 +112,37 @@ const ValorarModal = ({ reservaId, onClose }) => {
               onChange={(e) => setComentario(e.target.value)}
               placeholder="Escribí tu comentario sobre el desempeño..."
             />
+=======
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h3>Valorar jugador</h3>
+
+        <label>Jugador</label>
+        <select value={evaluadoId} onChange={(event) => setEvaluadoId(event.target.value)}>
+          <option value="">-- Selecciona un jugador --</option>
+          {jugadores.map((jugador) => (
+            <option key={jugador.id} value={jugador.id}>
+              {jugador.nombre} {jugador.esCreador ? "(Creador)" : ""}
+            </option>
+          ))}
+        </select>
+
+        <label>Puntaje</label>
+        <select value={puntaje} onChange={(event) => setPuntaje(Number(event.target.value))}>
+          {[1, 2, 3, 4, 5].map((valor) => (
+            <option key={valor} value={valor}>
+              {valor}
+            </option>
+          ))}
+        </select>
+
+        <label>Comentario</label>
+        <textarea
+          value={comentario}
+          onChange={(event) => setComentario(event.target.value)}
+          placeholder="Escribe tu comentario..."
+        />
+>>>>>>> fork/main
 
             <div className="modal-actions">
               <button className="btn-enviar" onClick={enviarValoracion}>

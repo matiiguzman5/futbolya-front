@@ -1,14 +1,27 @@
 .perfil-container {
+<<<<<<< HEAD
   max-width: 700px;
   margin: 60px auto;
   padding: 20px;
   background: #fff;
   border-radius: 20px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+=======
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 36px 32px 48px;
+  margin: 40px auto 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+>>>>>>> fork/main
   text-align: center;
 }
 
 .perfil-nombre {
+<<<<<<< HEAD
   font-size: 26px;
   font-weight: bold;
   margin-bottom: 10px;
@@ -32,8 +45,41 @@
   font-size: 14px;
   display: inline-block;
   margin-top: 8px;
+=======
+  font-size: clamp(1.9rem, 3vw, 2.4rem);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 1px;
+}
+
+.perfil-foto {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid rgba(37, 99, 235, 0.35);
+  box-shadow: var(--shadow-sm);
+}
+
+.perfil-subir-foto {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-subir-foto {
+  background: linear-gradient(120deg, var(--color-primary), var(--color-secondary));
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: var(--radius-round);
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+>>>>>>> fork/main
 }
 .btn-subir-foto:hover {
+<<<<<<< HEAD
   background: #1976d2;
 }
 
@@ -44,6 +90,20 @@
 .perfil-info p {
   font-size: 16px;
   margin: 6px 0;
+=======
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.perfil-info-lista {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+>>>>>>> fork/main
 }
 
 .perfil-estadisticas {
@@ -53,6 +113,7 @@
 .stat-card {
   display: flex;
   align-items: center;
+<<<<<<< HEAD
   background: #f7f7f7;
   padding: 12px;
   border-radius: 12px;
@@ -149,10 +210,47 @@
   font-style: italic;
   text-align: left;
   margin-top: 8px;
+=======
+  gap: 14px;
+  background: var(--color-surface-alt);
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.perfil-info-item img {
+  width: 36px;
+  height: 36px;
+}
+
+.perfil-info-item strong {
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.perfil-info-item p {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+>>>>>>> fork/main
 }
 
 .footer-perfil {
-  margin-top: 30px;
-  font-size: 13px;
-  color: #888;
+  margin-top: 24px;
+  font-size: 0.8rem;
+  color: var(--color-muted);
 }
+<<<<<<< HEAD
+=======
+
+@media (max-width: 768px) {
+  .perfil-container {
+    padding: 28px 20px 36px;
+  }
+
+  .perfil-info-item {
+    align-items: flex-start;
+  }
+}
+>>>>>>> fork/main

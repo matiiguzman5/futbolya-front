@@ -89,6 +89,7 @@ const Perfil = () => {
     }
   };
 
+<<<<<<< HEAD
   // --- Guardar edición
 const handleGuardar = async () => {
   try {
@@ -99,6 +100,11 @@ const handleGuardar = async () => {
       posicion: form.posicion,
       contraseña: form.contraseña
     };
+=======
+  if (!jugador) {
+    return <div className="perfil-container page-shell">Cargando...</div>;
+  }
+>>>>>>> fork/main
 
     const res = await fetch(`https://localhost:7055/api/usuarios/editar-perfil`, {
       method: 'PUT',
@@ -130,9 +136,25 @@ const handleGuardar = async () => {
     : '/default-profile.png';
 
   return (
+<<<<<<< HEAD
     <div className="perfil-container">
       <h2 className="perfil-nombre">{usuario.nombre.toUpperCase()}</h2>
       <img src={imagenPerfil} alt="Foto perfil" className="perfil-foto" />
+=======
+
+    <div className="perfil-container page-shell">
+
+      <div className='btnVolver'>
+        {/*<button onClick={() => window.location.href = '/Home'}>
+          ⬅ Volver al Home
+        </button>*/}
+      </div>
+        
+
+      <h2 className="perfil-nombre">{jugador.nombre.toUpperCase()}</h2>
+
+      <img src={imagenPerfil} alt="Foto del jugador" className="perfil-foto" />
+>>>>>>> fork/main
 
       <div className="perfil-subir-foto">
         <label className="btn-subir-foto">
@@ -206,3 +228,4 @@ const handleGuardar = async () => {
 };
 
 export default Perfil;
+
