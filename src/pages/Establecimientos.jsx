@@ -89,6 +89,7 @@ const Establecimientos = () => {
                   <p>Teléfono: {establecimiento.telefono || "No informado"}</p>
                   <p>Ubicación: {establecimiento.ubicacion || "No informada"}</p>
 
+
                   <p>
                     Canchas:
                     <span style={{ marginLeft: '5px' }}>
@@ -109,7 +110,7 @@ const Establecimientos = () => {
                     onClick={() => handleOpenModal(establecimiento)}
                     aria-haspopup="dialog"
                   >
-                    Ver mas
+                    Ver más
                   </button>
                 </div>
               </div>
@@ -185,3 +186,4 @@ const Establecimientos = () => {
 };
 
 export default Establecimientos;
+

@@ -152,7 +152,7 @@
 }
 
 .footer-perfil {
-  margin-top: 30px;
-  font-size: 13px;
-  color: #888;
+  margin-top: 24px;
+  font-size: 0.8rem;
+  color: var(--color-muted);
 }

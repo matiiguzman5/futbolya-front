@@ -15,15 +15,19 @@ const ValorarModal = ({ reservaId, onClose }) => {
         const res = await fetch(`https://localhost:7055/api/reservas/${reservaId}/jugadores`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+
         if (res.ok) {
           const data = await res.json();
           setJugadores(data.jugadores || []);
         }
-      } catch (err) {
-        console.error("Error al obtener jugadores:", err);
+      } catch (error) {
+        console.error("Error al obtener jugadores:", error);
       }
     };
-    if (reservaId) fetchJugadores();
+
+    if (reservaId) {
+      fetchJugadores();
+    }
   }, [reservaId, token]);
 
   const enviarValoracion = async () => {
@@ -52,10 +56,10 @@ const ValorarModal = ({ reservaId, onClose }) => {
         onClose();
       } else {
         const error = await res.text();
-        alert("❌ Error: " + error);
+        alert(`Error: ${error}`);
       }
     } catch (error) {
-      alert("❌ No se pudo enviar la valoración");
+      alert("No se pudo enviar la valoracion.");
     }
   };
 

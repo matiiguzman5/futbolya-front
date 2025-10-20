@@ -12,39 +12,56 @@ import MisReservas from './pages/MisReservas';
 import AgendaReservas from './pages/AgendaReservas';
 import Establecimientos from './pages/Establecimientos';
 import ProteccionRuta from './ProteccionRuta';
-import Layout from './components/Layout';   // 👈 importante
+import Layout from './components/Layout';
 import './assets/styles/global.css';
 
 const App = () => (
   <Router>
     <Routes>
-      {/* Públicas */}
+      {/* Publicas */}
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Privadas con Layout */}
+      {/* Privadas con layout compartido */}
       <Route element={<ProteccionRuta><Layout /></ProteccionRuta>}>
         <Route path="/home" element={<Home />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/crear-reserva" element={<CrearReserva />} />
         <Route path="/mis-reservas" element={<MisReservas />} />
         <Route path="/establecimientos" element={<Establecimientos />} />
-        <Route path="/abm-canchas" element={
-          <ProteccionRuta rolesPermitidos={['establecimiento']}>
-            <MisCanchas />
-          </ProteccionRuta>
-        } />
-        <Route path="/agendaCanchas" element={
-          <ProteccionRuta rolesPermitidos={['establecimiento']}>
-            <AgendaReservas />
-          </ProteccionRuta>
-        } />
-        <Route path="/admin-usuarios" element={
-          <ProteccionRuta rolesPermitidos={['administrador']}>
-            <AdminUsuarios />
-          </ProteccionRuta>
-        } />
+        <Route
+          path="/abm-canchas"
+          element={(
+            <ProteccionRuta rolesPermitidos={['establecimiento']}>
+              <MisCanchas />
+            </ProteccionRuta>
+          )}
+        />
+        <Route
+          path="/establecimiento"
+          element={(
+            <ProteccionRuta rolesPermitidos={['establecimiento']}>
+              <MisCanchas />
+            </ProteccionRuta>
+          )}
+        />
+        <Route
+          path="/agendaCanchas"
+          element={(
+            <ProteccionRuta rolesPermitidos={['establecimiento']}>
+              <AgendaReservas />
+            </ProteccionRuta>
+          )}
+        />
+        <Route
+          path="/admin-usuarios"
+          element={(
+            <ProteccionRuta rolesPermitidos={['administrador']}>
+              <AdminUsuarios />
+            </ProteccionRuta>
+          )}
+        />
       </Route>
     </Routes>
   </Router>

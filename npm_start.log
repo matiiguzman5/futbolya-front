@@ -21,13 +21,3 @@ webpack compiled [1m[32msuccessfully[39m[22m
 Compiling...
 Compiled successfully!
 webpack compiled [1m[32msuccessfully[39m[22m
-Failed to compile.
-
-Module not found: Error: Can't resolve '../components/ShareReserva' in 'C:\Users\ldiaz\source\repos\FUTFRONT\futbolya-front\src\pages'
-[1m[31mERROR[39m[22m in [1m./src/pages/MisReservas.jsx[39m[22m [1m[32m9:0-54[39m[22m
-[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve '../components/ShareReserva' in 'C:\Users\ldiaz\source\repos\FUTFRONT\futbolya-front\src\pages'[39m[22m
-
-webpack compiled with [1m[31m1 error[39m[22m
-Compiling...
-Compiled successfully!
-webpack compiled [1m[32msuccessfully[39m[22m

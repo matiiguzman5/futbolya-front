@@ -1,88 +1,127 @@
 .mis-canchas-container {
-  max-width: 1000px;
-  margin: 30px auto;
-  padding: 30px;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 32px;
+  margin: 32px auto 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.mis-canchas-container h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 3vw, 2.2rem);
+  color: var(--color-text);
+  text-align: center;
+}
+
+.form-canchas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px 24px;
+}
+
+.form-canchas label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--color-text);
 }
 
 .form-canchas input,
 .form-canchas select,
 .form-canchas textarea {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
 }
 
-.form-canchas label{
-display: block; /* Para que el margin funcione bien */
-  margin-bottom: 8px;
-}
 .btns-form {
+  grid-column: 1 / -1;
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
 }
 
 .btn {
-  padding: 10px 20px;
+  padding: 12px 22px;
   border: none;
-  border-radius: 6px;
-  font-weight: bold;
+  border-radius: var(--radius-round);
+  font-weight: 600;
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-crear {
-  background-color: #007bff;
-  color: white;
-  width: 100%;
+  background: linear-gradient(120deg, var(--color-primary), var(--color-secondary));
+  color: #ffffff;
+  flex: 1 1 220px;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-crear:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-cancelar {
-  background-color: #6c757d;
-  color: white;
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--color-text);
 }
 
 .lista-canchas {
-  margin-top: 30px;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 16px;
 }
 
 .cancha-card {
   display: flex;
-  justify-content: space-between;
-  background-color: #f1f1f1;
-  padding: 15px;
-  border-radius: 8px;
-  align-items: center;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.cancha-card strong {
+  color: var(--color-text);
 }
 
 .acciones {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
 .btn-editar {
-  background-color: #17a2b8;
-  color: white;
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--color-primary);
 }
 
 .btn-eliminar {
-  background-color: #dc3545;
-  color: white;
+  background: rgba(220, 53, 69, 0.15);
+  color: #dc3545;
 }
 
-.volver-btn {
-  color: #333;
-  padding: 50px 16px;
-  margin-left: 60px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
+.btn-editar:hover,
+.btn-eliminar:hover,
+.btn-cancelar:hover {
+  transform: translateY(-1px);
 }
 
+@media (max-width: 768px) {
+  .mis-canchas-container {
+    padding: 24px;
+  }
+
+  .btns-form {
+    justify-content: stretch;
+  }
+
+  .btn {
+    flex: 1 1 100%;
+  }
+}
