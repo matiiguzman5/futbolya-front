@@ -52,11 +52,7 @@ const ValorarModal = ({ reservaId, onClose }) => {
       });
 
       if (res.ok) {
-<<<<<<< HEAD
         alert("✅ Valoración enviada correctamente");
-=======
-        alert("Valoracion enviada.");
->>>>>>> fork/main
         onClose();
       } else {
         const error = await res.text();
@@ -68,7 +64,6 @@ const ValorarModal = ({ reservaId, onClose }) => {
   };
 
   return (
-<<<<<<< HEAD
     <AnimatePresence>
       <div className="modal-overlay" onClick={onClose}>
         <motion.div
@@ -112,37 +107,6 @@ const ValorarModal = ({ reservaId, onClose }) => {
               onChange={(e) => setComentario(e.target.value)}
               placeholder="Escribí tu comentario sobre el desempeño..."
             />
-=======
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>Valorar jugador</h3>
-
-        <label>Jugador</label>
-        <select value={evaluadoId} onChange={(event) => setEvaluadoId(event.target.value)}>
-          <option value="">-- Selecciona un jugador --</option>
-          {jugadores.map((jugador) => (
-            <option key={jugador.id} value={jugador.id}>
-              {jugador.nombre} {jugador.esCreador ? "(Creador)" : ""}
-            </option>
-          ))}
-        </select>
-
-        <label>Puntaje</label>
-        <select value={puntaje} onChange={(event) => setPuntaje(Number(event.target.value))}>
-          {[1, 2, 3, 4, 5].map((valor) => (
-            <option key={valor} value={valor}>
-              {valor}
-            </option>
-          ))}
-        </select>
-
-        <label>Comentario</label>
-        <textarea
-          value={comentario}
-          onChange={(event) => setComentario(event.target.value)}
-          placeholder="Escribe tu comentario..."
-        />
->>>>>>> fork/main
 
             <div className="modal-actions">
               <button className="btn-enviar" onClick={enviarValoracion}>

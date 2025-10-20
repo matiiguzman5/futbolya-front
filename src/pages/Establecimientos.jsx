@@ -84,17 +84,11 @@ const Establecimientos = () => {
                   alt="Establecimiento"
                 />
                 <div className="info">
-<<<<<<< HEAD
                   <strong>{e.nombre}</strong>
                   <p>Correo: {e.correo}</p>
                   <p>Teléfono: {e.telefono || "No informado"}</p>
                   <p>Ubicación: {e.ubicacion || "No informada"}</p>
 
-=======
-                  <strong>{establecimiento.nombre}</strong>
-                  <p>Correo: {establecimiento.correo}</p>
-                  <p>Telefono: {establecimiento.telefono || 'No informado'}</p>
->>>>>>> fork/main
 
                   <p>
                     Canchas:

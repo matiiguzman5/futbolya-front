@@ -351,7 +351,6 @@ const CrearReserva = () => {
     <div>
       <h3>Elige la cancha</h3>
       <div className="cards">
-<<<<<<< HEAD
         {canchas.map((c) => (
           <div
             key={c.id}
@@ -366,22 +365,6 @@ const CrearReserva = () => {
             <p>Precio: ${c.precio}</p>
           </div>
         ))}
-=======
-        {canchas.map((c) => {
-          const precioCalculado = obtenerPrecioCancha(c, fechaHora);
-          return (
-            <div
-              key={c.id}
-              className={`card ${parseInt(canchaId, 10) === c.id ? 'selected' : ''}`}
-              onClick={() => setCanchaId(String(c.id))}
-            >
-              <h4>{c.nombre}</h4>
-              <p>Tipo: {c.tipo}</p>
-              <p>Precio: {formatearPrecio(precioCalculado)}</p>
-            </div>
-          );
-        })}
->>>>>>> fork/main
       </div>
       <div className="nav-buttons">
         <button className="btn-back" onClick={() => setStep(2)}>

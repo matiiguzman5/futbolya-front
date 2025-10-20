@@ -79,7 +79,6 @@ const Home = () => {
           </div>
         </div>
 
-<<<<<<< HEAD
         {/* Botón Crear Reserva (solo si el usuario NO es establecimiento) */}
           {localStorage.getItem('rol') !== 'establecimiento' && (
             <div className="crear-reserva-container">
@@ -97,14 +96,6 @@ const Home = () => {
               </Link>
             </div>
         )}
-=======
-        {/* Boton Crear Reserva */}
-        <div className="crear-reserva-container">
-          <Link to="/crear-reserva" className="btn-crear-reserva">
-            Crear Reserva
-          </Link>
-        </div>
->>>>>>> fork/main
 
         <h3 style={{ textAlign: 'center' }}>Reservas Disponibles</h3>
 

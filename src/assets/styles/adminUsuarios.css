@@ -1,41 +1,24 @@
 .admin-usuarios-container {
-<<<<<<< HEAD
   max-width: 1000px;
   margin: auto;
   padding: 2rem;
   background-color: #ffffff;
   border-radius: 20px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-=======
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: 32px;
-  margin: 32px auto 56px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
->>>>>>> fork/main
 }
 
 .admin-usuarios-container h2 {
   margin: 0;
   text-align: center;
-<<<<<<< HEAD
   margin-bottom: 2rem;
   font-size: 1.8rem;
   font-weight: 600;
   color: #333;
-=======
-  font-size: clamp(1.8rem, 3vw, 2.3rem);
-  color: var(--color-text);
->>>>>>> fork/main
 }
 
 .form-usuario {
   display: flex;
   flex-wrap: wrap;
-<<<<<<< HEAD
   gap: 1rem;
   justify-content: center;
   margin-bottom: 2rem;
@@ -60,15 +43,6 @@
   border: 1px solid #ccc;
   border-radius: 10px;
   font-size: 0.95rem;
-=======
-  gap: 16px;
-  justify-content: center;
-}
-
-.form-usuario input,
-.form-usuario select {
-  flex: 1 1 220px;
->>>>>>> fork/main
 }
 
 .botones-container {
@@ -81,7 +55,6 @@
 
 
 .btn-volver {
-<<<<<<< HEAD
   width: 250px;
   padding: 1rem;
   border: none;
@@ -104,31 +77,11 @@
 
 .btn-crear:hover {
   background: linear-gradient(to right, #0060cc, #004bb5);
-=======
-  background: linear-gradient(120deg, var(--color-primary), var(--color-secondary));
-  color: #ffffff;
-  border: none;
-  padding: 12px 24px;
-  border-radius: var(--radius-round);
-  cursor: pointer;
-  font-weight: 600;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.btn-volver {
-  background: rgba(148, 163, 184, 0.25);
-  color: var(--color-text);
->>>>>>> fork/main
 }
 
 .btn-crear:hover,
 .btn-volver:hover {
-<<<<<<< HEAD
   background: linear-gradient(to right, #434fd1, #2d35a5);
-=======
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
->>>>>>> fork/main
 }
 
 .tabla-responsive {
@@ -138,20 +91,12 @@
 .tabla-usuarios {
   width: 100%;
   border-collapse: collapse;
-<<<<<<< HEAD
   border-radius: 12px;
   overflow: hidden;
-=======
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
->>>>>>> fork/main
 }
 
 .tabla-usuarios th,
 .tabla-usuarios td {
-<<<<<<< HEAD
   padding: 1rem;
   text-align: center;
   font-size: 0.95rem;
@@ -166,21 +111,6 @@
 .tabla-usuarios td {
   background-color: #ffffff;
   border-bottom: 1px solid #e5e7eb;
-=======
-  padding: 0.85rem;
-  text-align: center;
-  color: var(--color-text);
-}
-
-.tabla-usuarios th {
-  background: rgba(37, 99, 235, 0.12);
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
-.tabla-usuarios tr:nth-child(even) {
-  background: var(--color-surface-alt);
->>>>>>> fork/main
 }
 
 .btn-editar,
@@ -188,7 +118,6 @@
   padding: 0.5rem 1rem;
   margin: 0.2rem;
   border: none;
-<<<<<<< HEAD
   border-radius: 10px;
   font-weight: 600;
   font-size: 0.9rem;
@@ -208,31 +137,11 @@
 .btn-eliminar {
   background-color: #f44336;
   color: white;
-=======
-  border-radius: var(--radius-round);
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.btn-editar {
-  background: rgba(37, 99, 235, 0.15);
-  color: var(--color-primary);
-}
-
-.btn-eliminar {
-  background: rgba(220, 53, 69, 0.18);
-  color: #dc3545;
->>>>>>> fork/main
 }
 
 .btn-editar:hover,
 .btn-eliminar:hover {
-<<<<<<< HEAD
   background-color: #d32f2f;
-=======
-  transform: translateY(-1px);
->>>>>>> fork/main
 }
 
 @media (max-width: 768px) {
