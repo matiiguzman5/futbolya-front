@@ -151,3 +151,211 @@
     height: 150px;
   }
 }
+
+.est-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+}
+
+.est-modal {
+  position: relative;
+  width: min(620px, 100%);
+  max-height: min(88vh, 700px);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 28px 60px rgba(15, 23, 42, 0.25);
+  padding: 28px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+  z-index: 0;
+  animation: est-modal-entrance 200ms ease-out;
+}
+
+.est-modal::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(150deg, rgba(37, 99, 235, 0.14), rgba(59, 130, 246, 0.08));
+  z-index: -1;
+}
+
+.est-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.est-modal__header h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.15rem;
+}
+
+.est-modal__close {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+  border-radius: var(--radius-round);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.est-modal__close:hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.16);
+}
+
+.est-modal__description {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+.est-modal__contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.est-modal__contact span {
+  padding: 6px 12px;
+  border-radius: var(--radius-round);
+  background: rgba(37, 99, 235, 0.12);
+}
+
+.est-modal__canchas {
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.est-modal__canchas h4 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.est-modal__cancha-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.est-modal__cancha {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 16px 26px rgba(15, 23, 42, 0.12);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.est-modal__cancha-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.est-modal__cancha-name {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.est-modal__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: var(--radius-round);
+  background: rgba(37, 99, 235, 0.18);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.est-modal__cancha-description {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.est-modal__cancha-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.est-modal__empty {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+@keyframes est-modal-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 600px) {
+  .est-modal-overlay {
+    padding: 16px;
+  }
+
+  .est-modal {
+    padding: 22px 20px 20px;
+    max-height: 82vh;
+  }
+
+  .est-modal__contact span {
+    width: 100%;
+    text-align: center;
+  }
+
+  .est-modal__cancha {
+    padding: 12px 14px;
+  }
+}
+
+
+
+
+

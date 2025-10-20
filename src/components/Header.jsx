@@ -15,6 +15,20 @@ const Header = () => {
   const esAdmin = usuario?.rol === "administrador";
   const esEstablecimiento = usuario?.rol === "establecimiento";
 
+  const nombreUsuario = usuario?.nombre?.trim() || "Usuario";
+  const rolUsuario = usuario?.rol?.trim() || "Rol";
+  const userInitials = (
+    nombreUsuario
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase()
+  ) || "U";
+  const rolCapitalizado =
+    rolUsuario.charAt(0).toUpperCase() + rolUsuario.slice(1);
+
   const cerrarSesion = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("usuario");
@@ -29,9 +43,15 @@ const Header = () => {
             <img src="/IconoFYa.jpeg" alt="Logo" className="logo" />
             <span className="brand-text">FutbolYa</span>
           </Link>
-          <div className="user-info">
-            <span className="user-nombre">{usuario?.nombre || "Usuario"}</span>
-            <span className="user-rol">{usuario?.rol || "Rol"}</span>
+
+          <div className="user-card">
+            <div className="user-avatar" aria-hidden="true">
+              {userInitials}
+            </div>
+            <div className="user-meta">
+              <span className="user-nombre">{nombreUsuario}</span>
+              <span className="user-rol">{rolCapitalizado}</span>
+            </div>
           </div>
         </div>
 
@@ -39,7 +59,9 @@ const Header = () => {
           <Link to="/home">Inicio</Link>
           <Link to="/establecimientos">Establecimientos</Link>
           {usuario?.rol !== "establecimiento" && <Link to="/perfil">Perfil</Link>}
-          {usuario?.rol !== "establecimiento" && <Link to="/mis-reservas">Mis Reservas</Link>}
+          {usuario?.rol !== "establecimiento" && (
+            <Link to="/mis-reservas">Mis Reservas</Link>
+          )}
           {esEstablecimiento && (
             <>
               <Link to="/abm-canchas">Administrar Canchas</Link>

@@ -162,6 +162,61 @@ const CrearReserva = () => {
   const isPaymentValid = () =>
     isCardDataValid() && isSecurityValid() && isReceiptEmailValid();
 
+  const normalizarNumero = (valor) => {
+    if (valor === null || valor === undefined) {
+      return null;
+    }
+    const numero = typeof valor === 'number' ? valor : Number(valor);
+    return Number.isFinite(numero) ? numero : null;
+  };
+
+  const obtenerPrecioCancha = (cancha, fechaSeleccionada) => {
+    if (!cancha) {
+      return null;
+    }
+
+    const precioDirecto = normalizarNumero(
+      typeof cancha.precioPorHora !== 'undefined' ? cancha.precioPorHora : cancha.precio
+    );
+    if (precioDirecto !== null) {
+      return precioDirecto;
+    }
+
+    const precioBase = normalizarNumero(cancha.precioBaseHora);
+    const precioFinDeSemana = normalizarNumero(cancha.precioFinDeSemana);
+
+    if (!fechaSeleccionada) {
+      return precioBase !== null ? precioBase : precioFinDeSemana;
+    }
+
+    const fecha = new Date(fechaSeleccionada);
+    const esFechaValida = !Number.isNaN(fecha.getTime());
+    const esFinDeSemana = esFechaValida ? fecha.getDay() === 0 || fecha.getDay() === 6 : false;
+
+    if (esFinDeSemana && precioFinDeSemana !== null) {
+      return precioFinDeSemana;
+    }
+
+    if (precioBase !== null) {
+      return precioBase;
+    }
+
+    return precioFinDeSemana;
+  };
+
+  const formatearPrecio = (valor) => {
+    if (valor === null || valor === undefined) {
+      return 'No disponible';
+    }
+
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) {
+      return 'No disponible';
+    }
+
+    return `$${numero.toLocaleString('es-ES')}`;
+  };
+
   const handleSubmit = async () => {
     if (!isPaymentValid()) {
       alert('Completa los datos de pago para confirmar la reserva.');
@@ -218,7 +273,7 @@ const CrearReserva = () => {
     }
   };
 
-  const PasoEstablecimiento = () => (
+  const renderPasoEstablecimiento = () => (
     <div>
       <h3>Elige un establecimiento</h3>
       <div className="cards">
@@ -241,7 +296,7 @@ const CrearReserva = () => {
     </div>
   );
 
-  const PasoFechaHora = () => (
+  const renderPasoFechaHora = () => (
     <div>
       <h3>Elige la fecha y hora</h3>
       <div className="nav-buttons">
@@ -291,21 +346,24 @@ const CrearReserva = () => {
     </div>
   );
 
-  const PasoCancha = () => (
+  const renderPasoCancha = () => (
     <div>
       <h3>Elige la cancha</h3>
       <div className="cards">
-        {canchas.map((c) => (
-          <div
-            key={c.id}
-            className={`card ${parseInt(canchaId, 10) === c.id ? 'selected' : ''}`}
-            onClick={() => setCanchaId(String(c.id))}
-          >
-            <h4>{c.nombre}</h4>
-            <p>Tipo: {c.tipo}</p>
-            <p>Precio: ${c.precioPorHora}</p>
-          </div>
-        ))}
+        {canchas.map((c) => {
+          const precioCalculado = obtenerPrecioCancha(c, fechaHora);
+          return (
+            <div
+              key={c.id}
+              className={`card ${parseInt(canchaId, 10) === c.id ? 'selected' : ''}`}
+              onClick={() => setCanchaId(String(c.id))}
+            >
+              <h4>{c.nombre}</h4>
+              <p>Tipo: {c.tipo}</p>
+              <p>Precio: {formatearPrecio(precioCalculado)}</p>
+            </div>
+          );
+        })}
       </div>
       <div className="nav-buttons">
         <button className="btn-back" onClick={() => setStep(2)}>
@@ -322,11 +380,12 @@ const CrearReserva = () => {
     </div>
   );
 
-  const PasoConfirmar = () => {
+  const renderPasoConfirmar = () => {
     const establecimientoSeleccionado = establecimientos.find(
       (e) => e.id === parseInt(establecimientoId, 10)
     );
     const canchaSeleccionada = canchas.find((c) => c.id === parseInt(canchaId, 10));
+    const precioReserva = obtenerPrecioCancha(canchaSeleccionada, fechaHora);
     const cardDigits = cardNumber.replace(/\s/g, '');
     const maskedCard = cardDigits ? `**** **** **** ${cardDigits.slice(-4)}` : 'Completa la tarjeta';
 
@@ -342,6 +401,9 @@ const CrearReserva = () => {
           </p>
           <p>
             <b>Cancha:</b> {canchaSeleccionada?.nombre}
+          </p>
+          <p>
+            <b>Precio:</b> {formatearPrecio(precioReserva)}
           </p>
         </div>
 
@@ -457,10 +519,10 @@ const CrearReserva = () => {
   return (
     <div className="crear-reserva-container page-shell">
       <h2>Crear Nueva Reserva</h2>
-      {step === 1 && <PasoEstablecimiento />}
-      {step === 2 && <PasoFechaHora />}
-      {step === 3 && <PasoCancha />}
-      {step === 4 && <PasoConfirmar />}
+      {step === 1 && renderPasoEstablecimiento()}
+      {step === 2 && renderPasoFechaHora()}
+      {step === 3 && renderPasoCancha()}
+      {step === 4 && renderPasoConfirmar()}
       {/* <button className="btn-volver" onClick={() => navigate('/home')}>
         {'<- Volver al Home'}
       </button> */}
