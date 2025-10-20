@@ -87,12 +87,11 @@ const normalizeTime = (raw, fallback = '08:00') => {
     ? `https://localhost:7055/api/Canchas/${editandoId}`
     : 'https://localhost:7055/api/Canchas';
 
-  const payload = {
-    ...form,
-    estado: form.estado,
-    precioBaseHora: Number(form.precioBaseHora),
-    precioFinDeSemana: Number(form.precioFinDeSemana),
-  };
+ const payload = {
+  ...form,
+  estado: editandoId ? form.estado : "Disponible", // 👈 fuerza 'Disponible' solo en creación
+  precio: Number(form.precio),
+};
 
   const res = await fetch(url, {
     method,
@@ -186,39 +185,29 @@ const normalizeTime = (raw, fallback = '08:00') => {
             <option value="Cesped">Cesped</option>
           </select>
         </div>
+        {editandoId && (
+          <div className="form-group">
+            <label htmlFor="estado">Estado</label>
+            <select
+              id="estado"
+              name="estado"
+              value={form.estado}
+              onChange={handleChange}
+              required
+            >
+              <option value="">-- Selecciona un estado --</option>
+              <option value="Disponible">Disponible</option>
+              <option value="No disponible">No disponible</option>
+            </select>
+          </div>
+        )}
         <div className="form-group">
-          <label htmlFor="estado">Estado</label>
-          <select
-            id="estado"
-            name="estado"
-            value={form.estado}
-            onChange={handleChange}
-            required
-          >
-            <option value="">-- Selecciona un estado --</option>
-            <option value="Disponible">Disponible</option>
-            <option value="No disponible">No disponible</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label htmlFor="precioBaseHora">Precio base por hora</label>
+          <label htmlFor="precio">Precio de la cancha</label>
           <input
             type="number"
-            id="precioBaseHora"
-            name="precioBaseHora"
-            value={form.precioBaseHora}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="precioFinDeSemana">Precio fin de semana</label>
-          <input
-            type="number"
-            id="precioFinDeSemana"
-            name="precioFinDeSemana"
-            value={form.precioFinDeSemana}
+            id="precio"
+            name="precio"
+            value={form.precio}
             onChange={handleChange}
             required
           />
@@ -246,8 +235,8 @@ const normalizeTime = (raw, fallback = '08:00') => {
           <div key={c.id} className="cancha-card">
             <div>
               <strong>{c.nombre}</strong> | Tipo: {c.tipo} | Superficie: {c.superficie}<br />
-              Estado: {c.estado}
-              Precio base: ${c.precioBaseHora} | Fin de semana: ${c.precioFinDeSemana}
+              Estado: {c.estado} | 
+              Precio: ${c.precio}
             </div>
             <div className="acciones">
               <button className="btn btn-editar" onClick={() => handleEditar(c)}>Editar</button>
