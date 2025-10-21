@@ -1,4 +1,4 @@
-﻿.crear-reserva-container {
+.crear-reserva-container {
 
 
 
@@ -1164,3 +1164,30 @@
 
 
 
+
+.crear-reserva-establecimientos .reserva-card,
+.crear-reserva-canchas .reserva-card {
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.crear-reserva-establecimientos .reserva-card:hover,
+.crear-reserva-establecimientos .reserva-card:focus-visible,
+.crear-reserva-canchas .reserva-card:hover,
+.crear-reserva-canchas .reserva-card:focus-visible {
+  border-color: rgba(37, 99, 235, 0.45);
+  box-shadow: var(--shadow-md);
+}
+
+.reserva-card--selected {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.crear-reserva-canchas .reserva-card .info {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

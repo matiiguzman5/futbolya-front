@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/styles/crearReserva.css';
+import '../assets/styles/home.css';
 
 const CrearReserva = () => {
   const [step, setStep] = useState(1);
@@ -20,7 +21,7 @@ const CrearReserva = () => {
   const token = localStorage.getItem('token');
   const usuario = JSON.parse(localStorage.getItem('usuario'));
 
-  // 🔹 Traer establecimientos
+  // Traer establecimientos
   useEffect(() => {
     const fetchEstablecimientos = async () => {
       try {
@@ -34,7 +35,7 @@ const CrearReserva = () => {
     fetchEstablecimientos();
   }, []);
 
-  // 🔹 Generar próximos 5 días
+  // Generar proximos 5 dias
   useEffect(() => {
     const hoy = new Date();
     const opciones = [];
@@ -42,14 +43,14 @@ const CrearReserva = () => {
       const d = new Date(hoy);
       d.setDate(hoy.getDate() + i);
       opciones.push({
-        fecha: d.toISOString().split("T")[0], // YYYY-MM-DD
-        label: i === 0 ? "Hoy" : i === 1 ? "Mañana" : d.toLocaleDateString('es-ES', { weekday: 'long' })
+        fecha: d.toISOString().split('T')[0],
+        label: i === 0 ? 'Hoy' : i === 1 ? 'Manana' : d.toLocaleDateString('es-ES', { weekday: 'long' }),
       });
     }
     setDias(opciones);
   }, []);
 
-  // 🔹 Generar horas (09:00 a 23:00)
+  // Generar horas (09:00 a 23:00)
   const generarHoras = () => {
     const horas = [];
     for (let h = 9; h <= 23; h++) {
@@ -58,96 +59,126 @@ const CrearReserva = () => {
     return horas;
   };
 
-  // 🔹 Traer canchas disponibles
-  const fetchCanchasDisponibles = async (id, fechaHora) => {
+  // Traer canchas disponibles
+  const fetchCanchasDisponibles = async (id, fechaHoraSeleccionada) => {
     try {
       const res = await fetch(
-        `https://localhost:7055/api/Canchas/de/${id}/disponibles?fechaHora=${fechaHora}`
+        `https://localhost:7055/api/Canchas/de/${id}/disponibles?fechaHora=${fechaHoraSeleccionada}`
       );
       const data = await res.json();
-      setCanchas(data || []); // solo las libres entran acá
+      setCanchas(data || []); // Solo se muestran las canchas libres
     } catch (error) {
       console.error('Error al obtener canchas disponibles:', error);
     }
   };
 
-
-  // 🔹 Confirmar reserva
-const handleSubmit = async () => {
-  // Convertir la fecha/hora seleccionada a objeto Date
-  const fechaSeleccionada = new Date(`${diaSeleccionado}T${horaSeleccionada}:00`);
-
-  const payload = {
-    canchaId: parseInt(canchaId),
-    fechaHora: fechaSeleccionada.toISOString(),
-    observaciones,
-    clienteNombre: usuario.nombre,
-    clienteTelefono: usuario.telefono || 'No informado',
-    clienteEmail: usuario.Correo,
-    estadoPago: 'pendiente',
-    esFrecuente: false
-  };
-
-  try {
-    const res = await fetch('https://localhost:7055/api/Reservas', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) {
-      const err = await res.text();
-      alert(`Error: ${err}`);
-      return;
+  const formatPrecio = (valor) => {
+    if (valor === undefined || valor === null) {
+      return 'No informado';
     }
 
-    alert('Reserva creada correctamente');
-    navigate('/home');
-  } catch (error) {
-    console.error('Error al crear reserva:', error);
-  }
-};
+    const numero = Number(valor);
+    if (Number.isNaN(numero)) {
+      return valor;
+    }
 
+    return `$${numero.toLocaleString('es-AR')}`;
+  };
+
+
+  // Confirmar reserva
+  const handleSubmit = async () => {
+    const fechaSeleccionada = new Date(`${diaSeleccionado}T${horaSeleccionada}:00`);
+
+    const payload = {
+      canchaId: parseInt(canchaId, 10),
+      fechaHora: fechaSeleccionada.toISOString(),
+      observaciones,
+      clienteNombre: usuario.nombre,
+      clienteTelefono: usuario.telefono || 'No informado',
+      clienteEmail: usuario.Correo,
+      estadoPago: 'pendiente',
+      esFrecuente: false,
+    };
+
+    try {
+      const res = await fetch('https://localhost:7055/api/Reservas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        alert(`Error: ${err}`);
+        return;
+      }
+
+      alert('Reserva creada correctamente');
+      navigate('/home');
+    } catch (error) {
+      console.error('Error al crear reserva:', error);
+    }
+  };
 
   // Paso 1: Establecimiento
   const PasoEstablecimiento = () => (
     <div>
-      <h3>Elegí un establecimiento</h3>
-      <div className="cards">
-        {establecimientos.map((est) => (
-          <div
-            key={est.id}
-            className="card"
-            onClick={() => {
-              setEstablecimientoId(est.id);
-              setStep(2);
-            }}
-          >
-            <img src={est.fotoPerfil || '/default-club.jpg'} alt="foto" />
-            <h4>{est.nombre}</h4>
-            <p>{est.correo}</p>
-            <p>Ubicación: {est.ubicacion || "No informada"}</p>
-            <p>Canchas: {est.canchas.length}</p>
-          </div>
-        ))}
-      </div>
+      <h3>Elige un establecimiento</h3>
+      {establecimientos.length === 0 ? (
+        <p style={{ textAlign: 'center', marginTop: '20px' }}>
+          No hay establecimientos disponibles.
+        </p>
+      ) : (
+        <div className="partidos-grid crear-reserva-establecimientos">
+          {establecimientos.map((est) => (
+            <div
+              key={est.id}
+              className="reserva-card"
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setEstablecimientoId(est.id);
+                setStep(2);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setEstablecimientoId(est.id);
+                  setStep(2);
+                }
+              }}
+            >
+              <img
+                src={est.fotoPerfil || '/default-club.jpg'}
+                alt={`Foto de ${est.nombre}`}
+              />
+              <div className="info">
+                <strong>{est.nombre}</strong>
+                <p>Correo: {est.correo}</p>
+                <p>Ubicacion: {est.ubicacion || 'No informada'}</p>
+                <p>Canchas registradas: {Array.isArray(est.canchas) ? est.canchas.length : 0}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
-
-  // Paso 2: Fecha y hora
+// Paso 2: Fecha y hora
   const PasoFechaHora = () => (
     <div>
-      <h3>Elegí la fecha y hora</h3>
+      <h3>Elige la fecha y hora</h3>
 
-      {/* Botones de días */}
+      {/* Botones de dias */}
       <div className="nav-buttons">
         {dias.map((d) => (
           <button
             key={d.fecha}
-            className={`btn-next ${diaSeleccionado === d.fecha ? "active" : ""}`}
+            className={`btn-next ${diaSeleccionado === d.fecha ? 'active' : ''}`}
             onClick={() => {
               setDiaSeleccionado(d.fecha);
               setHoraSeleccionada('');
@@ -164,7 +195,7 @@ const handleSubmit = async () => {
           {generarHoras().map((hora) => (
             <button
               key={hora}
-              className={`hora-btn ${horaSeleccionada === hora ? "active" : ""}`}
+              className={`hora-btn ${horaSeleccionada === hora ? 'active' : ''}`}
               onClick={() => setHoraSeleccionada(hora)}
             >
               {hora}
@@ -173,20 +204,20 @@ const handleSubmit = async () => {
         </div>
       )}
 
-      {/* Navegación */}
+      {/* Navegacion */}
       <div className="nav-buttons">
-        <button className="btn-back" onClick={() => setStep(1)}>← Atrás</button>
+        <button className="btn-back" onClick={() => setStep(1)}>Atras</button>
         <button
           className="btn-next"
           onClick={() => {
-            const fechaHora = `${diaSeleccionado}T${horaSeleccionada}`;
-            fetchCanchasDisponibles(establecimientoId, fechaHora); // 👈 acá pedís solo libres
-            setFechaHora(fechaHora);
+            const fechaSeleccionada = `${diaSeleccionado}T${horaSeleccionada}`;
+            fetchCanchasDisponibles(establecimientoId, fechaSeleccionada); // Pedimos solo canchas disponibles
+            setFechaHora(fechaSeleccionada);
             setStep(3);
           }}
           disabled={!diaSeleccionado || !horaSeleccionada}
         >
-          Siguiente →
+          Siguiente
         </button>
       </div>
     </div>
@@ -195,58 +226,83 @@ const handleSubmit = async () => {
   // Paso 3: Cancha
   const PasoCancha = () => (
     <div>
-      <h3>Elegí la cancha</h3>
-      <div className="cards">
-        {canchas.map((c) => (
-          <div
-            key={c.id}
-            className="card"
-            onClick={() => {
-              setCanchaId(c.id);
-              setStep(4);
-            }}
-          >
-            <h4>{c.nombre}</h4>
-            <p>{c.tipo} - {c.superficie}</p>
-            <p>Precio: ${c.precio}</p>
-          </div>
-        ))}
-      </div>
+      <h3>Elige la cancha</h3>
+      {canchas.length === 0 ? (
+        <p style={{ textAlign: 'center', marginTop: '20px' }}>
+          No hay canchas disponibles para el horario seleccionado.
+        </p>
+      ) : (
+        <div className="partidos-grid crear-reserva-canchas">
+          {canchas.map((c) => {
+            const esSeleccionada = String(canchaId) === String(c.id);
+
+            return (
+              <div
+                key={c.id}
+                className={`reserva-card ${esSeleccionada ? 'reserva-card--selected' : ''}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  setCanchaId(c.id);
+                  setStep(4);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setCanchaId(c.id);
+                    setStep(4);
+                  }
+                }}
+              >
+                <div className="info">
+                  <strong>{c.nombre}</strong>
+                  <p>Tipo: {c.tipo || 'No informado'}</p>
+                  <p>Superficie: {c.superficie || 'No informada'}</p>
+                  <p>Precio: {formatPrecio(c.precio)}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
       <div className="nav-buttons">
-        <button className="btn-back" onClick={() => setStep(2)}>← Atrás</button>
+        <button className="btn-back" onClick={() => setStep(2)}>Atras</button>
       </div>
     </div>
   );
-
-  // Paso 4: Confirmar
+// Paso 4: Confirmar
   const PasoConfirmar = () => (
     <div>
       <h3>Confirmar reserva</h3>
-      <p><b>Establecimiento:</b> {establecimientos.find(e => e.id === parseInt(establecimientoId))?.nombre}</p>
+      <p><b>Establecimiento:</b> {establecimientos.find((e) => e.id === parseInt(establecimientoId, 10))?.nombre}</p>
       <p><b>Fecha y hora:</b> {fechaHora}</p>
-      <p><b>Cancha:</b> {canchas.find(c => c.id === parseInt(canchaId))?.nombre}</p>
+      <p><b>Cancha:</b> {canchas.find((c) => c.id === parseInt(canchaId, 10))?.nombre}</p>
       <textarea
         placeholder="Observaciones"
         value={observaciones}
-        onChange={(e) => setObservaciones(e.target.value)}
+        onChange={(event) => setObservaciones(event.target.value)}
       />
       <div className="nav-buttons">
-        <button className="btn-back" onClick={() => setStep(3)}>← Atrás</button>
-        <button className="btn-confirm" onClick={handleSubmit}>Confirmar ✅</button>
+        <button className="btn-back" onClick={() => setStep(3)}>Atras</button>
+        <button className="btn-confirm" onClick={handleSubmit}>Confirmar</button>
       </div>
     </div>
   );
 
   return (
-    <div className="crear-reserva-container">
-      <h2>Crear Nueva Reserva</h2>
-      {step === 1 && <PasoEstablecimiento />}
-      {step === 2 && <PasoFechaHora />}
-      {step === 3 && <PasoCancha />}
-      {step === 4 && <PasoConfirmar />}
-      {/*<button className="btn-volver" onClick={() => navigate('/home')}>
-        ← Volver al Home
-      </button>*/}
+    <div className="home-wrapper page-shell crear-reserva-page">
+      <div className="home-content">
+        <h2>Crear Nueva Reserva</h2>
+        {step === 1 ? (
+          <PasoEstablecimiento />
+        ) : (
+          <div className="crear-reserva-container">
+            {step === 2 && <PasoFechaHora />}
+            {step === 3 && <PasoCancha />}
+            {step === 4 && <PasoConfirmar />}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
