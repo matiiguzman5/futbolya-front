@@ -58,7 +58,7 @@ const Header = () => {
         <nav className="header-center" aria-label="Menu principal">
           <Link to="/home">Inicio</Link>
           <Link to="/establecimientos">Establecimientos</Link>
-          {usuario?.rol !== "establecimiento" && <Link to="/perfil">Perfil</Link>}
+          <Link to="/perfil">Perfil</Link>
           {usuario?.rol !== "establecimiento" && (
             <Link to="/mis-reservas">Mis Reservas</Link>
           )}
