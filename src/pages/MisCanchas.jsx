@@ -236,7 +236,7 @@ const normalizeTime = (raw, fallback = '08:00') => {
             <div>
               <strong>{c.nombre}</strong> | Tipo: {c.tipo} | Superficie: {c.superficie}<br />
               Estado: {c.estado} | 
-              Precio: ${c.precio} | Fin de semana: ${c.precioFinDeSemana}
+              Precio: ${c.precio}
             </div>
             <div className="acciones">
               <button className="btn btn-editar" onClick={() => handleEditar(c)}>Editar</button>

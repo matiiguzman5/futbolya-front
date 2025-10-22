@@ -27,6 +27,7 @@ const Establecimientos = () => {
         }
 
         const data = await res.json();
+        console.log("Establecimientos:", data);
         setEstablecimientos(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error de red al cargar establecimientos:', error);
@@ -80,7 +81,7 @@ const Establecimientos = () => {
             establecimientos.map((establecimiento) => (
               <div key={establecimiento.id} className="reserva-card">
                 <img
-                  src={establecimiento.fotoPerfil || '/cancha.jpg'}
+                  src={establecimiento.fotoPerfil ? `https://localhost:7055${establecimiento.fotoPerfil}` : '/cancha.jpg'}
                   alt="Establecimiento"
                 />
                 <div className="info">
@@ -139,9 +140,6 @@ const Establecimientos = () => {
                 &times;
               </button>
             </div>
-            <p className="est-modal__description">
-              {selectedEstablecimiento.descripcion || 'Sin descripcion general disponible.'}
-            </p>
             <div className="est-modal__contact">
               <span>Correo: {selectedEstablecimiento.correo}</span>
               <span>Telefono: {selectedEstablecimiento.telefono || 'No informado'}</span>
@@ -158,16 +156,12 @@ const Establecimientos = () => {
                           <span className="est-modal__badge">{cancha.tipo}</span>
                         ) : null}
                       </div>
-                      <p className="est-modal__cancha-description">
-                        {cancha.descripcion || 'Sin descripcion disponible.'}
-                      </p>
                       <div className="est-modal__cancha-meta">
                         <span>Superficie: {cancha.superficie || 'No informada'}</span>
                         <span>Estado: {cancha.estado || 'No informado'}</span>
                       </div>
                       <div className="est-modal__cancha-meta">
-                        <span>Precio base: {formatCurrency(cancha.precioBaseHora)}</span>
-                        <span>Fin de semana: {formatCurrency(cancha.precioFinDeSemana)}</span>
+                        <span>Precio: {formatCurrency(cancha.precio)}</span>
                       </div>
                     </li>
                   ))}
