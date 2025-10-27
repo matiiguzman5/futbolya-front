@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/styles/crearReserva.css';
 import '../assets/styles/home.css';
@@ -16,10 +16,28 @@ const CrearReserva = () => {
   const [dias, setDias] = useState([]);
   const [diaSeleccionado, setDiaSeleccionado] = useState('');
   const [horaSeleccionada, setHoraSeleccionada] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardHolder, setCardHolder] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [cvc, setCvc] = useState('');
+  const [receiptEmail, setReceiptEmail] = useState('');
+
+  const cardNumberRef = useRef(null);
+  const expiryRef = useRef(null);
+  const cardNumberCaretRef = useRef(null);
+  const expiryCaretRef = useRef(null);
 
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const usuario = JSON.parse(localStorage.getItem('usuario'));
+
+  useEffect(() => {
+    if (!usuario) {
+      return;
+    }
+    setCardHolder(usuario.nombre || '');
+    setReceiptEmail(usuario.Correo || '');
+  }, [usuario]);
 
   // Traer establecimientos
   useEffect(() => {
@@ -72,6 +90,99 @@ const CrearReserva = () => {
     }
   };
 
+  const handleCardNumberChange = (event) => {
+    const digits = event.target.value.replace(/\D/g, '').slice(0, 16);
+    setCardNumber(digits);
+  };
+
+  const handleExpiryChange = (event) => {
+    const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
+    setExpiryDate(digits);
+  };
+
+  const handleCvcChange = (event) => {
+    const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
+    setCvc(digits);
+  };
+
+  const getExpiryDisplay = (value) => {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length === 0) {
+      return '';
+    }
+    if (digits.length <= 2) {
+      return digits;
+    }
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  };
+
+  const isExpiryValid = (value) => {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length !== 4) {
+      return false;
+    }
+    const monthNumber = parseInt(digits.slice(0, 2), 10);
+    if (Number.isNaN(monthNumber) || monthNumber < 1 || monthNumber > 12) {
+      return false;
+    }
+    return true;
+  };
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const isCardDataValid = () => {
+    return cardHolder.trim().length >= 3 && cardNumber.length === 16;
+  };
+
+  const isSecurityValid = () =>
+    isExpiryValid(expiryDate) && (cvc.length === 3 || cvc.length === 4);
+
+  const isReceiptEmailValid = () => emailRegex.test(receiptEmail);
+
+  const isPaymentValid = () =>
+    isCardDataValid() && isSecurityValid() && isReceiptEmailValid();
+
+  const resolvePrecio = (valor) => {
+    if (valor === undefined || valor === null) {
+      return null;
+    }
+    const numero = Number(valor);
+    if (Number.isNaN(numero)) {
+      return null;
+    }
+    return numero;
+  };
+
+  const getPrecioBase = (cancha) => {
+    if (!cancha) {
+      return null;
+    }
+    const precioBase = resolvePrecio(cancha.precioBaseHora);
+    if (precioBase !== null) {
+      return precioBase;
+    }
+    return resolvePrecio(cancha.precio);
+  };
+
+  const getPrecioFinDeSemana = (cancha) => {
+    if (!cancha) {
+      return null;
+    }
+    const precioFin = resolvePrecio(cancha.precioFinDeSemana);
+    if (precioFin !== null) {
+      return precioFin;
+    }
+    return getPrecioBase(cancha);
+  };
+
+  const isWeekend = (isoDate) => {
+    if (!isoDate) {
+      return false;
+    }
+    const day = new Date(isoDate).getDay();
+    return day === 0 || day === 6;
+  };
+
   const formatPrecio = (valor) => {
     if (valor === undefined || valor === null) {
       return 'No informado';
@@ -88,7 +199,26 @@ const CrearReserva = () => {
 
   // Confirmar reserva
   const handleSubmit = async () => {
+    if (!isPaymentValid()) {
+      alert('Completa los datos de pago antes de confirmar.');
+      return;
+    }
+
     const fechaSeleccionada = new Date(`${diaSeleccionado}T${horaSeleccionada}:00`);
+    const canchaSeleccionada = canchas.find((c) => String(c.id) === String(canchaId));
+
+    if (!canchaSeleccionada) {
+      alert('Selecciona una cancha valida antes de continuar.');
+      return;
+    }
+
+    const precioBase = getPrecioBase(canchaSeleccionada);
+    const precioFinDeSemana = getPrecioFinDeSemana(canchaSeleccionada);
+    const totalCalculado = isWeekend(diaSeleccionado) ? precioFinDeSemana : precioBase;
+    const montoTotal =
+      typeof totalCalculado === 'number' && !Number.isNaN(totalCalculado)
+        ? totalCalculado
+        : null;
 
     const payload = {
       canchaId: parseInt(canchaId, 10),
@@ -97,9 +227,15 @@ const CrearReserva = () => {
       clienteNombre: usuario.nombre,
       clienteTelefono: usuario.telefono || 'No informado',
       clienteEmail: usuario.Correo,
-      estadoPago: 'pendiente',
+      estadoPago: 'Pagado',
       esFrecuente: false,
+      metodoPago: 'Tarjeta',
+      emailComprobante: receiptEmail,
     };
+
+    if (montoTotal !== null) {
+      payload.monto = montoTotal;
+    }
 
     try {
       const res = await fetch('https://localhost:7055/api/Reservas', {
@@ -117,10 +253,11 @@ const CrearReserva = () => {
         return;
       }
 
-      alert('Reserva creada correctamente');
+      alert('Pago registrado y reserva creada correctamente.');
       navigate('/home');
     } catch (error) {
       console.error('Error al crear reserva:', error);
+      alert('No pudimos registrar el pago. Intenta nuevamente.');
     }
   };
 
@@ -258,7 +395,8 @@ const CrearReserva = () => {
                   <strong>{c.nombre}</strong>
                   <p>Tipo: {c.tipo || 'No informado'}</p>
                   <p>Superficie: {c.superficie || 'No informada'}</p>
-                  <p>Precio: {formatPrecio(c.precio)}</p>
+                  <p>Precio base: {formatPrecio(getPrecioBase(c))}</p>
+                  <p>Fin de semana: {formatPrecio(getPrecioFinDeSemana(c))}</p>
                 </div>
               </div>
             );
@@ -270,24 +408,198 @@ const CrearReserva = () => {
       </div>
     </div>
   );
-// Paso 4: Confirmar
-  const PasoConfirmar = () => (
-    <div>
-      <h3>Confirmar reserva</h3>
-      <p><b>Establecimiento:</b> {establecimientos.find((e) => e.id === parseInt(establecimientoId, 10))?.nombre}</p>
-      <p><b>Fecha y hora:</b> {fechaHora}</p>
-      <p><b>Cancha:</b> {canchas.find((c) => c.id === parseInt(canchaId, 10))?.nombre}</p>
-      <textarea
-        placeholder="Observaciones"
-        value={observaciones}
-        onChange={(event) => setObservaciones(event.target.value)}
-      />
-      <div className="nav-buttons">
-        <button className="btn-back" onClick={() => setStep(3)}>Atras</button>
-        <button className="btn-confirm" onClick={handleSubmit}>Confirmar</button>
+// Paso 4: Confirmar y pagar
+  const PasoConfirmar = () => {
+    const establecimientoSeleccionado = establecimientos.find(
+      (e) => String(e.id) === String(establecimientoId)
+    );
+    const canchaSeleccionada = canchas.find((c) => String(c.id) === String(canchaId));
+    const fechaSeleccionada = diaSeleccionado && horaSeleccionada
+      ? new Date(`${diaSeleccionado}T${horaSeleccionada}:00`)
+      : null;
+    const esFinDeSemana = isWeekend(diaSeleccionado);
+    const precioBase = getPrecioBase(canchaSeleccionada);
+    const precioFinDeSemana = getPrecioFinDeSemana(canchaSeleccionada);
+    const montoTotal = esFinDeSemana ? precioFinDeSemana : precioBase;
+
+    const maskedCard = (() => {
+      const digits = cardNumber.replace(/\s/g, '');
+      if (digits.length >= 4) {
+        const lastFour = digits.slice(-4);
+        return `**** **** **** ${lastFour}`;
+      }
+      return 'Sin completar';
+    })();
+
+    return (
+      <div>
+        <h3>Revisar y pagar</h3>
+        <div className="payment-wizard">
+          <div className="payment-progress">
+            <div className="payment-progress__item completed">
+              <div className="payment-progress__number">1</div>
+              <div className="payment-progress__label">
+                <span>Seleccion</span>
+                <small>Establecimiento y cancha</small>
+              </div>
+            </div>
+            <div className="payment-progress__item completed">
+              <div className="payment-progress__number">2</div>
+              <div className="payment-progress__label">
+                <span>Horario</span>
+                <small>{horaSeleccionada || 'Sin definir'}</small>
+              </div>
+            </div>
+            <div className="payment-progress__item active">
+              <div className="payment-progress__number">3</div>
+              <div className="payment-progress__label">
+                <span>Pago</span>
+                <small>{formatPrecio(montoTotal)}</small>
+              </div>
+            </div>
+          </div>
+
+          <div className="payment-panel">
+            <div className="payment-summary">
+              <p>
+                <span>Establecimiento:</span> {establecimientoSeleccionado?.nombre || 'Sin seleccionar'}
+              </p>
+              <p>
+                <span>Cancha:</span> {canchaSeleccionada?.nombre || 'Sin seleccionar'}
+              </p>
+              <p>
+                <span>Fecha y hora:</span> {fechaSeleccionada ? fechaSeleccionada.toLocaleString('es-AR') : 'Sin definir'}
+              </p>
+              <p>
+                <span>Tarifa base:</span> {formatPrecio(precioBase)}
+              </p>
+              <p>
+                <span>Tarifa fin de semana:</span> {formatPrecio(precioFinDeSemana)}
+              </p>
+              <p>
+                <span>Total a pagar:</span> {formatPrecio(montoTotal)}
+              </p>
+              {esFinDeSemana ? (
+                <small>Se aplica tarifa de fin de semana.</small>
+              ) : null}
+            </div>
+
+            <div className="payment-fields">
+              <label>
+                Observaciones (opcional)
+                <textarea
+                  className="payment-input"
+                  rows={3}
+                  value={observaciones}
+                  onChange={(event) => setObservaciones(event.target.value)}
+                  placeholder="Mensaje para el establecimiento"
+                />
+              </label>
+            </div>
+
+            <div className="payment-fields">
+              <label>
+                Nombre del titular
+                <input
+                  type="text"
+                  className="payment-input"
+                  value={cardHolder}
+                  onChange={(event) => setCardHolder(event.target.value)}
+                  placeholder="Como figura en la tarjeta"
+                  autoComplete="cc-name"
+                />
+              </label>
+              <label>
+                Numero de tarjeta
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className="payment-input"
+                  value={cardNumber}
+                  onChange={handleCardNumberChange}
+                  placeholder="1234567890123456"
+                  autoComplete="cc-number"
+                  maxLength={16}
+                />
+              </label>
+            </div>
+
+            <div className="payment-fields payment-fields--split">
+              <label>
+                Vencimiento
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className="payment-input"
+                  value={expiryDate}
+                  onChange={handleExpiryChange}
+                  placeholder="MMAA"
+                  autoComplete="cc-exp"
+                  maxLength={4}
+                />
+              </label>
+              <label>
+                CVC
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className="payment-input"
+                  value={cvc}
+                  onChange={handleCvcChange}
+                  placeholder="123"
+                  autoComplete="cc-csc"
+                  maxLength={4}
+                />
+              </label>
+            </div>
+
+            <div className="payment-fields">
+              <label>
+                Email para comprobante
+                <input
+                  type="email"
+                  className="payment-input"
+                  value={receiptEmail}
+                  onChange={(event) => setReceiptEmail(event.target.value)}
+                  placeholder="nombre@correo.com"
+                  autoComplete="email"
+                />
+              </label>
+            </div>
+
+            <div className="payment-summary">
+              <p>
+                <span>Metodo:</span> Tarjeta de credito
+              </p>
+              <p>
+                <span>Tarjeta:</span> {maskedCard}
+              </p>
+              <p>
+                <span>Titular:</span> {cardHolder || 'Sin completar'}
+              </p>
+              <p>
+                <span>Vencimiento:</span> {getExpiryDisplay(expiryDate) || 'Sin completar'}
+              </p>
+              <p>
+                <span>Comprobante:</span> {receiptEmail || 'Sin completar'}
+              </p>
+            </div>
+          </div>
+
+          <div className="payment-actions">
+            <button className="btn-back" onClick={() => setStep(3)}>Atras</button>
+            <button
+              className="btn-confirm"
+              onClick={handleSubmit}
+              disabled={!isPaymentValid()}
+            >
+              Confirmar pago
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="home-wrapper page-shell crear-reserva-page">
