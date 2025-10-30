@@ -1191,3 +1191,25 @@
   flex-direction: column;
   gap: 10px;
 }
+
+.partidos-grid.crear-reserva-establecimientos,
+.partidos-grid.crear-reserva-canchas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+
+@media (max-width: 768px) {
+  .partidos-grid.crear-reserva-establecimientos,
+  .partidos-grid.crear-reserva-canchas {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .partidos-grid.crear-reserva-establecimientos,
+  .partidos-grid.crear-reserva-canchas {
+    grid-template-columns: 1fr;
+  }
+}
