@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/styles/crearReserva.css';
 import '../assets/styles/home.css';
@@ -22,10 +22,6 @@ const CrearReserva = () => {
   const [cvc, setCvc] = useState('');
   const [receiptEmail, setReceiptEmail] = useState('');
 
-  const cardNumberRef = useRef(null);
-  const expiryRef = useRef(null);
-  const cardNumberCaretRef = useRef(null);
-  const expiryCaretRef = useRef(null);
 
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
@@ -90,14 +86,33 @@ const CrearReserva = () => {
     }
   };
 
+  const formatCardNumber = (value) => {
+    const digitsOnly = value.replace(/\D/g, '').slice(0, 16);
+    return digitsOnly.replace(/(\d{4})(?=\d)/g, '$1 ');
+  };
+
+  const formatExpiry = (value) => {
+    const digitsOnly = value.replace(/\D/g, '').slice(0, 4);
+    if (digitsOnly.length >= 3) {
+      return `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2)}`;
+    }
+    return digitsOnly;
+  };
+
+  const formatExpiryDisplay = (value) => {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    if (digits.length <= 2) {
+      return digits;
+    }
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  };
+
   const handleCardNumberChange = (event) => {
-    const digits = event.target.value.replace(/\D/g, '').slice(0, 16);
-    setCardNumber(digits);
+    setCardNumber(formatCardNumber(event.target.value));
   };
 
   const handleExpiryChange = (event) => {
-    const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
-    setExpiryDate(digits);
+    setExpiryDate(formatExpiry(event.target.value));
   };
 
   const handleCvcChange = (event) => {
@@ -105,23 +120,12 @@ const CrearReserva = () => {
     setCvc(digits);
   };
 
-  const getExpiryDisplay = (value) => {
-    const digits = value.replace(/\D/g, '');
-    if (digits.length === 0) {
-      return '';
-    }
-    if (digits.length <= 2) {
-      return digits;
-    }
-    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  };
-
   const isExpiryValid = (value) => {
-    const digits = value.replace(/\D/g, '');
-    if (digits.length !== 4) {
+    const [month, year] = value.split('/');
+    if (!month || !year || value.length !== 5) {
       return false;
     }
-    const monthNumber = parseInt(digits.slice(0, 2), 10);
+    const monthNumber = parseInt(month, 10);
     if (Number.isNaN(monthNumber) || monthNumber < 1 || monthNumber > 12) {
       return false;
     }
@@ -131,7 +135,8 @@ const CrearReserva = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const isCardDataValid = () => {
-    return cardHolder.trim().length >= 3 && cardNumber.length === 16;
+    const digitsOnly = cardNumber.replace(/\s/g, '');
+    return cardHolder.trim().length >= 3 && digitsOnly.length === 16;
   };
 
   const isSecurityValid = () =>
@@ -141,6 +146,7 @@ const CrearReserva = () => {
 
   const isPaymentValid = () =>
     isCardDataValid() && isSecurityValid() && isReceiptEmailValid();
+
 
   const resolvePrecio = (valor) => {
     if (valor === undefined || valor === null) {
@@ -423,9 +429,9 @@ const CrearReserva = () => {
     const montoTotal = esFinDeSemana ? precioFinDeSemana : precioBase;
 
     const maskedCard = (() => {
-      const digits = cardNumber.replace(/\s/g, '');
-      if (digits.length >= 4) {
-        const lastFour = digits.slice(-4);
+      const digitsOnly = cardNumber.replace(/\D/g, '');
+      if (digitsOnly.length >= 4) {
+        const lastFour = digitsOnly.slice(-4);
         return `**** **** **** ${lastFour}`;
       }
       return 'Sin completar';
@@ -517,9 +523,9 @@ const CrearReserva = () => {
                   className="payment-input"
                   value={cardNumber}
                   onChange={handleCardNumberChange}
-                  placeholder="1234567890123456"
+                  placeholder="1234 5678 9012 3456"
                   autoComplete="cc-number"
-                  maxLength={16}
+                  maxLength={19}
                 />
               </label>
             </div>
@@ -533,9 +539,9 @@ const CrearReserva = () => {
                   className="payment-input"
                   value={expiryDate}
                   onChange={handleExpiryChange}
-                  placeholder="MMAA"
+                  placeholder="MM/AA"
                   autoComplete="cc-exp"
-                  maxLength={4}
+                  maxLength={5}
                 />
               </label>
               <label>
@@ -578,7 +584,7 @@ const CrearReserva = () => {
                 <span>Titular:</span> {cardHolder || 'Sin completar'}
               </p>
               <p>
-                <span>Vencimiento:</span> {getExpiryDisplay(expiryDate) || 'Sin completar'}
+                <span>Vencimiento:</span> {formatExpiryDisplay(expiryDate) || 'Sin completar'}
               </p>
               <p>
                 <span>Comprobante:</span> {receiptEmail || 'Sin completar'}

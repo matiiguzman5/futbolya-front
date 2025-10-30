@@ -780,54 +780,17 @@
 
 
 .payment-panel {
-
-
-
   width: 100%;
-
-
-
   max-width: 520px;
-
-
-
   margin: 0 auto;
-
-
-
   background: var(--color-surface-alt);
-
-
-
   border: 1px solid rgba(15, 23, 42, 0.08);
-
-
-
   border-radius: var(--radius-md);
-
-
-
   padding: 20px;
-
-
-
   display: flex;
-
-
-
   flex-direction: column;
-
-
-
   gap: 16px;
-
-
-
 }
-
-
-
-
 
 
 
@@ -1012,21 +975,13 @@
 
 
 .payment-actions .btn-back,
-
-
-
 .payment-actions .btn-next,
-
-
-
 .payment-actions .btn-confirm {
-
-
-
-  flex: 1 1 160px;
-
-
-
+  flex: 0 0 auto;
+  min-width: 160px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
 }
 
 
@@ -1192,24 +1147,59 @@
   gap: 10px;
 }
 
-.partidos-grid.crear-reserva-establecimientos,
-.partidos-grid.crear-reserva-canchas {
+.partidos-grid.crear-reserva-establecimientos {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 24px;
   align-items: stretch;
 }
 
+.partidos-grid.crear-reserva-canchas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.partidos-grid.crear-reserva-canchas .reserva-card {
+  flex: 1 1 240px;
+  max-width: 320px;
+}
+
 @media (max-width: 768px) {
-  .partidos-grid.crear-reserva-establecimientos,
-  .partidos-grid.crear-reserva-canchas {
+  .partidos-grid.crear-reserva-establecimientos {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
 }
 
-@media (max-width: 480px) {
-  .partidos-grid.crear-reserva-establecimientos,
+@media (max-width: 600px) {
   .partidos-grid.crear-reserva-canchas {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .partidos-grid.crear-reserva-canchas .reserva-card {
+    flex: 0 0 220px;
+  }
+}
+
+@media (max-width: 480px) {
+  .partidos-grid.crear-reserva-establecimientos {
     grid-template-columns: 1fr;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
