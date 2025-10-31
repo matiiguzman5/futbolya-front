@@ -334,6 +334,11 @@ const CrearReserva = () => {
 
     const maskedCard = maskCardNumber(cardNumber);
     const cardToken = simulateTokenization(cardNumber, expiryMonth, expiryYear);
+    const sanitizedCardNumber = cardNumber.replace(/\D/g, '');
+    const sanitizedCvv = cvc.replace(/\D/g, '');
+    const expiryMonthPadded = String(expiryMonth || '').padStart(2, '0');
+    const expiryYearPadded = String(expiryYear || '').padStart(2, '0');
+    const formattedExpiration = `${expiryMonthPadded}/${expiryYearPadded}`;
     const payload = {
       canchaId: parseInt(canchaId, 10),
       fechaHora: fechaSeleccionada.toISOString(),
@@ -369,7 +374,7 @@ const CrearReserva = () => {
     }
 
     try {
-      const res = await fetch('https://localhost:7055/api/Reservas', {
+      const reservaResponse = await fetch('https://localhost:7055/api/Reservas', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -378,16 +383,79 @@ const CrearReserva = () => {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const err = await res.text();
+      if (!reservaResponse.ok) {
+        const err = await reservaResponse.text();
         alert(`Error: ${err}`);
+        return;
+      }
+
+      const rawReservaResponse = await reservaResponse.text();
+      const textPayload = rawReservaResponse ? rawReservaResponse.trim() : '';
+      let parsedReserva = null;
+      if (textPayload) {
+        try {
+          parsedReserva = JSON.parse(textPayload);
+        } catch (parseError) {
+          console.warn('No se pudo parsear la respuesta de creacion de reserva como JSON:', parseError);
+        }
+      }
+
+      let reservaId = parsedReserva?.id
+        ?? parsedReserva?.Id
+        ?? parsedReserva?.reservaId
+        ?? parsedReserva?.reserva?.id
+        ?? parsedReserva?.reserva?.Id
+        ?? null;
+
+      if (!reservaId) {
+        const locationHeader = reservaResponse.headers.get('location');
+        if (locationHeader) {
+          const match = locationHeader.match(/\/reservas\/(\d+)/i);
+          if (match) {
+            reservaId = Number.parseInt(match[1], 10);
+          }
+        }
+      }
+
+      if (!reservaId) {
+        alert('La reserva se creo pero no pudimos confirmar el pago automaticamente. Por favor revisa el estado en Mis Reservas.');
+        navigate('/home');
+        return;
+      }
+
+      const confirmarPagoPayload = {
+        estadoPago: 'Pagado',
+        metodoPago: 'Tarjeta',
+        token: cardToken,
+        tokenPago: cardToken,
+        numeroTarjeta: sanitizedCardNumber,
+        numero: sanitizedCardNumber,
+        nombreTitular: cardHolder.trim(),
+        fechaExpiracion: formattedExpiration,
+        codigoSeguridad: sanitizedCvv,
+        cvv: sanitizedCvv,
+        fechaPago: new Date().toISOString(),
+      };
+
+      const pagoResponse = await fetch(`https://localhost:7055/api/reservas/pagar/${reservaId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(confirmarPagoPayload),
+      });
+
+      if (!pagoResponse.ok) {
+        const pagoError = await pagoResponse.text();
+        alert(`Reserva creada, pero no se pudo confirmar el pago: ${pagoError}`);
         return;
       }
 
       alert('Pago registrado y reserva creada correctamente.');
       navigate('/home');
     } catch (error) {
-      console.error('Error al crear reserva:', error);
+      console.error('Error al crear reserva o confirmar el pago:', error);
       alert('No pudimos registrar el pago. Intenta nuevamente.');
     }
   };
