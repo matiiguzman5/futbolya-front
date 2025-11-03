@@ -4,12 +4,32 @@ import '../assets/styles/home.css';
 import '../assets/styles/misReservas.css';
 import ShareReserva from '../components/ShareReserva';
 import ValorarModal from '../components/ValorarModal';
+import ConfirmActionModal from '../components/ConfirmActionModal';
+
+const ACCION_RESERVA_CONFIG = {
+  salir: {
+    title: '¿Salir del partido?',
+    description: 'Vas a abandonar el partido y liberar tu lugar. Esta acción no se puede deshacer.',
+    confirmLabel: 'Sí, salir',
+    successMessage: 'Saliste del partido correctamente.',
+    tone: 'warning'
+  },
+  cancelar: {
+    title: '¿Cancelar la reserva?',
+    description: 'Se liberará el turno y avisaremos al establecimiento. Esta acción no se puede deshacer.',
+    confirmLabel: 'Sí, cancelar',
+    successMessage: 'Reserva cancelada correctamente.',
+    tone: 'danger'
+  }
+};
 
 const MisReservas = () => {
   const [reservasActivas, setReservasActivas] = useState([]);
   const [reservasPasadas, setReservasPasadas] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [reservaSeleccionada, setReservaSeleccionada] = useState(null);
+  const [confirmacion, setConfirmacion] = useState(null);
+  const [procesandoAccion, setProcesandoAccion] = useState(false);
 
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
@@ -64,20 +84,33 @@ const MisReservas = () => {
     obtenerReservas();
   }, [obtenerReservas]);
 
-  const confirmarAccion = async (accion, reservaId) => {
-    const confirm1 = window.confirm(`Estas seguro que deseas ${accion} esta reserva?`);
-    if (!confirm1) {
+  const abrirConfirmacionAccion = (tipo, reserva) => {
+    setConfirmacion({ tipo, reserva });
+  };
+
+  const cerrarConfirmacionAccion = () => {
+    if (!procesandoAccion) {
+      setConfirmacion(null);
+    }
+  };
+
+  const ejecutarAccionConfirmada = async () => {
+    if (!confirmacion) {
       return;
     }
 
-    const confirm2 = window.confirm('Esta accion no se puede deshacer. Confirmas?');
-    if (!confirm2) {
+    const configuracion = ACCION_RESERVA_CONFIG[confirmacion.tipo];
+    const reservaId = confirmacion.reserva?.id;
+
+    if (!configuracion || !reservaId) {
       return;
     }
+
+    setProcesandoAccion(true);
 
     try {
       const endpoint =
-        accion === 'salir del partido'
+        confirmacion.tipo === 'salir'
           ? `https://localhost:7055/api/reservas/${reservaId}/salir`
           : `https://localhost:7055/api/reservas/${reservaId}`;
 
@@ -89,8 +122,9 @@ const MisReservas = () => {
       });
 
       if (response.ok) {
-        alert(`Reserva ${reservaId} - ${accion} realizada.`);
-        obtenerReservas();
+        alert(configuracion.successMessage);
+        setConfirmacion(null);
+        await obtenerReservas();
       } else {
         const error = await response.text();
         alert(`Error: ${error}`);
@@ -98,6 +132,8 @@ const MisReservas = () => {
     } catch (error) {
       console.error('Error al realizar accion:', error);
       alert('Hubo un error al procesar la accion.');
+    } finally {
+      setProcesandoAccion(false);
     }
   };
 
@@ -175,13 +211,13 @@ const MisReservas = () => {
               <>
                 <button
                   className="btn-salir"
-                  onClick={() => confirmarAccion('salir del partido', reserva.id)}
+                  onClick={() => abrirConfirmacionAccion('salir', reserva)}
                 >
                   Salir del partido
                 </button>
                 <button
                   className="btn-cancelar"
-                  onClick={() => confirmarAccion('cancelar la reserva', reserva.id)}
+                  onClick={() => abrirConfirmacionAccion('cancelar', reserva)}
                 >
                   Cancelar reserva
                 </button>
@@ -200,6 +236,26 @@ const MisReservas = () => {
       </article>
     );
   };
+
+  const accionActual = confirmacion ? ACCION_RESERVA_CONFIG[confirmacion.tipo] : null;
+
+  const detallesModal =
+    confirmacion && confirmacion.reserva
+      ? [
+          { label: 'Reserva', value: `#${confirmacion.reserva.id}` },
+          {
+            label: 'Cancha',
+            value:
+              confirmacion.reserva.canchaNombre ||
+              confirmacion.reserva.cancha ||
+              'Sin datos'
+          },
+          {
+            label: 'Fecha',
+            value: formatearFecha(confirmacion.reserva)
+          }
+        ].filter((item) => item.value && item.value !== '')
+      : [];
 
   return (
     <div className="home-wrapper page-shell">
@@ -251,6 +307,21 @@ const MisReservas = () => {
         <ValorarModal
           reservaId={reservaSeleccionada}
           onClose={() => setShowModal(false)}
+        />
+      )}
+
+      {confirmacion && accionActual && (
+        <ConfirmActionModal
+          open
+          title={accionActual.title}
+          description={accionActual.description}
+          details={detallesModal}
+          confirmLabel={accionActual.confirmLabel}
+          cancelLabel="No, volver"
+          onCancel={cerrarConfirmacionAccion}
+          onConfirm={ejecutarAccionConfirmada}
+          isProcessing={procesandoAccion}
+          tone={accionActual.tone}
         />
       )}
     </div>

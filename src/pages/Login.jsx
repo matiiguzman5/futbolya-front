@@ -24,8 +24,23 @@ const Login = () => {
         alert('Inicio de sesión sin token recibido.');
       }
     } catch (error) {
-      alert('Error al iniciar sesión. Verificá tus datos.');
-      console.error(error);
+      let alertMessage = 'Error al iniciar sesion. Verifica tus datos.';
+
+      if (error?.response) {
+        const { status, data } = error.response;
+        console.error('Login fallo con respuesta del servidor:', status, data);
+        const serverMessage = typeof data === 'string' ? data :
+          data?.mensaje || data?.message || data?.title || data?.detail;
+        alertMessage = `Error ${status}: ${serverMessage || 'Credenciales invalidas.'}`;
+      } else if (error?.request) {
+        console.error('Login envio solicitud pero no obtuvo respuesta:', error.request);
+        alertMessage = 'No hubo respuesta del servidor. Verifica que la API este ejecutandose y acepte solicitudes desde este origen.';
+      } else {
+        console.error('Login fallo antes de enviar la solicitud:', error);
+        alertMessage = `Error inesperado: ${error?.message || 'Revisa la consola para mas detalles.'}`;
+      }
+
+      alert(alertMessage);
     }
   };
 

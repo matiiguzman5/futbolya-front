@@ -16,68 +16,76 @@ const Perfil = () => {
     contraseña: ''
   });
 
-  // === Cargar datos del usuario ===
+  // Cargar datos del usuario
   useEffect(() => {
     const fetchUsuario = async () => {
-  const token = localStorage.getItem('token');
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('https://localhost:7055/api/usuarios/yo', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          throw new Error('No se pudo obtener el perfil');
+        }
+        const data = await res.json();
+        setUsuario(data);
+        setForm({ nombre: data.nombre || '', telefono: data.telefono || '', posicion: data.posicion || '', contraseña: '' });
+      } catch (error) {
+        console.error('Error al cargar perfil:', error);
+      }
+    };
 
-  try {
-    const res = await fetch('https://localhost:7055/api/usuarios/yo', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("Error en la respuesta:", errorText);
-      alert("❌ Error al cargar datos del usuario");
-      return;
-    }
-
-    const data = await res.json();
-    setUsuario(data);
-    setForm({
-      nombre: data.nombre || '',
-      correo: data.correo || '',
-      telefono: data.telefono || '',
-      posicion: data.rol === 'establecimiento' ? '' : data.posicion || '',
-      ubicacion: data.rol === 'establecimiento' ? data.ubicacion || '' : '',
-      contraseña: ''
-    });
-
-  } catch (error) {
-    console.error("Error de red o parseo JSON:", error);
-    alert("❌ Error de conexión al cargar perfil");
-  }
-};
     fetchUsuario();
   }, []);
 
-  // === Jugador: valoraciones y estadísticas ===
+  // Cargar valoraciones recibidas
   useEffect(() => {
     if (usuario?.rol === 'Jugador') {
       const fetchValoraciones = async () => {
         const token = localStorage.getItem('token');
         const res = await fetch('https://localhost:7055/api/calificaciones/mias', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
-        if (res.ok) setValoraciones(await res.json());
-      };
-      const fetchEstadisticas = async () => {
+        if (res.ok) {
+          const data = await res.json();
+          setValoraciones(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error('Error al obtener valoraciones:', error);
+      }
+    };
+
+    fetchValoraciones();
+  }, []);
+
+  // Cargar estadísticas (partidos jugados + promedio)
+  useEffect(() => {
+    const fetchEstadisticas = async () => {
+      try {
         const token = localStorage.getItem('token');
         const res = await fetch('https://localhost:7055/api/usuarios/estadisticas', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
-        if (res.ok) setEstadisticas(await res.json());
-      };
-      fetchValoraciones();
-      fetchEstadisticas();
-    }
-  }, [usuario]);
+        if (res.ok) {
+          const data = await res.json();
+          setEstadisticas({
+            partidosJugados: Number(data.partidosJugados) || 0,
+            promedioValoraciones: Number(data.promedioValoraciones) || 0,
+          });
+        }
+      } catch (error) {
+        console.error('Error al obtener estadísticas:', error);
+      }
+    };
 
-  // === Subir foto de perfil ===
-  const handleFotoChange = async (e) => {
-    const archivo = e.target.files[0];
-    if (!archivo) return;
+    fetchEstadisticas();
+  }, []);
+
+  const handleFotoChange = async (event) => {
+    const archivo = event.target.files?.[0];
+    if (!archivo) {
+      return;
+    }
 
     const formData = new FormData();
     formData.append('archivo', archivo);
@@ -91,65 +99,56 @@ const Perfil = () => {
         body: formData,
       });
 
-      if (!res.ok) throw new Error('Error al subir la imagen');
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+
       const data = await res.json();
-      setUsuario((prev) => ({ ...prev, fotoPerfil: data.ruta }));
-    } catch {
-      alert('❌ Error al subir la foto');
+      setUsuario((prev) => (prev ? { ...prev, fotoPerfil: data.ruta } : prev));
+    } catch (error) {
+      console.error('Error al subir la foto:', error);
+      alert('Error al subir la foto');
     } finally {
       setFotoCargando(false);
     }
   };
 
-  // === Guardar perfil editado ===
   const handleGuardar = async () => {
-    const token = localStorage.getItem('token');
+    try {
+      const token = localStorage.getItem('token');
+      const payload = {
+        nombre: form.nombre,
+        telefono: form.telefono,
+        posicion: form.posicion,
+        contraseña: form.contraseña,
+      };
 
-    // Estructura dinámica según rol
-    const payload =
-      usuario.rol === 'establecimiento'
-        ? {
-            nombre: form.nombre,
-            correo: form.correo,
-            telefono: form.telefono,
-            ubicacion: form.ubicacion,
-            contraseña: form.contraseña,
-          }
-        : {
-            nombre: form.nombre,
-            correo: form.correo,
-            telefono: form.telefono,
-            posicion: form.posicion,
-            contraseña: form.contraseña,
-          };
+      const res = await fetch('https://localhost:7055/api/usuarios/editar-perfil', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
-    const res = await fetch('https://localhost:7055/api/usuarios/editar-perfil', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
 
-    if (res.ok) {
-      alert('✅ Perfil actualizado correctamente');
-      setUsuario((prev) => ({
-        ...prev,
-        nombre: form.nombre || prev.nombre,
-        correo: form.correo || prev.correo,
-        telefono: form.telefono || prev.telefono,
-        posicion: form.posicion || prev.posicion,
-        ubicacion: form.ubicacion || prev.ubicacion,
-      }));
+      alert('Perfil actualizado correctamente');
+      setUsuario((prev) => (prev ? { ...prev, ...form } : prev));
       setModalAbierto(false);
-    } else {
-      const err = await res.text();
-      alert(`❌ Error: ${err}`);
+      setForm((prev) => ({ ...prev, contraseña: '' }));
+    } catch (error) {
+      console.error('Error al actualizar perfil:', error);
+      alert(`Error al actualizar perfil: ${error.message}`);
     }
   };
 
-  if (!usuario) return <div className="perfil-container">Cargando...</div>;
+  if (!usuario) {
+    return <div className="perfil-container">Cargando...</div>;
+  }
 
   const imagenPerfil = usuario.fotoPerfil
     ? `https://localhost:7055${usuario.fotoPerfil}`
@@ -157,7 +156,7 @@ const Perfil = () => {
 
   return (
     <div className="perfil-container">
-      <h2 className="perfil-nombre">{usuario.nombre.toUpperCase()}</h2>
+      <h2 className="perfil-nombre">{usuario.nombre?.toUpperCase?.() || usuario.nombre}</h2>
       <img src={imagenPerfil} alt="Foto perfil" className="perfil-foto" />
 
       <div className="perfil-subir-foto">
@@ -171,56 +170,56 @@ const Perfil = () => {
       <div className="perfil-info">
         <p><strong>Correo:</strong> {usuario.correo}</p>
         <p><strong>Teléfono:</strong> {usuario.telefono || 'No informado'}</p>
-        {usuario.rol === 'establecimiento' && (
-          <p><strong>Ubicación:</strong> {usuario.ubicacion || 'No informada'}</p>
-        )}
+        <p><strong>Posición:</strong> {usuario.posicion || 'No informada'}</p>
       </div>
 
-      {/* === Mostrar estadísticas y valoraciones solo si es jugador === */}
-      {usuario.rol === 'Jugador' && (
-        <>
-          <div className="perfil-estadisticas">
-            <div className="stat-card">
-              <img src="/pelotaIco.ico" alt="Partidos" />
-              <div>
-                <strong>Partidos jugados</strong>
-                <p>{estadisticas.partidosJugados}</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <img src="/valoracion.ico" alt="Valoración" />
-              <div>
-                <strong>Valoración promedio</strong>
-                <p>{Number(estadisticas.promedioValoraciones || 0).toFixed(1)}</p>
-              </div>
-            </div>
+      <div className="perfil-estadisticas">
+        <div className="stat-card">
+          <img src="/pelotaIco.ico" alt="Partidos" />
+          <div>
+            <strong>Partidos jugados</strong>
+            <p>{estadisticas.partidosJugados}</p>
           </div>
-
-          <h3 className="subtitulo">Mis valoraciones</h3>
-          {valoraciones.length === 0 ? (
-            <p className="sin-valoraciones">Todavía no recibiste valoraciones.</p>
-          ) : (
-            valoraciones.map((v, i) => (
-              <div key={i} className="valoracion-card">
-                <p><strong>{v.puntaje}/5</strong> - {v.comentario}</p>
-                <small>
-                  De {v.evaluador.nombre} el {new Date(v.fecha).toLocaleDateString('es-AR')}
-                </small>
-              </div>
-            ))
-          )}
-        </>
-      )}
+        </div>
+        <div className="stat-card">
+          <img src="/valoracion.ico" alt="Valoración" />
+          <div>
+            <strong>Valoración promedio</strong>
+              <p>{estadisticas.promedioValoraciones.toFixed(1)}</p>
+          </div>
 
       <button className="btn-editar" onClick={() => setModalAbierto(true)}>
         Editar perfil
       </button>
 
-      {/* === Modal de edición === */}
       {modalAbierto && (
         <div className="modal">
           <div className="modal-contenido">
             <h3>Editar Perfil</h3>
+            <input
+              type="text"
+              placeholder="Nombre"
+              value={form.nombre}
+              onChange={(event) => setForm({ ...form, nombre: event.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Teléfono"
+              value={form.telefono}
+              onChange={(event) => setForm({ ...form, telefono: event.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Posición"
+              value={form.posicion}
+              onChange={(event) => setForm({ ...form, posicion: event.target.value })}
+            />
+            <input
+              type="password"
+              placeholder="Nueva contraseña (opcional)"
+              value={form.contraseña}
+              onChange={(event) => setForm({ ...form, contraseña: event.target.value })}
+            />
 
             {usuario.rol === 'establecimiento' ? (
               <>
@@ -296,6 +295,25 @@ const Perfil = () => {
           </div>
         </div>
       )}
+
+      <h3 className="subtitulo">Mis valoraciones</h3>
+      {valoraciones.length === 0 ? (
+        <p className="sin-valoraciones">Todavía no recibiste valoraciones.</p>
+      ) : (
+        valoraciones.map((valoracion, index) => (
+          <div key={index} className="valoracion-card">
+            <p>
+              <strong>{valoracion.puntaje}/5</strong> - {valoracion.comentario}
+            </p>
+            <small>
+              De {valoracion.evaluador?.nombre || 'Desconocido'} el{' '}
+              {valoracion.fecha ? new Date(valoracion.fecha).toLocaleDateString('es-AR') : 'sin fecha'}
+            </small>
+          </div>
+        ))
+      )}
+
+      <footer className="footer-perfil">© 2025 FútbolYa</footer>
     </div>
   );
 };

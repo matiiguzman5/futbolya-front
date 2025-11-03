@@ -1,6 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/styles/crearReserva.css';
+import '../assets/styles/home.css';
+
+const safeParse = (value) => {
+  if (!value) {
+    return null;
+  }
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    console.error('No se pudo parsear el usuario almacenado:', error);
+    return null;
+  }
+};
+
+
+const defaultPaymentForm = {
+  cardHolder: '',
+  cardNumber: '',
+  expiryMonth: '',
+  expiryYear: '',
+  cvc: '',
+  receiptEmail: '',
+  installmentPlan: '1',
+  documentType: 'DNI',
+  documentNumber: '',
+  billingStreet: '',
+  billingNumber: '',
+  billingCity: '',
+  billingZip: '',
+  saveCard: false,
+};
 
 const CrearReserva = () => {
   const [step, setStep] = useState(1);
@@ -18,9 +49,59 @@ const CrearReserva = () => {
 
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
-  const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const [usuario] = useState(() => safeParse(localStorage.getItem('usuario')));
+  const [paymentForm, setPaymentForm] = useState(() => {
+    const initial = { ...defaultPaymentForm };
+    if (usuario?.nombre || usuario?.name) {
+      initial.cardHolder = usuario.nombre || usuario.name || '';
+    }
+    if (usuario?.Correo || usuario?.email) {
+      initial.receiptEmail = usuario.Correo || usuario.email || '';
+    }
+    return initial;
+  });
+  const hasHydrated = useRef(false);
 
-  // 🔹 Traer establecimientos
+  useEffect(() => {
+    if (hasHydrated.current) {
+      return;
+    }
+    hasHydrated.current = true;
+    const latestUsuario = safeParse(localStorage.getItem('usuario'));
+    if (!latestUsuario) {
+      return;
+    }
+    setPaymentForm((prev) => ({
+      ...prev,
+      cardHolder: prev.cardHolder || latestUsuario?.nombre || latestUsuario?.name || '',
+      receiptEmail: prev.receiptEmail || latestUsuario?.Correo || latestUsuario?.email || '',
+    }));
+  }, []);
+  const {
+    cardHolder,
+    cardNumber,
+    expiryMonth,
+    expiryYear,
+    cvc,
+    receiptEmail,
+    installmentPlan,
+    documentType,
+    documentNumber,
+    billingStreet,
+    billingNumber,
+    billingCity,
+    billingZip,
+    saveCard,
+  } = paymentForm;
+
+  const updatePaymentFormField = (field, value) => {
+    setPaymentForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  // Traer establecimientos
   useEffect(() => {
     const fetchEstablecimientos = async () => {
       try {
@@ -34,7 +115,7 @@ const CrearReserva = () => {
     fetchEstablecimientos();
   }, []);
 
-  // 🔹 Generar próximos 5 días
+  // Generar proximos 5 dias
   useEffect(() => {
     const hoy = new Date();
     const opciones = [];
@@ -42,14 +123,14 @@ const CrearReserva = () => {
       const d = new Date(hoy);
       d.setDate(hoy.getDate() + i);
       opciones.push({
-        fecha: d.toISOString().split("T")[0], // YYYY-MM-DD
-        label: i === 0 ? "Hoy" : i === 1 ? "Mañana" : d.toLocaleDateString('es-ES', { weekday: 'long' })
+        fecha: d.toISOString().split('T')[0],
+        label: i === 0 ? 'Hoy' : i === 1 ? 'Manana' : d.toLocaleDateString('es-ES', { weekday: 'long' }),
       });
     }
     setDias(opciones);
   }, []);
 
-  // 🔹 Generar horas (09:00 a 23:00)
+  // Generar horas (09:00 a 23:00)
   const generarHoras = () => {
     const horas = [];
     for (let h = 9; h <= 23; h++) {
@@ -58,96 +139,382 @@ const CrearReserva = () => {
     return horas;
   };
 
-  // 🔹 Traer canchas disponibles
-  const fetchCanchasDisponibles = async (id, fechaHora) => {
+  // Traer canchas disponibles
+  const fetchCanchasDisponibles = async (id, fechaHoraSeleccionada) => {
     try {
       const res = await fetch(
-        `https://localhost:7055/api/Canchas/de/${id}/disponibles?fechaHora=${fechaHora}`
+        `https://localhost:7055/api/Canchas/de/${id}/disponibles?fechaHora=${fechaHoraSeleccionada}`
       );
       const data = await res.json();
-      setCanchas(data || []); // solo las libres entran acá
+      setCanchas(data || []); // Solo se muestran las canchas libres
     } catch (error) {
       console.error('Error al obtener canchas disponibles:', error);
     }
   };
 
-
-  // 🔹 Confirmar reserva
-const handleSubmit = async () => {
-  // Convertir la fecha/hora seleccionada a objeto Date
-  const fechaSeleccionada = new Date(`${diaSeleccionado}T${horaSeleccionada}:00`);
-
-  const payload = {
-    canchaId: parseInt(canchaId),
-    fechaHora: fechaSeleccionada.toISOString(),
-    observaciones,
-    clienteNombre: usuario.nombre,
-    clienteTelefono: usuario.telefono || 'No informado',
-    clienteEmail: usuario.Correo,
-    estadoPago: 'pendiente',
-    esFrecuente: false
+  const formatCardNumber = (value) => {
+    const digitsOnly = value.replace(/\D/g, '').slice(0, 19);
+    return digitsOnly.replace(/(\d{4})(?=\d)/g, '$1 ');
   };
 
-  try {
-    const res = await fetch('https://localhost:7055/api/Reservas', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
+  const maskCardNumber = (value) => {
+    const digitsOnly = value.replace(/\D/g, '');
+    if (digitsOnly.length >= 4) {
+      const lastFour = digitsOnly.slice(-4);
+      return `**** **** **** ${lastFour}`;
+    }
+    return 'Sin completar';
+  };
 
-    if (!res.ok) {
-      const err = await res.text();
-      alert(`Error: ${err}`);
+  const formatExpiryDisplay = (month, year) => {
+    if (!month || !year) {
+      return '';
+    }
+    const monthPadded = month.padStart(2, '0');
+    const yearShort = year.slice(-2);
+    return `${monthPadded}/${yearShort}`;
+  };
+
+  const handleCardNumberChange = (event) => {
+    updatePaymentFormField('cardNumber', formatCardNumber(event.target.value));
+  };
+
+  const handleExpiryMonthChange = (event) => {
+    updatePaymentFormField('expiryMonth', event.target.value);
+  };
+
+  const handleExpiryYearChange = (event) => {
+    updatePaymentFormField('expiryYear', event.target.value);
+  };
+
+  const handleCvcChange = (event) => {
+    const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
+    updatePaymentFormField('cvc', digits);
+  };
+
+  const isExpiryValid = () => {
+    const monthNumber = parseInt(expiryMonth, 10);
+    const yearNumber = parseInt(expiryYear, 10);
+    if (Number.isNaN(monthNumber) || Number.isNaN(yearNumber)) {
+      return false;
+    }
+    if (monthNumber < 1 || monthNumber > 12) {
+      return false;
+    }
+    const reference = new Date();
+    const firstDayOfCurrentMonth = new Date(reference.getFullYear(), reference.getMonth(), 1);
+    const firstDayOfExpiryMonth = new Date(yearNumber, monthNumber - 1, 1);
+    return firstDayOfExpiryMonth >= firstDayOfCurrentMonth;
+  };
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const isCardDataValid = () => {
+    const digitsOnly = cardNumber.replace(/\s/g, '');
+    return (
+      cardHolder.trim().length >= 3 &&
+      digitsOnly.length >= 13 &&
+      digitsOnly.length <= 19
+    );
+  };
+
+  const isSecurityValid = () => isExpiryValid() && (cvc.length === 3 || cvc.length === 4);
+
+  const isReceiptEmailValid = () => emailRegex.test(receiptEmail);
+
+  const isDocumentValid = () => documentNumber.trim().length >= 6;
+
+  const isBillingValid = () => {
+    const fields = [billingStreet, billingNumber, billingCity, billingZip];
+    const hasData = fields.some((value) => value && value.trim().length > 0);
+    if (!hasData) {
+      return true;
+    }
+    return (
+      billingStreet.trim().length >= 3 &&
+      billingNumber.trim().length > 0 &&
+      billingCity.trim().length >= 3 &&
+      billingZip.trim().length >= 4
+    );
+  };
+
+  const simulateTokenization = (cardNumberValue, expiryMonthValue, expiryYearValue) => {
+    const normalized = [cardNumberValue.replace(/\s/g, ''), expiryMonthValue, expiryYearValue].join('|');
+    let hash = 0;
+    for (let i = 0; i < normalized.length; i += 1) {
+      hash = (hash * 31 + normalized.charCodeAt(i)) % 1000000007;
+    }
+    return `tok_${hash.toString(16)}`;
+  };
+
+  const isPaymentValid = () =>
+    isCardDataValid() &&
+    isSecurityValid() &&
+    isReceiptEmailValid() &&
+    isDocumentValid() &&
+    isBillingValid();
+
+  const resolvePrecio = (valor) => {
+    if (valor === undefined || valor === null) {
+      return null;
+    }
+    const numero = Number(valor);
+    if (Number.isNaN(numero)) {
+      return null;
+    }
+    return numero;
+  };
+
+  const getPrecioBase = (cancha) => {
+    if (!cancha) {
+      return null;
+    }
+    const precioBase = resolvePrecio(cancha.precioBaseHora);
+    if (precioBase !== null) {
+      return precioBase;
+    }
+    return resolvePrecio(cancha.precio);
+  };
+
+  const getPrecioFinDeSemana = (cancha) => {
+    if (!cancha) {
+      return null;
+    }
+    const precioFin = resolvePrecio(cancha.precioFinDeSemana);
+    if (precioFin !== null) {
+      return precioFin;
+    }
+    return getPrecioBase(cancha);
+  };
+
+  const isWeekend = (isoDate) => {
+    if (!isoDate) {
+      return false;
+    }
+    const day = new Date(isoDate).getDay();
+    return day === 0 || day === 6;
+  };
+
+  const formatPrecio = (valor) => {
+    if (valor === undefined || valor === null) {
+      return 'No informado';
+    }
+
+    const numero = Number(valor);
+    if (Number.isNaN(numero)) {
+      return valor;
+    }
+
+    return `$${numero.toLocaleString('es-AR')}`;
+  };
+
+
+  // Confirmar reserva
+  const handleSubmit = async () => {
+    if (!isPaymentValid()) {
+      alert('Completa los datos de pago antes de confirmar.');
       return;
     }
 
-    alert('Reserva creada correctamente');
-    navigate('/home');
-  } catch (error) {
-    console.error('Error al crear reserva:', error);
-  }
-};
+    const fechaSeleccionada = new Date(`${diaSeleccionado}T${horaSeleccionada}:00`);
+    const canchaSeleccionada = canchas.find((c) => String(c.id) === String(canchaId));
 
+    if (!canchaSeleccionada) {
+      alert('Selecciona una cancha valida antes de continuar.');
+      return;
+    }
+
+    const precioBase = getPrecioBase(canchaSeleccionada);
+    const precioFinDeSemana = getPrecioFinDeSemana(canchaSeleccionada);
+    const totalCalculado = isWeekend(diaSeleccionado) ? precioFinDeSemana : precioBase;
+    const montoTotal =
+      typeof totalCalculado === 'number' && !Number.isNaN(totalCalculado)
+        ? totalCalculado
+        : null;
+
+    const maskedCard = maskCardNumber(cardNumber);
+    const cardToken = simulateTokenization(cardNumber, expiryMonth, expiryYear);
+    const sanitizedCardNumber = cardNumber.replace(/\D/g, '');
+    const sanitizedCvv = cvc.replace(/\D/g, '');
+    const expiryMonthPadded = String(expiryMonth || '').padStart(2, '0');
+    const expiryYearPadded = String(expiryYear || '').padStart(2, '0');
+    const formattedExpiration = `${expiryMonthPadded}/${expiryYearPadded}`;
+    const payload = {
+      canchaId: parseInt(canchaId, 10),
+      fechaHora: fechaSeleccionada.toISOString(),
+      observaciones,
+      clienteNombre: usuario?.nombre || usuario?.name || cardHolder,
+      clienteTelefono: usuario?.telefono || 'No informado',
+      clienteEmail: usuario?.Correo || usuario?.email || receiptEmail,
+      estadoPago: 'Pagado',
+      esFrecuente: false,
+      metodoPago: 'Tarjeta',
+      emailComprobante: receiptEmail,
+      pago: {
+        token: cardToken,
+        tarjetaEnmascarada: maskedCard,
+        cuotas: installmentPlan,
+        documento: documentNumber
+          ? { tipo: documentType, numero: documentNumber }
+          : null,
+        domicilio: billingStreet
+          ? {
+              calle: billingStreet,
+              numero: billingNumber,
+              ciudad: billingCity,
+              codigoPostal: billingZip,
+            }
+          : null,
+        guardarTarjeta: saveCard,
+      },
+    };
+
+    if (montoTotal !== null) {
+      payload.monto = montoTotal;
+    }
+
+    try {
+      const reservaResponse = await fetch('https://localhost:7055/api/Reservas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!reservaResponse.ok) {
+        const err = await reservaResponse.text();
+        alert(`Error: ${err}`);
+        return;
+      }
+
+      const rawReservaResponse = await reservaResponse.text();
+      const textPayload = rawReservaResponse ? rawReservaResponse.trim() : '';
+      let parsedReserva = null;
+      if (textPayload) {
+        try {
+          parsedReserva = JSON.parse(textPayload);
+        } catch (parseError) {
+          console.warn('No se pudo parsear la respuesta de creacion de reserva como JSON:', parseError);
+        }
+      }
+
+      let reservaId = parsedReserva?.id
+        ?? parsedReserva?.Id
+        ?? parsedReserva?.reservaId
+        ?? parsedReserva?.reserva?.id
+        ?? parsedReserva?.reserva?.Id
+        ?? null;
+
+      if (!reservaId) {
+        const locationHeader = reservaResponse.headers.get('location');
+        if (locationHeader) {
+          const match = locationHeader.match(/\/reservas\/(\d+)/i);
+          if (match) {
+            reservaId = Number.parseInt(match[1], 10);
+          }
+        }
+      }
+
+      if (!reservaId) {
+        alert('La reserva se creo pero no pudimos confirmar el pago automaticamente. Por favor revisa el estado en Mis Reservas.');
+        navigate('/home');
+        return;
+      }
+
+      const confirmarPagoPayload = {
+        estadoPago: 'Pagado',
+        metodoPago: 'Tarjeta',
+        token: cardToken,
+        tokenPago: cardToken,
+        numeroTarjeta: sanitizedCardNumber,
+        numero: sanitizedCardNumber,
+        nombreTitular: cardHolder.trim(),
+        fechaExpiracion: formattedExpiration,
+        codigoSeguridad: sanitizedCvv,
+        cvv: sanitizedCvv,
+        fechaPago: new Date().toISOString(),
+      };
+
+      const pagoResponse = await fetch(`https://localhost:7055/api/reservas/pagar/${reservaId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(confirmarPagoPayload),
+      });
+
+      if (!pagoResponse.ok) {
+        const pagoError = await pagoResponse.text();
+        alert(`Reserva creada, pero no se pudo confirmar el pago: ${pagoError}`);
+        return;
+      }
+
+      alert('Pago registrado y reserva creada correctamente.');
+      navigate('/home');
+    } catch (error) {
+      console.error('Error al crear reserva o confirmar el pago:', error);
+      alert('No pudimos registrar el pago. Intenta nuevamente.');
+    }
+  };
 
   // Paso 1: Establecimiento
   const PasoEstablecimiento = () => (
     <div>
-      <h3>Elegí un establecimiento</h3>
-      <div className="cards">
-        {establecimientos.map((est) => (
-          <div
-            key={est.id}
-            className="card"
-            onClick={() => {
-              setEstablecimientoId(est.id);
-              setStep(2);
-            }}
-          >
-            <img src={est.fotoPerfil || '/default-club.jpg'} alt="foto" />
-            <h4>{est.nombre}</h4>
-            <p>{est.correo}</p>
-            <p>Ubicación: {est.ubicacion || "No informada"}</p>
-            <p>Canchas: {est.canchas.length}</p>
-          </div>
-        ))}
-      </div>
+      <h3>Elige un establecimiento</h3>
+      {establecimientos.length === 0 ? (
+        <p style={{ textAlign: 'center', marginTop: '20px' }}>
+          No hay establecimientos disponibles.
+        </p>
+      ) : (
+        <div className="partidos-grid crear-reserva-establecimientos">
+          {establecimientos.map((est) => (
+            <div
+              key={est.id}
+              className="reserva-card"
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setEstablecimientoId(est.id);
+                setStep(2);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setEstablecimientoId(est.id);
+                  setStep(2);
+                }
+              }}
+            >
+              <img
+                src={est.fotoPerfil || '/default-club.jpg'}
+                alt={`Foto de ${est.nombre}`}
+              />
+              <div className="info">
+                <strong>{est.nombre}</strong>
+                <p>Correo: {est.correo}</p>
+                <p>Ubicacion: {est.ubicacion || 'No informada'}</p>
+                <p>Canchas registradas: {Array.isArray(est.canchas) ? est.canchas.length : 0}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
-
-  // Paso 2: Fecha y hora
+// Paso 2: Fecha y hora
   const PasoFechaHora = () => (
     <div>
-      <h3>Elegí la fecha y hora</h3>
+      <h3>Elige la fecha y hora</h3>
 
-      {/* Botones de días */}
+      {/* Botones de dias */}
       <div className="nav-buttons">
         {dias.map((d) => (
           <button
             key={d.fecha}
-            className={`btn-next ${diaSeleccionado === d.fecha ? "active" : ""}`}
+            className={`btn-next ${diaSeleccionado === d.fecha ? 'active' : ''}`}
             onClick={() => {
               setDiaSeleccionado(d.fecha);
               setHoraSeleccionada('');
@@ -164,7 +531,7 @@ const handleSubmit = async () => {
           {generarHoras().map((hora) => (
             <button
               key={hora}
-              className={`hora-btn ${horaSeleccionada === hora ? "active" : ""}`}
+              className={`hora-btn ${horaSeleccionada === hora ? 'active' : ''}`}
               onClick={() => setHoraSeleccionada(hora)}
             >
               {hora}
@@ -173,20 +540,20 @@ const handleSubmit = async () => {
         </div>
       )}
 
-      {/* Navegación */}
+      {/* Navegacion */}
       <div className="nav-buttons">
-        <button className="btn-back" onClick={() => setStep(1)}>← Atrás</button>
+        <button className="btn-back" onClick={() => setStep(1)}>Atras</button>
         <button
           className="btn-next"
           onClick={() => {
-            const fechaHora = `${diaSeleccionado}T${horaSeleccionada}`;
-            fetchCanchasDisponibles(establecimientoId, fechaHora); // 👈 acá pedís solo libres
-            setFechaHora(fechaHora);
+            const fechaSeleccionada = `${diaSeleccionado}T${horaSeleccionada}`;
+            fetchCanchasDisponibles(establecimientoId, fechaSeleccionada); // Pedimos solo canchas disponibles
+            setFechaHora(fechaSeleccionada);
             setStep(3);
           }}
           disabled={!diaSeleccionado || !horaSeleccionada}
         >
-          Siguiente →
+          Siguiente
         </button>
       </div>
     </div>
@@ -195,58 +562,431 @@ const handleSubmit = async () => {
   // Paso 3: Cancha
   const PasoCancha = () => (
     <div>
-      <h3>Elegí la cancha</h3>
-      <div className="cards">
-        {canchas.map((c) => (
-          <div
-            key={c.id}
-            className="card"
-            onClick={() => {
-              setCanchaId(c.id);
-              setStep(4);
-            }}
-          >
-            <h4>{c.nombre}</h4>
-            <p>{c.tipo} - {c.superficie}</p>
-            <p>Precio: ${c.precio}</p>
-          </div>
-        ))}
-      </div>
-      <div className="nav-buttons">
-        <button className="btn-back" onClick={() => setStep(2)}>← Atrás</button>
-      </div>
-    </div>
-  );
+      <h3>Elige la cancha</h3>
+      {canchas.length === 0 ? (
+        <p style={{ textAlign: 'center', marginTop: '20px' }}>
+          No hay canchas disponibles para el horario seleccionado.
+        </p>
+      ) : (
+        <div className="partidos-grid crear-reserva-canchas">
+          {canchas.map((c) => {
+            const esSeleccionada = String(canchaId) === String(c.id);
 
-  // Paso 4: Confirmar
-  const PasoConfirmar = () => (
-    <div>
-      <h3>Confirmar reserva</h3>
-      <p><b>Establecimiento:</b> {establecimientos.find(e => e.id === parseInt(establecimientoId))?.nombre}</p>
-      <p><b>Fecha y hora:</b> {fechaHora}</p>
-      <p><b>Cancha:</b> {canchas.find(c => c.id === parseInt(canchaId))?.nombre}</p>
-      <textarea
-        placeholder="Observaciones"
-        value={observaciones}
-        onChange={(e) => setObservaciones(e.target.value)}
-      />
+            return (
+              <div
+                key={c.id}
+                className={`reserva-card ${esSeleccionada ? 'reserva-card--selected' : ''}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  setCanchaId(c.id);
+                  setStep(4);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setCanchaId(c.id);
+                    setStep(4);
+                  }
+                }}
+              >
+                <div className="info">
+                  <strong>{c.nombre}</strong>
+                  <p>Tipo: {c.tipo || 'No informado'}</p>
+                  <p>Superficie: {c.superficie || 'No informada'}</p>
+                  <p>Precio base: {formatPrecio(getPrecioBase(c))}</p>
+                  <p>Fin de semana: {formatPrecio(getPrecioFinDeSemana(c))}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
       <div className="nav-buttons">
-        <button className="btn-back" onClick={() => setStep(3)}>← Atrás</button>
-        <button className="btn-confirm" onClick={handleSubmit}>Confirmar ✅</button>
+        <button className="btn-back" onClick={() => setStep(2)}>Atras</button>
       </div>
     </div>
   );
+// Paso 4: Confirmar y pagar
+
+const PasoConfirmar = () => {
+  const establecimientoSeleccionado = establecimientos.find(
+    (e) => String(e.id) === String(establecimientoId)
+  );
+  const canchaSeleccionada = canchas.find((c) => String(c.id) === String(canchaId));
+  const fechaSeleccionada = diaSeleccionado && horaSeleccionada
+    ? new Date(`${diaSeleccionado}T${horaSeleccionada}:00`)
+    : null;
+  const esFinDeSemana = isWeekend(diaSeleccionado);
+  const precioBase = getPrecioBase(canchaSeleccionada);
+  const precioFinDeSemana = getPrecioFinDeSemana(canchaSeleccionada);
+  const montoTotal = esFinDeSemana ? precioFinDeSemana : precioBase;
+
+  const maskedCard = maskCardNumber(cardNumber);
+
+  const monthOptions = Array.from({ length: 12 }, (_, index) => {
+    const value = String(index + 1).padStart(2, '0');
+    return { value, label: value };
+  });
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 12 }, (_, index) => {
+    const yearValue = String(currentYear + index);
+    return { value: yearValue, label: yearValue };
+  });
+  const installmentOptions = [
+    { value: '1', label: 'Pago unico (sin interes)' },
+    { value: '3', label: '3 cuotas fijas' },
+    { value: '6', label: '6 cuotas sin interes' },
+    { value: '12', label: '12 cuotas bancarias' },
+  ];
+  const documentTypeOptions = ['DNI', 'CUIT', 'Pasaporte'];
+  const formattedExpiry = formatExpiryDisplay(expiryMonth, expiryYear);
 
   return (
-    <div className="crear-reserva-container">
-      <h2>Crear Nueva Reserva</h2>
-      {step === 1 && <PasoEstablecimiento />}
-      {step === 2 && <PasoFechaHora />}
-      {step === 3 && <PasoCancha />}
-      {step === 4 && <PasoConfirmar />}
-      {/*<button className="btn-volver" onClick={() => navigate('/home')}>
-        ← Volver al Home
-      </button>*/}
+    <div>
+      <h3>Revisar y pagar</h3>
+      <div className="payment-wizard">
+        <div className="payment-progress">
+          <div className="payment-progress__item completed">
+            <div className="payment-progress__number">1</div>
+            <div className="payment-progress__label">
+              <span>Seleccion</span>
+              <small>Establecimiento y cancha</small>
+            </div>
+          </div>
+          <div className="payment-progress__item completed">
+            <div className="payment-progress__number">2</div>
+            <div className="payment-progress__label">
+              <span>Horario</span>
+              <small>{horaSeleccionada || 'Sin definir'}</small>
+            </div>
+          </div>
+          <div className="payment-progress__item active">
+            <div className="payment-progress__number">3</div>
+            <div className="payment-progress__label">
+              <span>Pago</span>
+              <small>{formatPrecio(montoTotal)}</small>
+            </div>
+          </div>
+        </div>
+
+        <div className="payment-checkout">
+          <div className="payment-checkout__form">
+            <section className="payment-section">
+              <div className="payment-section__header">
+                <h4>Datos de la tarjeta</h4>
+                <p>Usamos encriptacion segura para proteger tu informacion.</p>
+              </div>
+              <div className="payment-grid payment-grid--single">
+                <label className="payment-field payment-field--full">
+                  <span>Nombre del titular</span>
+                  <input
+                    type="text"
+                    className="payment-input"
+                    value={cardHolder}
+                    onChange={(event) => updatePaymentFormField('cardHolder', event.target.value)}
+                    placeholder="Como figura en la tarjeta"
+                    autoComplete="cc-name"
+                  />
+                </label>
+                <label className="payment-field payment-field--full">
+                  <span>Numero de tarjeta</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className="payment-input"
+                    value={cardNumber}
+                    onChange={handleCardNumberChange}
+                    placeholder="1234 5678 9012 3456"
+                    autoComplete="cc-number"
+                    maxLength={19}
+                  />
+                </label>
+                <div className="payment-grid payment-grid--three">
+                  <label className="payment-field">
+                    <span>Mes</span>
+                    <select
+                      className="payment-input payment-input--select"
+                      value={expiryMonth}
+                      onChange={handleExpiryMonthChange}
+                    >
+                      <option value="">MM</option>
+                      {monthOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="payment-field">
+                    <span>Ano</span>
+                    <select
+                      className="payment-input payment-input--select"
+                      value={expiryYear}
+                      onChange={handleExpiryYearChange}
+                    >
+                      <option value="">AAAA</option>
+                      {yearOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="payment-field">
+                    <span>CVC</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="payment-input"
+                      value={cvc}
+                      onChange={handleCvcChange}
+                      placeholder="123"
+                      autoComplete="cc-csc"
+                      maxLength={4}
+                    />
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <section className="payment-section">
+              <div className="payment-section__header">
+                <h4>Contacto y comprobante</h4>
+                <p>Te enviaremos el comprobante y las novedades del turno.</p>
+              </div>
+              <div className="payment-grid payment-grid--two">
+                <label className="payment-field">
+                  <span>Correo electronico</span>
+                  <input
+                    type="email"
+                    className="payment-input"
+                    value={receiptEmail}
+                    onChange={(event) => updatePaymentFormField('receiptEmail', event.target.value)}
+                    placeholder="nombre@correo.com"
+                    autoComplete="email"
+                  />
+                </label>
+                <label className="payment-field">
+                  <span>Tipo de documento</span>
+                  <select
+                    className="payment-input payment-input--select"
+                    value={documentType}
+                    onChange={(event) => updatePaymentFormField('documentType', event.target.value)}
+                  >
+                    {documentTypeOptions.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="payment-field">
+                  <span>Numero de documento</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className="payment-input"
+                    value={documentNumber}
+                    onChange={(event) => {
+                      const digitsOnly = event.target.value.replace(/[^0-9]/g, '');
+                      updatePaymentFormField('documentNumber', digitsOnly);
+                    }}
+                    placeholder="12345678"
+                  />
+                </label>
+                <label className="payment-field">
+                  <span>Plan de pago</span>
+                  <select
+                    className="payment-input payment-input--select"
+                    value={installmentPlan}
+                    onChange={(event) => updatePaymentFormField('installmentPlan', event.target.value)}
+                  >
+                    {installmentOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="payment-field payment-field--checkbox">
+                  <input
+                    type="checkbox"
+                    checked={saveCard}
+                    onChange={(event) => updatePaymentFormField('saveCard', event.target.checked)}
+                  />
+                  <span>Guardar tarjeta para proximas reservas</span>
+                </label>
+              </div>
+            </section>
+
+            <section className="payment-section">
+              <div className="payment-section__header">
+                <h4>Domicilio de facturacion (opcional)</h4>
+                <p>Completalo si necesitas que el comprobante tenga tus datos.</p>
+              </div>
+              <div className="payment-grid payment-grid--two">
+                <label className="payment-field payment-field--full">
+                  <span>Calle</span>
+                  <input
+                    type="text"
+                    className="payment-input"
+                    value={billingStreet}
+                    onChange={(event) => updatePaymentFormField('billingStreet', event.target.value)}
+                    placeholder="Ej: Av. Siempre Viva"
+                  />
+                </label>
+                <label className="payment-field">
+                  <span>Numero</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className="payment-input"
+                    value={billingNumber}
+                    onChange={(event) => {
+                      const digitsOnly = event.target.value.replace(/[^0-9]/g, '');
+                      updatePaymentFormField('billingNumber', digitsOnly);
+                    }}
+                    placeholder="1234"
+                  />
+                </label>
+                <label className="payment-field">
+                  <span>Ciudad</span>
+                  <input
+                    type="text"
+                    className="payment-input"
+                    value={billingCity}
+                    onChange={(event) => updatePaymentFormField('billingCity', event.target.value)}
+                    placeholder="Ciudad"
+                  />
+                </label>
+                <label className="payment-field">
+                  <span>Codigo postal</span>
+                  <input
+                    type="text"
+                    className="payment-input"
+                    value={billingZip}
+                    onChange={(event) => {
+                      const sanitized = event.target.value.replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+                      updatePaymentFormField('billingZip', sanitized);
+                    }}
+                    placeholder="CP"
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="payment-section">
+              <div className="payment-section__header">
+                <h4>Notas para el establecimiento</h4>
+              </div>
+              <label className="payment-field payment-field--full">
+                <span>Observaciones (opcional)</span>
+                <textarea
+                  className="payment-input payment-input--textarea"
+                  rows={3}
+                  value={observaciones}
+                  onChange={(event) => setObservaciones(event.target.value)}
+                  placeholder="Agrega un mensaje para el establecimiento"
+                />
+              </label>
+            </section>
+          </div>
+
+          <aside className="payment-checkout__summary">
+            <div className="summary-card">
+              <h4>Resumen de tu reserva</h4>
+              <ul className="summary-list">
+                <li>
+                  <span className="summary-label">Establecimiento</span>
+                  <span className="summary-value">{establecimientoSeleccionado?.nombre || 'Sin seleccionar'}</span>
+                </li>
+                <li>
+                  <span className="summary-label">Cancha</span>
+                  <span className="summary-value">{canchaSeleccionada?.nombre || 'Sin seleccionar'}</span>
+                </li>
+                <li>
+                  <span className="summary-label">Fecha y hora</span>
+                  <span className="summary-value">{fechaSeleccionada ? fechaSeleccionada.toLocaleString('es-AR') : 'Sin definir'}</span>
+                </li>
+                <li>
+                  <span className="summary-label">Tarifa base</span>
+                  <span className="summary-value">{formatPrecio(precioBase)}</span>
+                </li>
+                {esFinDeSemana ? (
+                  <li>
+                    <span className="summary-label">Tarifa fin de semana</span>
+                    <span className="summary-value">{formatPrecio(precioFinDeSemana)}</span>
+                  </li>
+                ) : null}
+                <li>
+                  <span className="summary-label">Plan de pago</span>
+                  <span className="summary-value">{installmentPlan === '1' ? 'Pago unico' : `${installmentPlan} cuotas`}</span>
+                </li>
+                {documentNumber ? (
+                  <li>
+                    <span className="summary-label">Documento</span>
+                    <span className="summary-value">{`${documentType} ${documentNumber}`}</span>
+                  </li>
+                ) : null}
+                {billingStreet ? (
+                  <li>
+                    <span className="summary-label">Facturacion</span>
+                    <span className="summary-value">
+                      {`${billingStreet} ${billingNumber || ''}${billingCity ? `, ${billingCity}` : ''}${billingZip ? ` (${billingZip})` : ''}`.trim()}
+                    </span>
+                  </li>
+                ) : null}
+              </ul>
+              <div className="summary-divider" />
+              <div className="summary-total">
+                <span>Total a pagar</span>
+                <strong>{formatPrecio(montoTotal)}</strong>
+              </div>
+              <div className="summary-card__payment">
+                <div className="summary-card__payment-row">
+                  <span>{maskedCard}</span>
+                  <span>{formattedExpiry || 'MM/AA'}</span>
+                </div>
+                <small>Titular: {cardHolder || 'Sin completar'}</small>
+                <small>Comprobante: {receiptEmail || 'Sin completar'}</small>
+                <small>{installmentPlan === '1' ? 'Pago unico' : `${installmentPlan} cuotas seleccionadas`}</small>
+                {saveCard ? <small>Guardaremos esta tarjeta para tu proxima visita.</small> : null}
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div className="payment-actions">
+          <button className="btn-back" onClick={() => setStep(3)}>Atras</button>
+          <button
+            className="btn-confirm"
+            onClick={handleSubmit}
+            disabled={!isPaymentValid()}
+          >
+            Confirmar pago
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+  return (
+    <div className="home-wrapper page-shell crear-reserva-page">
+      <div className="home-content">
+        <h2>Crear Nueva Reserva</h2>
+        {step === 1 ? (
+          <PasoEstablecimiento />
+        ) : (
+          <div className="crear-reserva-container">
+            {step === 2 && <PasoFechaHora />}
+            {step === 3 && <PasoCancha />}
+            {step === 4 && <PasoConfirmar />}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
