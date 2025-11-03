@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../assets/styles/perfil.css';
 
 const Perfil = () => {
@@ -7,7 +7,14 @@ const Perfil = () => {
   const [estadisticas, setEstadisticas] = useState({ partidosJugados: 0, promedioValoraciones: 0 });
   const [fotoCargando, setFotoCargando] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [form, setForm] = useState({ nombre: '', telefono: '', posicion: '', contraseña: '' });
+  const [form, setForm] = useState({
+    nombre: '',
+    correo: '',
+    telefono: '',
+    posicion: '',
+    ubicacion: '',
+    contraseña: ''
+  });
 
   // Cargar datos del usuario
   useEffect(() => {
@@ -33,8 +40,8 @@ const Perfil = () => {
 
   // Cargar valoraciones recibidas
   useEffect(() => {
-    const fetchValoraciones = async () => {
-      try {
+    if (usuario?.rol === 'Jugador') {
+      const fetchValoraciones = async () => {
         const token = localStorage.getItem('token');
         const res = await fetch('https://localhost:7055/api/calificaciones/mias', {
           headers: { Authorization: `Bearer ${token}` },
@@ -180,8 +187,6 @@ const Perfil = () => {
             <strong>Valoración promedio</strong>
               <p>{estadisticas.promedioValoraciones.toFixed(1)}</p>
           </div>
-        </div>
-      </div>
 
       <button className="btn-editar" onClick={() => setModalAbierto(true)}>
         Editar perfil
@@ -215,6 +220,69 @@ const Perfil = () => {
               value={form.contraseña}
               onChange={(event) => setForm({ ...form, contraseña: event.target.value })}
             />
+
+            {usuario.rol === 'establecimiento' ? (
+              <>
+                <input
+                  type="text"
+                  placeholder="Nombre"
+                  value={form.nombre}
+                  onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                />
+                <input
+                  type="email"
+                  placeholder="Correo electrónico"
+                  value={form.correo}
+                  onChange={(e) => setForm({ ...form, correo: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Teléfono"
+                  value={form.telefono}
+                  onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Ubicación"
+                  value={form.ubicacion}
+                  onChange={(e) => setForm({ ...form, ubicacion: e.target.value })}
+                />
+                <input
+                  type="password"
+                  placeholder="Nueva contraseña (opcional)"
+                  value={form.contraseña}
+                  onChange={(e) => setForm({ ...form, contraseña: e.target.value })}
+                />
+              </>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  placeholder="Nombre"
+                  value={form.nombre}
+                  onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                />
+                <input
+                  type="email"
+                  placeholder="Correo electrónico"
+                  value={form.correo}
+                  onChange={(e) => setForm({ ...form, correo: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Teléfono"
+                  value={form.telefono}
+                  onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+                />
+                
+                <input
+                  type="password"
+                  placeholder="Nueva contraseña (opcional)"
+                  value={form.contraseña}
+                  onChange={(e) => setForm({ ...form, contraseña: e.target.value })}
+                />
+              </>
+            )}
 
             <div className="modal-botones">
               <button className="btn-guardar" onClick={handleGuardar}>
@@ -251,4 +319,3 @@ const Perfil = () => {
 };
 
 export default Perfil;
-
