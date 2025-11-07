@@ -220,9 +220,17 @@ const CrearReserva = () => {
 
   const isSecurityValid = () => isExpiryValid() && (cvc.length === 3 || cvc.length === 4);
 
-  const isReceiptEmailValid = () => emailRegex.test(receiptEmail);
+  const isReceiptEmailValid = () => {
+    // email opcional: si está vacío se considera válido; si se completó, debe ser válido
+    if (!receiptEmail || receiptEmail.trim() === '') return true;
+    return emailRegex.test(receiptEmail);
+  };
 
-  const isDocumentValid = () => documentNumber.trim().length >= 6;
+  const isDocumentValid = () => {
+    // documento opcional: si está vacío se considera válido; si se completó, mínimo 6 dígitos
+    if (!documentNumber || documentNumber.trim() === '') return true;
+    return documentNumber.trim().length >= 6;
+  };
 
   const isBillingValid = () => {
     const fields = [billingStreet, billingNumber, billingCity, billingZip];
@@ -238,15 +246,8 @@ const CrearReserva = () => {
     );
   };
 
-  const simulateTokenization = (cardNumberValue, expiryMonthValue, expiryYearValue) => {
-    const normalized = [cardNumberValue.replace(/\s/g, ''), expiryMonthValue, expiryYearValue].join('|');
-    let hash = 0;
-    for (let i = 0; i < normalized.length; i += 1) {
-      hash = (hash * 31 + normalized.charCodeAt(i)) % 1000000007;
-    }
-    return `tok_${hash.toString(16)}`;
-  };
-
+  // Ahora la validación principal requiere sólo los datos esenciales de la tarjeta.
+  // Los demás campos se validan solamente si el usuario los completó (ver funciones arriba).
   const isPaymentValid = () =>
     isCardDataValid() &&
     isSecurityValid() &&
@@ -308,11 +309,29 @@ const CrearReserva = () => {
     return `$${numero.toLocaleString('es-AR')}`;
   };
 
+  // Simula tokenización de tarjeta (genera token determinista a partir de datos)
+  const simulateTokenization = (cardNumberValue, expiryMonthValue, expiryYearValue) => {
+    const normalized = [
+      (cardNumberValue || '').replace(/\s/g, ''),
+      expiryMonthValue || '',
+      expiryYearValue || ''
+    ].join('|');
+    let hash = 0;
+    for (let i = 0; i < normalized.length; i += 1) {
+      hash = (hash * 31 + normalized.charCodeAt(i)) % 1000000007;
+    }
+    return `tok_${hash.toString(16)}`;
+  };
+
 
   // Confirmar reserva
   const handleSubmit = async () => {
+    console.log('handleSubmit called', { isPaymentValid: isPaymentValid(), paymentForm });
     if (!isPaymentValid()) {
-      alert('Completa los datos de pago antes de confirmar.');
+      // Mostrar en consola motivos y en UI (ver getValidationErrors)
+      const razones = getValidationErrors();
+      console.warn('Validación de pago falló:', razones);
+      alert('No se pueden enviar los datos. Revisa los campos requeridos: \n' + razones.join('\n'));
       return;
     }
 
@@ -460,6 +479,26 @@ const CrearReserva = () => {
     }
   };
 
+  const getValidationErrors = () => {
+    const errores = [];
+    if (!isCardDataValid()) {
+      errores.push('Nombre del titular (>=3 chars) o número de tarjeta (13-19 dígitos) incompletos');
+    }
+    if (!isSecurityValid()) {
+      errores.push('Fecha de expiración o CVC inválidos');
+    }
+    if (!isReceiptEmailValid()) {
+      errores.push('Correo de comprobante inválido');
+    }
+    if (!isDocumentValid()) {
+      errores.push('Documento inválido (mín 6 dígitos si se completa)');
+    }
+    if (!isBillingValid()) {
+      errores.push('Domicilio incompleto (si completás algún campo, completá todos los obligatorios)');
+    }
+    return errores;
+  };
+
   // Paso 1: Establecimiento
   const PasoEstablecimiento = () => (
     <div>
@@ -594,8 +633,7 @@ const CrearReserva = () => {
                   <strong>{c.nombre}</strong>
                   <p>Tipo: {c.tipo || 'No informado'}</p>
                   <p>Superficie: {c.superficie || 'No informada'}</p>
-                  <p>Precio base: {formatPrecio(getPrecioBase(c))}</p>
-                  <p>Fin de semana: {formatPrecio(getPrecioFinDeSemana(c))}</p>
+                  <p>Precio: {formatPrecio(getPrecioBase(c))}</p>
                 </div>
               </div>
             );
@@ -743,7 +781,7 @@ const PasoConfirmar = () => {
                       onChange={handleCvcChange}
                       placeholder="123"
                       autoComplete="cc-csc"
-                      maxLength={4}
+                      maxLength={3}
                     />
                   </label>
                 </div>
@@ -788,6 +826,7 @@ const PasoConfirmar = () => {
                     inputMode="numeric"
                     className="payment-input"
                     value={documentNumber}
+                    maxLength={8}
                     onChange={(event) => {
                       const digitsOnly = event.target.value.replace(/[^0-9]/g, '');
                       updatePaymentFormField('documentNumber', digitsOnly);
@@ -843,6 +882,7 @@ const PasoConfirmar = () => {
                     inputMode="numeric"
                     className="payment-input"
                     value={billingNumber}
+                    maxLength={4}
                     onChange={(event) => {
                       const digitsOnly = event.target.value.replace(/[^0-9]/g, '');
                       updatePaymentFormField('billingNumber', digitsOnly);
@@ -958,11 +998,28 @@ const PasoConfirmar = () => {
         </div>
 
         <div className="payment-actions">
+          {/* Mostrar errores de validación para que sepas qué completar */}
+          {(() => {
+            const errores = getValidationErrors();
+            if (errores.length === 0) return null;
+            return (
+              <div className="payment-errors" style={{ color: '#b00', marginBottom: 8 }}>
+                <strong>Faltan campos:</strong>
+                <ul style={{ margin: '6px 0 0 18px' }}>
+                  {errores.map((e, i) => (
+                    <li key={i}>{e}</li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
+
           <button className="btn-back" onClick={() => setStep(3)}>Atras</button>
           <button
             className="btn-confirm"
             onClick={handleSubmit}
             disabled={!isPaymentValid()}
+            title={!isPaymentValid() ? getValidationErrors().join(' · ') : 'Confirmar pago'}
           >
             Confirmar pago
           </button>

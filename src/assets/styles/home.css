@@ -5,6 +5,30 @@
   padding: 16px 0 56px;
 }
 
+/* ensure main content is pushed below the fixed header */
+.page-shell, .home-content {
+  padding-top: calc(var(--header-height) + 12px);
+}
+
+/* wrapper spacing for the map */
+.map-wrapper {
+  margin-top: 0; /* already handled by .page-shell padding-top */
+  position: relative;
+  z-index: 1;
+}
+
+/* force leaflet and its controls to render below the header */
+.leaflet-container {
+  z-index: 1 !important;
+}
+.leaflet-control,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control-zoom,
+.leaflet-control-attribution {
+  z-index: 1 !important;
+}
+
 .leaflet-container {
   width: 100%;
   height: 400px;
