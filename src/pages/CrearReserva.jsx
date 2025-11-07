@@ -978,12 +978,12 @@ const PasoConfirmar = () => {
       <div className="home-content">
         <h2>Crear Nueva Reserva</h2>
         {step === 1 ? (
-          <PasoEstablecimiento />
+          PasoEstablecimiento()
         ) : (
           <div className="crear-reserva-container">
-            {step === 2 && <PasoFechaHora />}
-            {step === 3 && <PasoCancha />}
-            {step === 4 && <PasoConfirmar />}
+            {step === 2 && PasoFechaHora()}
+            {step === 3 && PasoCancha()}
+            {step === 4 && PasoConfirmar()}
           </div>
         )}
       </div>
