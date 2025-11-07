@@ -29,7 +29,7 @@ const Perfil = () => {
         }
         const data = await res.json();
         setUsuario(data);
-        setForm({ nombre: data.nombre || '', telefono: data.telefono || '', posicion: data.posicion || '', contraseña: '' });
+        setForm({ nombre: data.nombre || '', telefono: data.telefono || '', posicion: data.posicion || '', correo: data.correo || '', ubicacion: data.ubicacion || '', contraseña: '' });
       } catch (error) {
         console.error('Error al cargar perfil:', error);
       }
@@ -38,10 +38,12 @@ const Perfil = () => {
     fetchUsuario();
   }, []);
 
-  // Cargar valoraciones recibidas
+  // Cargar valoraciones recibidas (solo si es Jugador)
   useEffect(() => {
-    if (usuario?.rol === 'Jugador') {
-      const fetchValoraciones = async () => {
+    if (!usuario || usuario.rol !== 'Jugador') return;
+
+    const fetchValoraciones = async () => {
+      try {
         const token = localStorage.getItem('token');
         const res = await fetch('https://localhost:7055/api/calificaciones/mias', {
           headers: { Authorization: `Bearer ${token}` },
@@ -56,7 +58,7 @@ const Perfil = () => {
     };
 
     fetchValoraciones();
-  }, []);
+  }, [usuario]);
 
   // Cargar estadísticas (partidos jugados + promedio)
   useEffect(() => {
@@ -185,8 +187,10 @@ const Perfil = () => {
           <img src="/valoracion.ico" alt="Valoración" />
           <div>
             <strong>Valoración promedio</strong>
-              <p>{estadisticas.promedioValoraciones.toFixed(1)}</p>
+            <p>{estadisticas.promedioValoraciones.toFixed(1)}</p>
           </div>
+        </div>
+      </div>
 
       <button className="btn-editar" onClick={() => setModalAbierto(true)}>
         Editar perfil
