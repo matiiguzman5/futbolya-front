@@ -1,7 +1,29 @@
-.home-header {
-  position: sticky;
+/* Asegurar que el header esté por encima del mapa y definir la altura usada por el layout */
+:root {
+  --header-height: 72px; /* ajustar si tu header mide distinto */
+}
+
+/* selector del header (ajusta si tu proyecto usa otra clase/ID) */
+header, .site-header, .app-header {
+  position: fixed; /* mantiene el header en la parte superior */
   top: 0;
-  z-index: 100;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  z-index: 2000; /* suficientemente alto para estar sobre leaflet */
+  background: var(--header-bg, #fff); /* mantener fondo para ocultar mapa debajo */
+}
+
+.home-header {
+  /* fixed so content is always pushed under it using padding-top on the page */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  z-index: 3000; /* must be above leaflet controls */
   background: linear-gradient(135deg, rgba(12, 33, 66, 0.92), rgba(46, 105, 255, 0.9));
   color: #ffffff;
   box-shadow: 0 18px 40px rgba(10, 25, 56, 0.28);
@@ -219,24 +241,42 @@
   justify-content: flex-end;
 }
 
-.btnlogout {
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--color-primary);
-  border: 1px solid rgba(255, 255, 255, 0.46);
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 0.72rem;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  box-shadow: 0 10px 24px rgba(10, 25, 56, 0.18);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-}
-
+.btnlogout {
+
+  background: rgba(255, 255, 255, 0.92);
+
+  color: var(--color-primary);
+
+  border: 1px solid rgba(255, 255, 255, 0.46);
+
+  padding: 6px 14px;
+
+  border-radius: 999px;
+
+  font-weight: 600;
+
+  font-size: 0.72rem;
+
+  letter-spacing: 0.5px;
+
+  white-space: nowrap;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+
+  box-shadow: 0 10px 24px rgba(10, 25, 56, 0.18);
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
+}
+
+
+
 
 
 .btnlogout:hover {

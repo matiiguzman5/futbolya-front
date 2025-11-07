@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 const API_BASE = 'https://localhost:7055/api';
 
-const PASSWORD_FIELD = 'contrase\u00f1a';
+const PASSWORD_FIELD = 'Contrasena';
 
 
 

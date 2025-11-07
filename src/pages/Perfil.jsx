@@ -29,7 +29,14 @@ const Perfil = () => {
         }
         const data = await res.json();
         setUsuario(data);
-        setForm({ nombre: data.nombre || '', telefono: data.telefono || '', posicion: data.posicion || '', correo: data.correo || '', ubicacion: data.ubicacion || '', contraseña: '' });
+        setForm({
+          nombre: data.nombre || '',
+          telefono: data.telefono || '',
+          posicion: data.posicion || '',
+          correo: data.correo || '',
+          ubicacion: data.ubicacion || '',
+          contraseña: ''
+        });
       } catch (error) {
         console.error('Error al cargar perfil:', error);
       }
@@ -120,8 +127,10 @@ const Perfil = () => {
       const token = localStorage.getItem('token');
       const payload = {
         nombre: form.nombre,
+        correo: form.correo,
         telefono: form.telefono,
         posicion: form.posicion,
+        ubicacion: form.ubicacion,
         contraseña: form.contraseña,
       };
 
@@ -156,6 +165,8 @@ const Perfil = () => {
     ? `https://localhost:7055${usuario.fotoPerfil}`
     : '/default-profile.png';
 
+  const esEstablecimiento = String(usuario.rol || '').toLowerCase() === 'establecimiento';
+
   return (
     <div className="perfil-container">
       <h2 className="perfil-nombre">{usuario.nombre?.toUpperCase?.() || usuario.nombre}</h2>
@@ -172,25 +183,33 @@ const Perfil = () => {
       <div className="perfil-info">
         <p><strong>Correo:</strong> {usuario.correo}</p>
         <p><strong>Teléfono:</strong> {usuario.telefono || 'No informado'}</p>
-        <p><strong>Posición:</strong> {usuario.posicion || 'No informada'}</p>
+        {/* Mostrar ubicación para establecimientos o si el usuario tiene una ubicación */}
+        {(esEstablecimiento || usuario.ubicacion) && (
+          <p><strong>Ubicación:</strong> {usuario.ubicacion || 'No informada'}</p>
+        )}
+        {!esEstablecimiento && (
+          <p><strong>Posición:</strong> {usuario.posicion || 'No informada'}</p>
+        )}
       </div>
 
-      <div className="perfil-estadisticas">
-        <div className="stat-card">
-          <img src="/pelotaIco.ico" alt="Partidos" />
-          <div>
-            <strong>Partidos jugados</strong>
-            <p>{estadisticas.partidosJugados}</p>
+      {!esEstablecimiento && (
+        <div className="perfil-estadisticas">
+          <div className="stat-card">
+            <img src="/pelotaIco.ico" alt="Partidos" />
+            <div>
+              <strong>Partidos jugados</strong>
+              <p>{estadisticas.partidosJugados}</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <img src="/valoracion.ico" alt="Valoración" />
+            <div>
+              <strong>Valoración promedio</strong>
+              <p>{estadisticas.promedioValoraciones.toFixed(1)}</p>
+            </div>
           </div>
         </div>
-        <div className="stat-card">
-          <img src="/valoracion.ico" alt="Valoración" />
-          <div>
-            <strong>Valoración promedio</strong>
-            <p>{estadisticas.promedioValoraciones.toFixed(1)}</p>
-          </div>
-        </div>
-      </div>
+      )}
 
       <button className="btn-editar" onClick={() => setModalAbierto(true)}>
         Editar perfil
@@ -200,93 +219,54 @@ const Perfil = () => {
         <div className="modal">
           <div className="modal-contenido">
             <h3>Editar Perfil</h3>
+
+            {/* Campos comunes / obligatorios para edición */}
             <input
               type="text"
               placeholder="Nombre"
               value={form.nombre}
-              onChange={(event) => setForm({ ...form, nombre: event.target.value })}
+              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
             />
+
+            <input
+              type="email"
+              placeholder="Correo electrónico"
+              value={form.correo}
+              onChange={(e) => setForm({ ...form, correo: e.target.value })}
+            />
+
             <input
               type="text"
               placeholder="Teléfono"
               value={form.telefono}
-              onChange={(event) => setForm({ ...form, telefono: event.target.value })}
+              onChange={(e) => setForm({ ...form, telefono: e.target.value })}
             />
-            <input
-              type="text"
-              placeholder="Posición"
-              value={form.posicion}
-              onChange={(event) => setForm({ ...form, posicion: event.target.value })}
-            />
+
+            {/* Para establecimientos: mostrar ubicación.
+                Para jugadores u otros roles: mostrar posición. */}
+            {esEstablecimiento ? (
+              <input
+                type="text"
+                placeholder="Ubicación"
+                value={form.ubicacion}
+                onChange={(e) => setForm({ ...form, ubicacion: e.target.value })}
+              />
+            ) : (
+              <input
+                type="text"
+                placeholder="Posición"
+                value={form.posicion}
+                onChange={(e) => setForm({ ...form, posicion: e.target.value })}
+              />
+            )}
+
+            {/* Contraseña (única vez) */}
             <input
               type="password"
               placeholder="Nueva contraseña (opcional)"
               value={form.contraseña}
-              onChange={(event) => setForm({ ...form, contraseña: event.target.value })}
+              onChange={(e) => setForm({ ...form, contraseña: e.target.value })}
             />
-
-            {usuario.rol === 'establecimiento' ? (
-              <>
-                <input
-                  type="text"
-                  placeholder="Nombre"
-                  value={form.nombre}
-                  onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                />
-                <input
-                  type="email"
-                  placeholder="Correo electrónico"
-                  value={form.correo}
-                  onChange={(e) => setForm({ ...form, correo: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="Teléfono"
-                  value={form.telefono}
-                  onChange={(e) => setForm({ ...form, telefono: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="Ubicación"
-                  value={form.ubicacion}
-                  onChange={(e) => setForm({ ...form, ubicacion: e.target.value })}
-                />
-                <input
-                  type="password"
-                  placeholder="Nueva contraseña (opcional)"
-                  value={form.contraseña}
-                  onChange={(e) => setForm({ ...form, contraseña: e.target.value })}
-                />
-              </>
-            ) : (
-              <>
-                <input
-                  type="text"
-                  placeholder="Nombre"
-                  value={form.nombre}
-                  onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                />
-                <input
-                  type="email"
-                  placeholder="Correo electrónico"
-                  value={form.correo}
-                  onChange={(e) => setForm({ ...form, correo: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="Teléfono"
-                  value={form.telefono}
-                  onChange={(e) => setForm({ ...form, telefono: e.target.value })}
-                />
-                
-                <input
-                  type="password"
-                  placeholder="Nueva contraseña (opcional)"
-                  value={form.contraseña}
-                  onChange={(e) => setForm({ ...form, contraseña: e.target.value })}
-                />
-              </>
-            )}
 
             <div className="modal-botones">
               <button className="btn-guardar" onClick={handleGuardar}>
@@ -300,21 +280,25 @@ const Perfil = () => {
         </div>
       )}
 
-      <h3 className="subtitulo">Mis valoraciones</h3>
-      {valoraciones.length === 0 ? (
-        <p className="sin-valoraciones">Todavía no recibiste valoraciones.</p>
-      ) : (
-        valoraciones.map((valoracion, index) => (
-          <div key={index} className="valoracion-card">
-            <p>
-              <strong>{valoracion.puntaje}/5</strong> - {valoracion.comentario}
-            </p>
-            <small>
-              De {valoracion.evaluador?.nombre || 'Desconocido'} el{' '}
-              {valoracion.fecha ? new Date(valoracion.fecha).toLocaleDateString('es-AR') : 'sin fecha'}
-            </small>
-          </div>
-        ))
+      {!esEstablecimiento && (
+        <>
+          <h3 className="subtitulo">Mis valoraciones</h3>
+          {valoraciones.length === 0 ? (
+            <p className="sin-valoraciones">Todavía no recibiste valoraciones.</p>
+          ) : (
+            valoraciones.map((valoracion, index) => (
+              <div key={index} className="valoracion-card">
+                <p>
+                  <strong>{valoracion.puntaje}/5</strong> - {valoracion.comentario}
+                </p>
+                <small>
+                  De {valoracion.evaluador?.nombre || 'Desconocido'} el{' '}
+                  {valoracion.fecha ? new Date(valoracion.fecha).toLocaleDateString('es-AR') : 'sin fecha'}
+                </small>
+              </div>
+            ))
+          )} 
+        </>
       )}
 
       <footer className="footer-perfil">© 2025 FútbolYa</footer>

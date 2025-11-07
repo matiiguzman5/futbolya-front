@@ -1,119 +1,223 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import '../assets/styles/home.css';
 import { Link } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-// Fix ícono Leaflet roto en React
+const DEFAULT_CENTER = { lat: -34.6037, lng: -58.3816 };
+const MAP_STYLE = { width: '100%', height: '320px' };
+const GEOCODE_CACHE_KEY = 'geocodeCache_v1';
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl:
-    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl:
-    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
+
+const defaultMarkerIcon = L.icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+const loadGeocodeCache = () => {
+  try { return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || '{}'); } catch { return {}; }
+};
+const saveGeocodeCache = (cache) => { try { localStorage.setItem(GEOCODE_CACHE_KEY, JSON.stringify(cache)); } catch {} };
 
 const Home = () => {
   const [reservas, setReservas] = useState([]);
   const [reservasConCoords, setReservasConCoords] = useState([]);
+  const [establecimientos, setEstablecimientos] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1);
   const [busqueda, setBusqueda] = useState('');
   const reservasPorPagina = 4;
-  const usuario = JSON.parse(localStorage.getItem('usuario'));
-  const [establecimientos, setEstablecimientos] = useState([]);
-  const [selectedEstablecimiento, setSelectedEstablecimiento] = useState(null);
+  const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+  const mapRef = useRef(null);
+  const cache = loadGeocodeCache();
 
-  // 🔹 Convierte direcciones en coordenadas (usando Nominatim)
   const obtenerCoordenadas = async (direccion) => {
+    if (!direccion) return null;
+    const normalizeKey = (s) => s.trim().toLowerCase();
+    const key = normalizeKey(direccion);
+
+    // if cached and looks good, return
+    if (cache[key]) return cache[key];
+
+    // helper para parsear componentes básicos de la dirección
+    const parseAddress = (addr) => {
+      const parts = addr.split(',').map(p => p.trim()).filter(Boolean);
+      const street = parts[0] || addr;
+      const postalMatch = addr.match(/\b[A-Za-z]\d{4}[A-Za-z]{0,3}\b/i) || addr.match(/\b\d{4}\b/);
+      const postalcode = postalMatch ? postalMatch[0] : '';
+      const cityPart = parts.find(p => /buenos|caba|ciudad|baires/i.test(p)) || '';
+      const city = cityPart || 'Ciudad Autónoma de Buenos Aires';
+      return { street, city, postalcode };
+    };
+
+    const parsed = parseAddress(direccion);
+
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          direccion
-        )}`,
-        { headers: { 'User-Agent': 'FutbolYa-WebApp' } } // por cortesía de uso
-      );
-      const data = await res.json();
-      if (data.length > 0) {
-        return {
-          lat: parseFloat(data[0].lat),
-          lon: parseFloat(data[0].lon),
-        };
+      // 1) Intento: búsqueda estructurada restringida a Argentina
+      const paramsStruct = new URLSearchParams({
+        format: 'json',
+        street: parsed.street,
+        city: parsed.city,
+        country: 'Argentina',
+        limit: '1',
+        addressdetails: '1'
+      });
+      if (parsed.postalcode) paramsStruct.set('postalcode', parsed.postalcode);
+
+      const urlStruct = `https://nominatim.openstreetmap.org/search?${paramsStruct.toString()}`;
+      console.debug('Nominatim structured url:', urlStruct);
+      const resStruct = await fetch(urlStruct, { headers: { 'User-Agent': 'FutbolYa-WebApp' } });
+      const dataStruct = await resStruct.json();
+      if (dataStruct && dataStruct.length) {
+        const coords = { lat: Number(dataStruct[0].lat), lon: Number(dataStruct[0].lon) };
+        cache[key] = coords; saveGeocodeCache(cache);
+        return coords;
       }
-    } catch (error) {
-      console.error('Error al obtener coordenadas:', error);
+
+      // 2) Fallback: búsqueda libre pero forzando Argentina y añadiendo "Argentina" al query
+      // Antes de reintentar, borrar cache para esta clave por si estaba mal
+      try { delete cache[key]; saveGeocodeCache(cache); } catch (e) {}
+
+      const q = `${direccion}${direccion.toLowerCase().includes('argentina') ? '' : ', Argentina'}`;
+      const paramsFree = new URLSearchParams({
+        format: 'json',
+        q,
+        countrycodes: 'ar',
+        limit: '1',
+        addressdetails: '1'
+      });
+      const urlFree = `https://nominatim.openstreetmap.org/search?${paramsFree.toString()}`;
+      console.debug('Nominatim fallback url:', urlFree);
+      const resFree = await fetch(urlFree, { headers: { 'User-Agent': 'FutbolYa-WebApp' } });
+      const dataFree = await resFree.json();
+      if (dataFree && dataFree.length) {
+        const coords = { lat: Number(dataFree[0].lat), lon: Number(dataFree[0].lon) };
+        cache[key] = coords; saveGeocodeCache(cache);
+        return coords;
+      }
+
+    } catch (e) {
+      console.error('Geocode error', e);
     }
     return null;
   };
 
-  // 🔹 Carga reservas desde la API
+  const extractCoordsFromObject = (obj) => {
+    if (!obj) return null;
+    const lat = obj.latitud ?? obj.lat ?? obj.latitude ?? obj.coords?.lat ?? obj.coordenadas?.lat;
+    const lng = obj.longitud ?? obj.lng ?? obj.lon ?? obj.longitude ?? obj.coords?.lng ?? obj.coordenadas?.lng;
+    if (lat == null || lng == null) return null;
+    const nlat = Number(lat), nlng = Number(lng);
+    return Number.isFinite(nlat) && Number.isFinite(nlng) ? { lat: nlat, lon: nlng } : null;
+  };
+
   useEffect(() => {
-    const fetchReservas = async () => {
-      const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
+    const fetchAll = async () => {
       try {
-        const res = await fetch('https://localhost:7055/api/reservas/disponibles', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const resEst = await fetch('https://localhost:7055/api/Usuarios/establecimientos', { headers: { Authorization: `Bearer ${token}` } });
+        const estList = resEst.ok ? await resEst.json() : [];
+        setEstablecimientos(estList);
 
-        if (!res.ok) {
-          console.error('Error al obtener reservas:', res.status);
-          return;
-        }
-
+        const res = await fetch('https://localhost:7055/api/reservas/disponibles', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) { console.error('Error reservas', res.status); return; }
         const data = await res.json();
         setReservas(data);
 
-        // Convertir direcciones en coordenadas
-        const dataConCoords = await Promise.all(
-          data.map(async (reserva) => {
-            const coords = await obtenerCoordenadas(reserva.ubicacion);
-            return { ...reserva, latitud: coords?.lat, longitud: coords?.lon };
-          })
-        );
+        const canchaToEstMap = new Map();
+        estList.forEach(est => {
+          const canchas = est.canchas || est.listaCanchas || [];
+          if (Array.isArray(canchas)) canchas.forEach(c => {
+            const cid = c.id ?? c.canchaId; if (cid != null) canchaToEstMap.set(String(cid), est);
+          });
+        });
+
+        const dataConCoords = await Promise.all(data.map(async (reserva) => {
+          let coords = extractCoordsFromObject(reserva) || extractCoordsFromObject(reserva.cancha) || extractCoordsFromObject(reserva.establecimiento);
+
+          let ubic = reserva.ubicacion || reserva.establecimiento?.ubicacion || reserva.cancha?.establecimiento?.ubicacion || null;
+
+          if (!coords) {
+            const estId = reserva.establecimientoId ?? reserva.establecimiento?.id ?? reserva.estId ?? reserva.establishmentId ?? reserva.usuarioId ?? null;
+            let est = estId ? estList.find(e => String(e.id) === String(estId)) : null;
+            if (!est) {
+              const canchaId = reserva.canchaId ?? reserva.cancha?.id ?? null;
+              if (canchaId != null) est = canchaToEstMap.get(String(canchaId)) || null;
+            }
+            if (est) {
+              const ec = extractCoordsFromObject(est);
+              if (ec) coords = ec;
+              if (!ubic && est.ubicacion) ubic = est.ubicacion;
+            }
+          }
+
+          if (!coords && ubic) {
+            const g = await obtenerCoordenadas(ubic);
+            if (g) coords = g;
+          }
+
+          return {
+            ...reserva,
+            latitud: coords?.lat ?? null,
+            longitud: coords?.lon ?? null,
+            resolvedUbicacion: ubic ?? null
+          };
+        }));
 
         setReservasConCoords(dataConCoords);
-      } catch (error) {
-        console.error('Error en fetchReservas:', error);
-      }
+      } catch (err) { console.error('fetchAll error', err); }
     };
-
-    fetchReservas();
+    fetchAll();
+    // eslint-disable-next-line
   }, []);
 
-  // 🔹 Filtrado por texto
-  const reservasFiltradas = reservas.filter(
+  useEffect(() => {
+    const pts = reservasConCoords.filter(r => r.latitud != null && r.longitud != null).map(r => [Number(r.latitud), Number(r.longitud)]);
+    const map = mapRef.current;
+    if (!map) return;
+    try {
+      if (pts.length === 0) { map.setView([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], 11); return; }
+      if (pts.length === 1) { map.setView(pts[0], 13); return; }
+      const bounds = L.latLngBounds(pts);
+      map.fitBounds(bounds.pad ? bounds.pad(0.2) : bounds, { padding: [50,50] });
+    } catch (e) { console.error('bounds error', e); }
+  }, [reservasConCoords]);
+
+  // Use reservasConCoords for filtering and pagination so cards display resolvedUbicacion
+  const reservasFiltradas = reservasConCoords.filter(
     (reserva) =>
       reserva.nombreCancha?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      reserva.ubicacion?.toLowerCase().includes(busqueda.toLowerCase())
+      (reserva.resolvedUbicacion || reserva.establecimiento?.ubicacion || reserva.ubicacion || '').toLowerCase().includes(busqueda.toLowerCase())
   );
 
   const totalPaginas = Math.ceil(reservasFiltradas.length / reservasPorPagina);
   const indexInicio = (paginaActual - 1) * reservasPorPagina;
-  const indexFin = indexInicio + reservasPorPagina;
-  const reservasPaginadas = reservasFiltradas.slice(indexInicio, indexFin);
+  const reservasPaginadas = reservasFiltradas.slice(indexInicio, indexInicio + reservasPorPagina);
 
   const manejarUnirse = async (reservaId) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(
-        `https://localhost:7055/api/reservas/${reservaId}/unirse`,
-        {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
+      const res = await fetch(`https://localhost:7055/api/reservas/${reservaId}/unirse`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) {
         const err = await res.text();
         alert(`Error: ${err}`);
         return;
       }
-
       alert('Te uniste a la reserva.');
       window.location.reload();
-    } catch (error) {
+    } catch {
       alert('Hubo un error al unirse.');
     }
   };
@@ -121,7 +225,6 @@ const Home = () => {
   return (
     <div className="home-wrapper page-shell">
       <div className="home-content">
-        {/* Buscador */}
         <div className="home-search">
           <div className="search-container">
             <input
@@ -133,107 +236,79 @@ const Home = () => {
           </div>
         </div>
 
-        {/* 🌍 Mapa con todas las ubicaciones */}
-        {reservasConCoords.length > 0 && (
+        {/* map wrapper to avoid overlapping header */}
+        <div className="map-wrapper">
           <MapContainer
-            center={[-34.6037, -58.3816]} // Buenos Aires por defecto
+            center={[DEFAULT_CENTER.lat, DEFAULT_CENTER.lng]}
             zoom={11}
-            scrollWheelZoom={false}
+            style={MAP_STYLE}
+            whenCreated={(mapInstance) => { mapRef.current = mapInstance; setTimeout(() => mapInstance.invalidateSize?.(), 200); }}
           >
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+              attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {reservasConCoords.map((reserva, i) =>
-              reserva.latitud && reserva.longitud ? (
-                <Marker
-                  key={i}
-                  position={[reserva.latitud, reserva.longitud]}
-                >
-                  <Popup>
-                    <strong>{reserva.nombreCancha}</strong>
-                    <br />
-                    {reserva.ubicacion}
-                  </Popup>
-                </Marker>
+            {reservasConCoords.map(reserva =>
+              reserva.latitud != null && reserva.longitud != null ? (
+                <React.Fragment key={reserva.id ?? `${reserva.nombreCancha}-${Math.random()}`}>
+                  <Marker position={[Number(reserva.latitud), Number(reserva.longitud)]} icon={defaultMarkerIcon}>
+                    <Popup>
+                      <strong>{reserva.nombreCancha}</strong><br/>
+                      {reserva.resolvedUbicacion || reserva.ubicacion || 'Ubicación sin resolver'}<br/>
+                      Fecha: {reserva.fechaHora ? new Date(reserva.fechaHora).toLocaleString('es-AR') : '-'}
+                    </Popup>
+                  </Marker>
+                  <CircleMarker center={[Number(reserva.latitud), Number(reserva.longitud)]} radius={6} pathOptions={{ color: '#007bff', fillColor: '#49a7ff', fillOpacity: 0.9 }} />
+                </React.Fragment>
               ) : null
             )}
           </MapContainer>
-        )}
+        </div>
 
-        {/* Botones */}
-        {localStorage.getItem('rol') !== 'establecimiento' && (
+        {localStorage.getItem('rol') !== 'establecimiento' ? (
           <div className="crear-reserva-container">
-            <Link to="/crear-reserva" className="btn-crear-reserva">
-              Crear Reserva
-            </Link>
+            <Link to="/crear-reserva" className="btn-crear-reserva">Crear Reserva</Link>
           </div>
-        )}
-
-        {localStorage.getItem('rol') === 'establecimiento' && (
+        ) : (
           <div className="crear-reserva-container">
-            <Link to="/abm-canchas" className="btn-crear-reserva">
-              Administrar Canchas
-            </Link>
+            <Link to="/abm-canchas" className="btn-crear-reserva">Administrar Canchas</Link>
           </div>
         )}
 
         <h3 style={{ textAlign: 'center' }}>Reservas Disponibles</h3>
 
-        {/* Lista de reservas */}
         <div className="partidos-grid">
           {reservasPaginadas.length === 0 ? (
-            <p style={{ textAlign: 'center', marginTop: '20px' }}>
-              No hay reservas disponibles.
-            </p>
+            <p style={{ textAlign: 'center', marginTop: '20px' }}>No hay reservas disponibles.</p>
           ) : (
             reservasPaginadas.map((reserva) => (
               <div key={reserva.id} className="reserva-card">
                 <img src="/cancha.jpg" alt="Cancha" />
                 <div className="info">
-                  <strong>
-                    {reserva.nombreCancha} ({reserva.tipo})
-                  </strong>
-                  <p>Ubicación: {establecimientos.ubicacion}</p>
-                  <p>
-                    Fecha: {new Date(reserva.fechaHora).toLocaleString('es-AR')}
-                  </p>
-                  <p>
-                    Jugadores: {reserva.anotados} / {reserva.capacidad}
-                  </p>
+                  <strong>{reserva.nombreCancha} ({reserva.tipo})</strong>
+                  <p>Ubicación: {reserva.resolvedUbicacion || reserva.ubicacion || 'No informada'}</p>
+                  <p>Fecha: {reserva.fechaHora ? new Date(reserva.fechaHora).toLocaleString('es-AR') : '-'}</p>
+                  <p>Jugadores: {reserva.anotados} / {reserva.capacidad}</p>
                   <p>Observaciones: {reserva.observaciones || 'Ninguna'}</p>
                   <p>Estado de Pago: {reserva.estadoPago}</p>
 
-                  {usuario?.rol === 'jugador' &&
-                    (reserva.yaEstoyUnido ? (
-                      <p style={{ color: 'green', marginTop: '10px' }}>
-                        ✅ Ya estás unido a esta reserva
-                      </p>
-                    ) : (
-                      reserva.anotados < reserva.capacidad && (
-                        <button
-                          onClick={() => manejarUnirse(reserva.id)}
-                          className="btn-crear-reserva"
-                          style={{ marginTop: '10px' }}
-                        >
-                          Unirse
-                        </button>
-                      )
-                    ))}
+                  {usuario?.rol === 'jugador' && (reserva.yaEstoyUnido ? (
+                    <p style={{ color: 'green', marginTop: '10px' }}>✅ Ya estás unido a esta reserva</p>
+                  ) : (
+                    reserva.anotados < reserva.capacidad && (
+                      <button onClick={() => manejarUnirse(reserva.id)} className="btn-crear-reserva" style={{ marginTop: '10px' }}>Unirse</button>
+                    )
+                  ))}
+
                 </div>
               </div>
             ))
           )}
         </div>
 
-        {/* Paginación */}
         <div className="paginacion">
           {[...Array(totalPaginas)].map((_, i) => (
-            <button
-              key={i}
-              className={paginaActual === i + 1 ? 'activo' : ''}
-              onClick={() => setPaginaActual(i + 1)}
-            >
+            <button key={i} className={paginaActual === i + 1 ? 'activo' : ''} onClick={() => setPaginaActual(i + 1)}>
               {i + 1}
             </button>
           ))}
