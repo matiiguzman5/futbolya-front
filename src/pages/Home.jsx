@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaf
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+const BASE_URL = 'https://localhost:7055';
 const DEFAULT_CENTER = { lat: -34.6037, lng: -58.3816 };
 const MAP_STYLE = { width: '100%', height: '320px' };
 const GEOCODE_CACHE_KEY = 'geocodeCache_v1';
@@ -335,7 +336,16 @@ const Home = () => {
           ) : (
             reservasPaginadas.map((reserva) => (
               <div key={reserva.id} className="reserva-card">
-                <img src="/cancha.jpg" alt="Cancha" />
+                <img
+                  src={
+                    reserva.fotoEstablecimiento
+                      ? `${BASE_URL}${reserva.fotoEstablecimiento}`
+                      : "/imagenes/cancha_default.jpg"
+                  }
+                  alt="Establecimiento"
+                  className="rounded-md w-full h-48 object-cover"
+                  onError={(e) => { e.target.src = "/imagenes/cancha_default.jpg"; }}
+                />
                 <div className="info">
                   <strong>{reserva.nombreCancha} ({reserva.tipo})</strong>
                   <p>Ubicación: {reserva.resolvedUbicacion || reserva.ubicacion || 'No informada'}</p>
