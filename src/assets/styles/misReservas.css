@@ -347,5 +347,104 @@
   to { transform: scale(1); opacity: 1; }
 }
 
+.share-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #2563eb;
+  border-radius: 14px;
+  padding: 10px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.15);
+  width: fit-content;
+  min-width: 240px;
+  position: absolute;
+  right: 0;
+  z-index: 20;
+}
 
+.share-opciones button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #2563eb;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.95rem;
+  text-align: left;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
 
+.share-opciones button:hover {
+  background: #1e50c1;
+  transform: translateX(2px);
+}
+
+.share-opciones button:not(:first-child):not(:last-child) {
+  border-radius: 10px;
+}
+
+.share-opciones button:first-child {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.share-opciones button:last-child {
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+.reserva-card {
+  background: #fff !important;
+  border: none !important;
+  border-radius: 18px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06) !important;
+  overflow: visible !important;
+  position: relative;
+}
+
+.reserva-card-header {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  z-index: 2;
+}
+
+.reserva-card-header *,
+.reserva-card-header::before,
+.reserva-card-header::after {
+  background: transparent !important;
+}
+.home-wrapper.page-shell {
+  padding-top: 20px !important;
+}
+.reserva-card {
+  position: relative;
+  background-color: #ffffff !important;
+  border: none !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06) !important;
+  overflow: visible !important;
+}
+.reserva-card-header {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding-top: 0 !important;
+  margin-top: -4px !important;
+  position: relative;
+  z-index: 2;
+}
+
+.reserva-card-header * {
+  background: transparent !important;
+}
+
+.reserva-card-meta {
+  margin-top: 2px !important;
+  display: block;
+}
