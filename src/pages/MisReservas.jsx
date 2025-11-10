@@ -8,16 +8,16 @@ import ConfirmActionModal from '../components/ConfirmActionModal';
 
 const ACCION_RESERVA_CONFIG = {
   salir: {
-    title: '¿Salir del partido?',
-    description: 'Vas a abandonar el partido y liberar tu lugar. Esta acción no se puede deshacer.',
-    confirmLabel: 'Sí, salir',
+    title: 'Â¿Salir del partido?',
+    description: 'Vas a abandonar el partido y liberar tu lugar. Esta acciÃ³n no se puede deshacer.',
+    confirmLabel: 'SÃ­, salir',
     successMessage: 'Saliste del partido correctamente.',
     tone: 'warning'
   },
   cancelar: {
-    title: '¿Cancelar la reserva?',
-    description: 'Se liberará el turno y avisaremos al establecimiento. Esta acción no se puede deshacer.',
-    confirmLabel: 'Sí, cancelar',
+    title: 'Â¿Cancelar la reserva?',
+    description: 'Se libero el turno y avisaremos al establecimiento. Esta acciÃ³n no se puede deshacer.',
+    confirmLabel: 'SÃ­, cancelar',
     successMessage: 'Reserva cancelada correctamente.',
     tone: 'danger'
   }
@@ -261,17 +261,7 @@ const MisReservas = () => {
     <div className="home-wrapper page-shell">
       <div className="home-content">
         <div className="mis-reservas-container">
-          <header className="mis-reservas-header">
-            <div>
-              <h2 className="titulo">Mis Reservas</h2>
-              <p className="mis-reservas-subtitulo">
-                Consulta tus proximas reservas y tu historial en un panel mas claro y ordenado.
-              </p>
-            </div>
-            <button className="btn-volver" onClick={() => navigate('/home')}>
-              Volver al Home
-            </button>
-          </header>
+          
 
           <section className="reserva-seccion">
             <div className="reserva-seccion-header">
