@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import ChatPartido from "../components/ChatPartido";
+
 
 const BASE_URL = 'https://localhost:7055';
 const DEFAULT_CENTER = { lat: -34.6037, lng: -58.3816 };
@@ -372,7 +374,9 @@ const Home = () => {
                       <button onClick={() => manejarUnirse(reserva.id)} className="btn-crear-reserva" style={{ marginTop: '10px' }}>Unirse</button>
                     )
                   ))}
-
+                  <Link to={`/chat/${reserva.id}`} className="btn-chat">
+                    💬 Ir al chat
+                  </Link>
                 </div>
               </div>
             ))

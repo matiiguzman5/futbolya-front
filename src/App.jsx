@@ -14,6 +14,8 @@ import Establecimientos from './pages/Establecimientos';
 import ProteccionRuta from './ProteccionRuta';
 import Layout from './components/Layout';
 import './assets/styles/global.css';
+import ChatPartidoPage from "./pages/ChatPartidoPage";
+
 
 const App = () => (
   <Router>
@@ -38,6 +40,7 @@ const App = () => (
             </ProteccionRuta>
           )}
         />
+        <Route path="/chat/:id" element={<ChatPartidoPage />} />
         <Route
           path="/establecimiento"
           element={(

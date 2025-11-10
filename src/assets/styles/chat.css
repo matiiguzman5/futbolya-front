@@ -1,0 +1,124 @@
+.chat-page {
+  max-width: 700px;
+  margin: 60px auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* HEADER */
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.chat-header h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.btn-volver {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-volver:hover {
+  background-color: #1d4ed8;
+}
+
+/* MENSAJES */
+.chat-mensajes {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  padding: 16px;
+  height: 400px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.chat-mensaje {
+  max-width: 75%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.chat-mensaje.mio {
+  align-self: flex-end;
+  background: #2563eb;
+  color: #fff;
+}
+
+.chat-mensaje.otro {
+  align-self: flex-start;
+  background: #e5e7eb;
+  color: #111;
+}
+
+.chat-vacio {
+  text-align: center;
+  color: #6b7280;
+  margin-top: auto;
+}
+
+/* INPUT */
+.chat-input {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.chat-input input {
+  flex: 1;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.chat-input input:focus {
+  border-color: #2563eb;
+}
+
+.chat-input button {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chat-input button:hover {
+  background-color: #1d4ed8;
+}
