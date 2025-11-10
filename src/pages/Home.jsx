@@ -252,11 +252,38 @@ const Home = () => {
               reserva.latitud != null && reserva.longitud != null ? (
                 <React.Fragment key={reserva.id ?? `${reserva.nombreCancha}-${Math.random()}`}>
                   <Marker position={[Number(reserva.latitud), Number(reserva.longitud)]} icon={defaultMarkerIcon}>
-                    <Popup>
-                      <strong>{reserva.nombreCancha}</strong><br/>
-                      {reserva.resolvedUbicacion || reserva.ubicacion || 'Ubicación sin resolver'}<br/>
-                      Fecha: {reserva.fechaHora ? new Date(reserva.fechaHora).toLocaleString('es-AR') : '-'}
-                    </Popup>
+                  <Popup>
+                    <strong>{reserva.nombreCancha}</strong><br />
+                    {reserva.resolvedUbicacion || reserva.ubicacion || 'Ubicación sin resolver'}<br />
+                    Fecha: {reserva.fechaHora 
+                      ? new Date(reserva.fechaHora).toLocaleString('es-AR', {
+                          hour12: false,
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) 
+                      : '-'}
+                    <br />
+                    Jugadores: {reserva.anotados} / {reserva.capacidad}<br />
+                    Observaciones: {reserva.observaciones || 'Ninguna'}<br />
+
+                    {usuario?.rol === 'jugador' ? (
+                      reserva.yaEstoyUnido ? (
+                        <span style={{ color: 'green' }}>✅ Ya estás unido</span>
+                      ) : reserva.anotados < reserva.capacidad ? (
+                        <button
+                          onClick={() => manejarUnirse(reserva.id)}
+                          style={{ marginTop: '5px', backgroundColor: '#28a745', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer' }}
+                        >
+                          Unirse
+                        </button>
+                      ) : (
+                        <span style={{ color: 'red' }}>Cupo completo</span>
+                      )
+                    ) : null}
+                  </Popup>
                   </Marker>
                   <CircleMarker center={[Number(reserva.latitud), Number(reserva.longitud)]} radius={6} pathOptions={{ color: '#007bff', fillColor: '#49a7ff', fillOpacity: 0.9 }} />
                 </React.Fragment>
@@ -287,7 +314,18 @@ const Home = () => {
                 <div className="info">
                   <strong>{reserva.nombreCancha} ({reserva.tipo})</strong>
                   <p>Ubicación: {reserva.resolvedUbicacion || reserva.ubicacion || 'No informada'}</p>
-                  <p>Fecha: {reserva.fechaHora ? new Date(reserva.fechaHora).toLocaleString('es-AR') : '-'}</p>
+                  <p>
+                    Fecha: {reserva.fechaHora 
+                      ? new Date(reserva.fechaHora).toLocaleString('es-AR', {
+                          hour12: false,
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) 
+                      : '-'}
+                  </p>
                   <p>Jugadores: {reserva.anotados} / {reserva.capacidad}</p>
                   <p>Observaciones: {reserva.observaciones || 'Ninguna'}</p>
                   <p>Estado de Pago: {reserva.estadoPago}</p>
