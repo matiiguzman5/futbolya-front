@@ -236,61 +236,86 @@ const Home = () => {
           </div>
         </div>
 
-        {/* map wrapper to avoid overlapping header */}
         <div className="map-wrapper">
           <MapContainer
             center={[DEFAULT_CENTER.lat, DEFAULT_CENTER.lng]}
             zoom={11}
             style={MAP_STYLE}
-            whenCreated={(mapInstance) => { mapRef.current = mapInstance; setTimeout(() => mapInstance.invalidateSize?.(), 200); }}
+            whenCreated={(mapInstance) => {
+              mapRef.current = mapInstance;
+              setTimeout(() => mapInstance.invalidateSize?.(), 200);
+            }}
           >
             <TileLayer
               attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {reservasConCoords.map(reserva =>
-              reserva.latitud != null && reserva.longitud != null ? (
-                <React.Fragment key={reserva.id ?? `${reserva.nombreCancha}-${Math.random()}`}>
-                  <Marker position={[Number(reserva.latitud), Number(reserva.longitud)]} icon={defaultMarkerIcon}>
-                  <Popup>
-                    <strong>{reserva.nombreCancha}</strong><br />
-                    {reserva.resolvedUbicacion || reserva.ubicacion || 'Ubicación sin resolver'}<br />
-                    Fecha: {reserva.fechaHora 
-                      ? new Date(reserva.fechaHora).toLocaleString('es-AR', {
-                          hour12: false,
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        }) 
-                      : '-'}
-                    <br />
-                    Jugadores: {reserva.anotados} / {reserva.capacidad}<br />
-                    Observaciones: {reserva.observaciones || 'Ninguna'}<br />
 
-                    {usuario?.rol === 'jugador' ? (
-                      reserva.yaEstoyUnido ? (
-                        <span style={{ color: 'green' }}>✅ Ya estás unido</span>
-                      ) : reserva.anotados < reserva.capacidad ? (
-                        <button
-                          onClick={() => manejarUnirse(reserva.id)}
-                          style={{ marginTop: '5px', backgroundColor: '#28a745', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer' }}
-                        >
-                          Unirse
-                        </button>
-                      ) : (
-                        <span style={{ color: 'red' }}>Cupo completo</span>
-                      )
-                    ) : null}
+            {/** Agrupar reservas por latitud/longitud como clave */}
+            {Object.entries(
+              reservasConCoords.reduce((acc, reserva) => {
+                if (reserva.latitud != null && reserva.longitud != null) {
+                  const key = `${reserva.latitud},${reserva.longitud}`;
+                  if (!acc[key]) acc[key] = [];
+                  acc[key].push(reserva);
+                }
+                return acc;
+              }, {})
+            ).map(([coordStr, reservas]) => {
+              const [lat, lng] = coordStr.split(',').map(Number);
+              return (
+                <Marker key={coordStr} position={[lat, lng]} icon={defaultMarkerIcon}>
+                  <Popup maxWidth={300}>
+                    {reservas.map((reserva) => (
+                      <div key={reserva.id} style={{ marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '5px' }}>
+                        <strong>{reserva.nombreCancha}</strong><br />
+                        {reserva.resolvedUbicacion || reserva.ubicacion || 'Ubicación sin resolver'}<br />
+                        Fecha:{' '}
+                        {reserva.fechaHora
+                          ? new Date(reserva.fechaHora).toLocaleString('es-AR', {
+                              hour12: false,
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '-'}
+                        <br />
+                        Jugadores: {reserva.anotados} / {reserva.capacidad}<br />
+                        Observaciones: {reserva.observaciones || 'Ninguna'}<br />
+
+                        {usuario?.rol === 'jugador' ? (
+                          reserva.yaEstoyUnido ? (
+                            <span style={{ color: 'green' }}>✅ Ya estás unido</span>
+                          ) : reserva.anotados < reserva.capacidad ? (
+                            <button
+                              onClick={() => manejarUnirse(reserva.id)}
+                              style={{
+                                marginTop: '5px',
+                                backgroundColor: '#28a745',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '5px 10px',
+                                borderRadius: '5px',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Unirse
+                            </button>
+                          ) : (
+                            <span style={{ color: 'red' }}>Cupo completo</span>
+                          )
+                        ) : null}
+                      </div>
+                    ))}
                   </Popup>
-                  </Marker>
-                  <CircleMarker center={[Number(reserva.latitud), Number(reserva.longitud)]} radius={6} pathOptions={{ color: '#007bff', fillColor: '#49a7ff', fillOpacity: 0.9 }} />
-                </React.Fragment>
-              ) : null
-            )}
+                </Marker>
+              );
+            })}
           </MapContainer>
         </div>
+
 
         {localStorage.getItem('rol') !== 'establecimiento' ? (
           <div className="crear-reserva-container">
