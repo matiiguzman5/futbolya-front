@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import ChatPartido from "../components/ChatPartido";
+import ChatFlotante from "../components/ChatFlotante";
+
 
 
 const BASE_URL = 'https://localhost:7055';
@@ -38,6 +39,7 @@ const Home = () => {
   const [establecimientos, setEstablecimientos] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1);
   const [busqueda, setBusqueda] = useState('');
+  const [chatReservaId, setChatReservaId] = useState(null);
   const reservasPorPagina = 4;
   const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
   const mapRef = useRef(null);
@@ -374,9 +376,12 @@ const Home = () => {
                       <button onClick={() => manejarUnirse(reserva.id)} className="btn-crear-reserva" style={{ marginTop: '10px' }}>Unirse</button>
                     )
                   ))}
-                  <Link to={`/chat/${reserva.id}`} className="btn-chat">
+                  <button
+                    className="btn-chat"
+                    onClick={() => setChatReservaId(reserva.id)}
+                  >
                     💬 Ir al chat
-                  </Link>
+                  </button>
                 </div>
               </div>
             ))
@@ -391,6 +396,13 @@ const Home = () => {
           ))}
         </div>
       </div>
+      {chatReservaId && (
+  <ChatFlotante
+    reservaId={chatReservaId}
+    onClose={() => setChatReservaId(null)}
+  />
+)}
+
     </div>
   );
 };
