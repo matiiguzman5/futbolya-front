@@ -376,12 +376,14 @@ const Home = () => {
                       <button onClick={() => manejarUnirse(reserva.id)} className="btn-crear-reserva" style={{ marginTop: '10px' }}>Unirse</button>
                     )
                   ))}
-                  <button
-                    className="btn-chat"
-                    onClick={() => setChatReservaId(reserva.id)}
-                  >
-                    💬 Ir al chat
-                  </button>
+                  {reserva.yaEstoyUnido && (
+                    <button
+                      className="btn-chat"
+                      onClick={() => setChatReservaId(reserva.id)}
+                    >
+                      💬 Ir al chat
+                    </button>
+                  )}
                 </div>
               </div>
             ))

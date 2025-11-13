@@ -1,56 +1,130 @@
 import React, { useEffect, useState, useRef } from "react";
+import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import "../assets/styles/chatflotante.css";
 
 const ChatFlotante = ({ reservaId, onClose }) => {
+  const [connection, setConnection] = useState(null);
   const [mensajes, setMensajes] = useState([]);
   const [nuevoMensaje, setNuevoMensaje] = useState("");
-  const token = localStorage.getItem("token");
+  const [puedeChatear, setPuedeChatear] = useState(false);
   const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
+  const token = localStorage.getItem("token");
   const chatRef = useRef(null);
 
+  // 🔹 1. Verificar si el usuario está inscripto
   useEffect(() => {
-    if (!reservaId) return;
-    const fetchMensajes = async () => {
+    const verificarInscripcion = async () => {
       try {
-        const res = await fetch(`https://localhost:7055/api/mensajes/reserva/${reservaId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `https://localhost:7055/api/reservas/${reservaId}/esta-inscripto`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setPuedeChatear(data === true);
+        } else {
+          setPuedeChatear(false);
+        }
+      } catch (err) {
+        console.error("Error verificando inscripción:", err);
+        setPuedeChatear(false);
+      }
+    };
+
+    verificarInscripcion();
+  }, [reservaId, token]);
+
+  // 🔹 2. Cargar mensajes previos
+  useEffect(() => {
+    const fetchMensajesPrevios = async () => {
+      try {
+        const res = await fetch(
+          `https://localhost:7055/api/mensajes/reserva/${reservaId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (res.ok) {
           const data = await res.json();
           setMensajes(data);
         }
       } catch (err) {
-        console.error("Error al obtener mensajes:", err);
+        console.error("Error al obtener mensajes previos:", err);
       }
     };
 
-    fetchMensajes();
-    const intervalo = setInterval(fetchMensajes, 10000);
-    return () => clearInterval(intervalo);
+    fetchMensajesPrevios();
   }, [reservaId, token]);
 
-  const enviarMensaje = async () => {
-    if (!nuevoMensaje.trim()) return;
-    try {
-      const res = await fetch("https://localhost:7055/api/mensajes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ reservaId, contenido: nuevoMensaje }),
-      });
+  // 🔹 3. Conectar con SignalR (solo si puede chatear)
+  useEffect(() => {
+    if (!puedeChatear) return;
 
-      if (res.ok) {
-        const data = await res.json();
-        setMensajes((prev) => [...prev, data]);
-        setNuevoMensaje("");
+    const connect = async () => {
+      try {
+        const conn = new HubConnectionBuilder()
+          .withUrl("https://localhost:7055/hubs/chat", {
+            accessTokenFactory: () => token,
+          })
+          .configureLogging(LogLevel.Information)
+          .withAutomaticReconnect()
+          .build();
+
+        conn.on("RecibirMensaje", (usuarioNombre, contenido, fecha) => {
+          setMensajes((prev) => [
+            ...prev,
+            {
+              usuario: { nombre: usuarioNombre },
+              contenido,
+              fecha: fecha || new Date().toISOString(),
+            },
+          ]);
+        });
+
+        await conn.start();
+        await conn.invoke("UnirseAReserva", reservaId.toString());
+        setConnection(conn);
+        console.log("✅ Conectado al chat de la reserva", reservaId);
+      } catch (err) {
+        console.error("❌ Error al conectar con SignalR:", err);
       }
-    } catch (err) {
-      console.error("Error al enviar mensaje:", err);
-    }
-  };
+    };
 
+    connect();
+
+    return () => {
+      if (connection) {
+        connection.invoke("SalirDeReserva", reservaId.toString());
+        connection.stop();
+      }
+    };
+  }, [reservaId, puedeChatear]);
+
+  // 🔹 4. Enviar mensaje
+const enviarMensaje = async () => {
+  if (!nuevoMensaje.trim()) return;
+  try {
+    if (connection) {
+      console.log("📤 Enviando mensaje:", nuevoMensaje);
+      await connection.invoke(
+        "EnviarMensaje",        // 🔹 Debe coincidir con el método del hub
+        reservaId.toString(),
+        usuario.nombre,
+        nuevoMensaje
+      );
+      setNuevoMensaje("");
+    } else {
+      console.error("❌ No hay conexión activa con SignalR");
+    }
+  } catch (err) {
+    console.error("Error al enviar mensaje:", err);
+  }
+};
+
+
+  // 🔹 5. Auto-scroll al último mensaje
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
@@ -61,19 +135,33 @@ const ChatFlotante = ({ reservaId, onClose }) => {
     <div className="chat-popup">
       <div className="chat-header">
         <h4>Chat de la reserva #{reservaId}</h4>
-        <button className="cerrar" onClick={onClose}>✕</button>
+        <button className="cerrar" onClick={onClose}>
+          ✕
+        </button>
       </div>
 
       <div className="chat-mensajes" ref={chatRef}>
-        {mensajes.length === 0 ? (
+        {!puedeChatear ? (
+          <p className="chat-vacio">
+            No podés usar el chat si no estás inscripto en esta reserva.
+          </p>
+        ) : mensajes.length === 0 ? (
           <p className="chat-vacio">Aún no hay mensajes.</p>
         ) : (
-          mensajes.map((m) => (
-            <div key={m.id} className={`mensaje ${m.usuarioId === usuario.id ? "mio" : "otro"}`}>
+          mensajes.map((m, i) => (
+            <div
+              key={i}
+              className={`mensaje ${
+                m.usuario?.nombre === usuario.nombre ? "mio" : "otro"
+              }`}
+            >
               <div className="mensaje-header">
                 <span className="nombre">{m.usuario?.nombre || "Jugador"}</span>
                 <span className="hora">
-                  {new Date(m.fecha).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(m.fecha).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
               </div>
               <p>{m.contenido}</p>
@@ -87,10 +175,20 @@ const ChatFlotante = ({ reservaId, onClose }) => {
           type="text"
           value={nuevoMensaje}
           onChange={(e) => setNuevoMensaje(e.target.value)}
-          placeholder="Escribí un mensaje..."
-          onKeyDown={(e) => e.key === "Enter" && enviarMensaje()}
+          placeholder={
+            puedeChatear
+              ? "Escribí un mensaje..."
+              : "No podés chatear en esta reserva"
+          }
+          disabled={!puedeChatear}
+          onKeyDown={(e) => e.key === "Enter" && puedeChatear && enviarMensaje()}
         />
-        <button className="btn-enviar" onClick={enviarMensaje}>
+        <button
+          className="btn-enviar"
+          onClick={enviarMensaje}
+          disabled={!puedeChatear}
+          style={{ opacity: puedeChatear ? 1 : 0.5 }}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="white"
