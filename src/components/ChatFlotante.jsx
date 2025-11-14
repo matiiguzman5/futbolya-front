@@ -36,7 +36,7 @@ const ChatFlotante = ({ reservaId, onClose }) => {
     verificarInscripcion();
   }, [reservaId, token]);
 
-  // 🔹 2. Cargar mensajes previos
+  // 🔹 2. Cargar mensajes previos (historial)
   useEffect(() => {
     const fetchMensajesPrevios = async () => {
       try {
@@ -72,7 +72,9 @@ const ChatFlotante = ({ reservaId, onClose }) => {
           .withAutomaticReconnect()
           .build();
 
+        // 📥 Escuchar mensajes en tiempo real
         conn.on("RecibirMensaje", (usuarioNombre, contenido, fecha) => {
+          console.log("📥 Recibido:", usuarioNombre, contenido);
           setMensajes((prev) => [
             ...prev,
             {
@@ -81,6 +83,11 @@ const ChatFlotante = ({ reservaId, onClose }) => {
               fecha: fecha || new Date().toISOString(),
             },
           ]);
+        });
+
+        conn.onreconnected(async () => {
+          console.log("🔁 Reconectado. Volviendo a unirse al grupo...");
+          await conn.invoke("UnirseAReserva", reservaId.toString());
         });
 
         await conn.start();
@@ -109,12 +116,14 @@ const enviarMensaje = async () => {
     if (connection) {
       console.log("📤 Enviando mensaje:", nuevoMensaje);
       await connection.invoke(
-        "EnviarMensaje",        // 🔹 Debe coincidir con el método del hub
+        "EnviarMensaje",
         reservaId.toString(),
         usuario.nombre,
         nuevoMensaje
       );
       setNuevoMensaje("");
+      // Si querés loguear cuando termina:
+      console.log("✅ Mensaje enviado al hub correctamente");
     } else {
       console.error("❌ No hay conexión activa con SignalR");
     }
@@ -181,7 +190,9 @@ const enviarMensaje = async () => {
               : "No podés chatear en esta reserva"
           }
           disabled={!puedeChatear}
-          onKeyDown={(e) => e.key === "Enter" && puedeChatear && enviarMensaje()}
+          onKeyDown={(e) =>
+            e.key === "Enter" && puedeChatear && enviarMensaje()
+          }
         />
         <button
           className="btn-enviar"
