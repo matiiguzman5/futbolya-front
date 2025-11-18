@@ -1,13 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { login } from '../api/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../assets/styles/login.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [mensajeConfirmacion, setMensajeConfirmacion] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    document.title = 'Iniciar sesión - FutbolYa';
+  }, []);
+
+  // Leer ?confirmado=1 del query string para mostrar mensaje
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('confirmado') === '1') {
+      setMensajeConfirmacion(
+        'Tu correo fue confirmado correctamente. Ya podés iniciar sesión 😊'
+      );
+    }
+  }, [location.search]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,20 +40,30 @@ const Login = () => {
         alert('Inicio de sesión sin token recibido.');
       }
     } catch (error) {
-      let alertMessage = 'Error al iniciar sesion. Verifica tus datos.';
+      let alertMessage = 'Error al iniciar sesión. Verificá tus datos.';
 
       if (error?.response) {
         const { status, data } = error.response;
-        console.error('Login fallo con respuesta del servidor:', status, data);
-        const serverMessage = typeof data === 'string' ? data :
-          data?.mensaje || data?.message || data?.title || data?.detail;
-        alertMessage = `Error ${status}: ${serverMessage || 'Credenciales invalidas.'}`;
+        console.error('Login falló con respuesta del servidor:', status, data);
+        const serverMessage =
+          typeof data === 'string'
+            ? data
+            : data?.mensaje || data?.message || data?.title || data?.detail;
+        alertMessage = `Error ${status}: ${
+          serverMessage || 'Credenciales inválidas.'
+        }`;
       } else if (error?.request) {
-        console.error('Login envio solicitud pero no obtuvo respuesta:', error.request);
-        alertMessage = 'No hubo respuesta del servidor. Verifica que la API este ejecutandose y acepte solicitudes desde este origen.';
+        console.error(
+          'Login envió solicitud pero no obtuvo respuesta:',
+          error.request
+        );
+        alertMessage =
+          'No hubo respuesta del servidor. Verificá que la API esté ejecutándose y acepte solicitudes desde este origen.';
       } else {
-        console.error('Login fallo antes de enviar la solicitud:', error);
-        alertMessage = `Error inesperado: ${error?.message || 'Revisa la consola para mas detalles.'}`;
+        console.error('Login falló antes de enviar la solicitud:', error);
+        alertMessage = `Error inesperado: ${
+          error?.message || 'Revisá la consola para más detalles.'
+        }`;
       }
 
       alert(alertMessage);
@@ -48,6 +74,11 @@ const Login = () => {
     navigate('/register');
   };
 
+  const irAContactoEstablecimiento = () => {
+    console.log('Ir a contacto establecimiento');
+    navigate('/contacto-establecimiento');
+  };
+
   return (
     <div className="login-background">
       <div className="login-box">
@@ -55,11 +86,18 @@ const Login = () => {
           <img src="/IconoFYa.jpeg" alt="Logo FútbolYa" />
           <h2>LOGIN</h2>
         </div>
+
+        {mensajeConfirmacion && (
+          <div className="alert success">
+            {mensajeConfirmacion}
+          </div>
+        )}
+
         <form onSubmit={handleLogin}>
           <input
             type="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="Usuario"
             required
           />
@@ -67,7 +105,7 @@ const Login = () => {
             <input
               type={mostrarPassword ? 'text' : 'password'}
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Contraseña"
               required
             />
@@ -78,14 +116,33 @@ const Login = () => {
               {mostrarPassword ? '🙈' : '👁️'}
             </span>
           </div>
-          <div className="forgot-password">
-            <a href="#">¿Olvidaste tu contraseña?</a>
-          </div>
           <button type="submit">Iniciar Sesión</button>
         </form>
+
         <button className="buttonC" onClick={irARegistro}>
           Crear Cuenta
         </button>
+
+
+        {/* CTA para establecimientos */}
+        <div className="establecimiento-cta">
+        <div className="forgot-password">
+          <button
+            type="button"
+            className="forgot-password-link"
+            onClick={() => navigate('/olvide-mi-contrasena')}
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
+        </div>
+          <span
+          
+            className="establecimiento-link"
+            onClick={irAContactoEstablecimiento}
+          >
+            ¿Tenés un establecimiento y te querés sumar?
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -23,6 +23,7 @@ const ACCION_RESERVA_CONFIG = {
   }
 };
 
+
 const MisReservas = () => {
   const [reservasActivas, setReservasActivas] = useState([]);
   const [reservasPasadas, setReservasPasadas] = useState([]);
@@ -82,6 +83,7 @@ const MisReservas = () => {
 
   useEffect(() => {
     obtenerReservas();
+    document.title = 'Mis Reservas';
   }, [obtenerReservas]);
 
   const abrirConfirmacionAccion = (tipo, reserva) => {

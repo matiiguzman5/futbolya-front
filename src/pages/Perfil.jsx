@@ -15,6 +15,9 @@ const Perfil = () => {
     ubicacion: '',
     contraseña: ''
   });
+      useEffect(() => {
+        document.title = 'Mi perfil';
+      }, []);
 
   // Cargar datos del usuario
   useEffect(() => {

@@ -18,6 +18,7 @@ const AgendaReservas = () => {
 
   // traer canchas del establecimiento
   useEffect(() => {
+    document.title = 'Mi agenda';
     const fetchCanchas = async () => {
       const token = localStorage.getItem("token");
       const res = await fetch("https://localhost:7055/api/reservas/mias", {

@@ -15,6 +15,9 @@ import ProteccionRuta from './ProteccionRuta';
 import Layout from './components/Layout';
 import './assets/styles/global.css';
 import ChatPartidoPage from "./pages/ChatPartidoPage";
+import ContactoEstablecimiento from './pages/ContactoEstablecimiento';
+import OlvideContrasena from './pages/OlvideContrasena';
+import RestablecerPassword from './pages/RestablecerPassword';
 
 
 const App = () => (
@@ -24,6 +27,9 @@ const App = () => (
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/contacto-establecimiento" element={<ContactoEstablecimiento />} />
+      <Route path="/olvide-mi-contrasena" element={<OlvideContrasena />} />
+      <Route path="/restablecer-password" element={<RestablecerPassword />} />
 
       {/* Privadas con layout compartido */}
       <Route element={<ProteccionRuta><Layout /></ProteccionRuta>}>
@@ -40,6 +46,7 @@ const App = () => (
             </ProteccionRuta>
           )}
         />
+        
         <Route path="/chat/:id" element={<ChatPartidoPage />} />
         <Route
           path="/establecimiento"

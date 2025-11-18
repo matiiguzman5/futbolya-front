@@ -6,9 +6,9 @@ const MisCanchas = () => {
   const [form, setForm] = useState(initialFormState());
   const [editandoId, setEditandoId] = useState(null);
   const token = localStorage.getItem('token');
-
   useEffect(() => {
     obtenerCanchas();
+    document.title = 'Mis canchas ';
   }, []);
 
   function initialFormState() {

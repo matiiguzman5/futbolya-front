@@ -15,8 +15,9 @@ const formatCurrency = (value) => {
 const Establecimientos = () => {
   const [establecimientos, setEstablecimientos] = useState([]);
   const [selectedEstablecimiento, setSelectedEstablecimiento] = useState(null);
-
+  
   useEffect(() => {
+    document.title = 'Establecimientos disponibles ';
     const fetchEstablecimientos = async () => {
       try {
         const res = await fetch('https://localhost:7055/api/usuarios/establecimientos');

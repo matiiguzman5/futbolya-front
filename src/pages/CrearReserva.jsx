@@ -61,8 +61,16 @@ const CrearReserva = () => {
     return initial;
   });
   const hasHydrated = useRef(false);
+  const toLocalISODate = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`; // ej: 2025-11-20
+  };
+
 
   useEffect(() => {
+    document.title = 'Creá tu reserva';
     if (hasHydrated.current) {
       return;
     }
@@ -115,27 +123,51 @@ const CrearReserva = () => {
     fetchEstablecimientos();
   }, []);
 
-  // Generar proximos 5 dias
+  // Generar próximos 5 días (en horario local)
   useEffect(() => {
     const hoy = new Date();
     const opciones = [];
+
     for (let i = 0; i < 5; i++) {
       const d = new Date(hoy);
       d.setDate(hoy.getDate() + i);
+
       opciones.push({
-        fecha: d.toISOString().split('T')[0],
-        label: i === 0 ? 'Hoy' : i === 1 ? 'Manana' : d.toLocaleDateString('es-ES', { weekday: 'long' }),
+        fecha: toLocalISODate(d),
+        label:
+          i === 0
+            ? 'Hoy'
+            : i === 1
+            ? 'Manana'
+            : d.toLocaleDateString('es-ES', { weekday: 'long' }),
       });
     }
+
     setDias(opciones);
   }, []);
 
-  // Generar horas (09:00 a 23:00)
+
+  // Generar horas (09:00 a 23:00), filtrando las que ya pasaron si es hoy
   const generarHoras = () => {
     const horas = [];
+    const ahora = new Date();
+    const hoyISO = toLocalISODate(new Date());
+
     for (let h = 9; h <= 23; h++) {
-      horas.push(`${h.toString().padStart(2, '0')}:00`);
+      const horaStr = `${h.toString().padStart(2, '0')}:00`;
+
+      // Si el día seleccionado es hoy, ocultar horas que ya pasaron
+      if (diaSeleccionado === hoyISO) {
+        const slot = new Date(`${diaSeleccionado}T${horaStr}:00`);
+
+        if (slot <= ahora) {
+          continue; // saltar esta hora
+        }
+      }
+
+      horas.push(horaStr);
     }
+
     return horas;
   };
 

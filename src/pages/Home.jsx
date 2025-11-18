@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaf
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import ChatFlotante from "../components/ChatFlotante";
-
+<title>Futbol Ya login</title>
 
 
 const BASE_URL = 'https://localhost:7055';
