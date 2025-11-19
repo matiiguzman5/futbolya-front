@@ -5,8 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaf
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import ChatFlotante from "../components/ChatFlotante";
-<title>Futbol Ya login</title>
-
+// <title>Futbol Ya login</title>
 
 const BASE_URL = 'https://localhost:7055';
 const DEFAULT_CENTER = { lat: -34.6037, lng: -58.3816 };
@@ -40,6 +39,7 @@ const Home = () => {
   const [paginaActual, setPaginaActual] = useState(1);
   const [busqueda, setBusqueda] = useState('');
   const [chatReservaId, setChatReservaId] = useState(null);
+  const [userPosition, setUserPosition] = useState(null); // 🔹 ubicación actual
   const reservasPorPagina = 4;
   const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
   const mapRef = useRef(null);
@@ -185,17 +185,68 @@ const Home = () => {
     // eslint-disable-next-line
   }, []);
 
+  // 🔹 Obtener ubicación actual del usuario
   useEffect(() => {
-    const pts = reservasConCoords.filter(r => r.latitud != null && r.longitud != null).map(r => [Number(r.latitud), Number(r.longitud)]);
+    if (!navigator.geolocation) {
+      console.warn('Geolocalización no soportada por el navegador');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        };
+        setUserPosition(coords);
+
+        const map = mapRef.current;
+        if (map) {
+          map.setView([coords.lat, coords.lng], 14);
+        }
+      },
+      (err) => {
+        console.error('Error al obtener ubicación del usuario', err);
+      },
+      { enableHighAccuracy: true }
+    );
+  }, []);
+
+  // Centrado del mapa: prioriza la ubicación del usuario, si no, usa las reservas
+  useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+
+    // Si tenemos ubicación del usuario, centramos ahí
+    if (userPosition) {
+      try {
+        map.setView([userPosition.lat, userPosition.lng], 14);
+      } catch (e) {
+        console.error('Error al centrar en userPosition', e);
+      }
+      return;
+    }
+
+    // Si no hay userPosition, usamos las reservas como antes
+    const pts = reservasConCoords
+      .filter(r => r.latitud != null && r.longitud != null)
+      .map(r => [Number(r.latitud), Number(r.longitud)]);
+
     try {
-      if (pts.length === 0) { map.setView([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], 11); return; }
-      if (pts.length === 1) { map.setView(pts[0], 13); return; }
+      if (pts.length === 0) {
+        map.setView([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], 11);
+        return;
+      }
+      if (pts.length === 1) {
+        map.setView(pts[0], 13);
+        return;
+      }
       const bounds = L.latLngBounds(pts);
-      map.fitBounds(bounds.pad ? bounds.pad(0.2) : bounds, { padding: [50,50] });
-    } catch (e) { console.error('bounds error', e); }
-  }, [reservasConCoords]);
+      map.fitBounds(bounds.pad ? bounds.pad(0.2) : bounds, { padding: [50, 50] });
+    } catch (e) {
+      console.error('bounds error', e);
+    }
+  }, [reservasConCoords, userPosition]);
 
   // Use reservasConCoords for filtering and pagination so cards display resolvedUbicacion
   const reservasFiltradas = reservasConCoords.filter(
@@ -256,6 +307,15 @@ const Home = () => {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
+            {/* 🔹 Marker de ubicación actual del usuario */}
+            {userPosition && (
+              <CircleMarker
+                center={[userPosition.lat, userPosition.lng]}
+                radius={8}
+                pathOptions={{ color: '#007bff', fillColor: '#007bff', fillOpacity: 0.7 }}
+              />
+            )}
+
             {/** Agrupar reservas por latitud/longitud como clave */}
             {Object.entries(
               reservasConCoords.reduce((acc, reserva) => {
@@ -266,61 +326,70 @@ const Home = () => {
                 }
                 return acc;
               }, {})
-            ).map(([coordStr, reservas]) => {
+            ).map(([coordStr, reservasGrupo]) => {
               const [lat, lng] = coordStr.split(',').map(Number);
               return (
                 <Marker key={coordStr} position={[lat, lng]} icon={defaultMarkerIcon}>
+                  {/* 🔹 Popup con scroll cuando hay muchas reservas */}
                   <Popup maxWidth={300}>
-                    {reservas.map((reserva) => (
-                      <div key={reserva.id} style={{ marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '5px' }}>
-                        <strong>{reserva.nombreCancha}</strong><br />
-                        {reserva.resolvedUbicacion || reserva.ubicacion || 'Ubicación sin resolver'}<br />
-                        Fecha:{' '}
-                        {reserva.fechaHora
-                          ? new Date(reserva.fechaHora).toLocaleString('es-AR', {
-                              hour12: false,
-                              year: 'numeric',
-                              month: '2-digit',
-                              day: '2-digit',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : '-'}
-                        <br />
-                        Jugadores: {reserva.anotados} / {reserva.capacidad}<br />
-                        Observaciones: {reserva.observaciones || 'Ninguna'}<br />
+                    <div style={{ maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }}>
+                      {reservasGrupo.map((reserva) => (
+                        <div
+                          key={reserva.id}
+                          style={{
+                            marginBottom: '10px',
+                            borderBottom: '1px solid #ccc',
+                            paddingBottom: '5px'
+                          }}
+                        >
+                          <strong>{reserva.nombreCancha}</strong><br />
+                          {reserva.resolvedUbicacion || reserva.ubicacion || 'Ubicación sin resolver'}<br />
+                          Fecha:{' '}
+                          {reserva.fechaHora
+                            ? new Date(reserva.fechaHora).toLocaleString('es-AR', {
+                                hour12: false,
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '-'}
+                          <br />
+                          Jugadores: {reserva.anotados} / {reserva.capacidad}<br />
+                          Observaciones: {reserva.observaciones || 'Ninguna'}<br />
 
-                        {usuario?.rol === 'jugador' ? (
-                          reserva.yaEstoyUnido ? (
-                            <span style={{ color: 'green' }}>✅ Ya estás unido</span>
-                          ) : reserva.anotados < reserva.capacidad ? (
-                            <button
-                              onClick={() => manejarUnirse(reserva.id)}
-                              style={{
-                                marginTop: '5px',
-                                backgroundColor: '#28a745',
-                                color: '#fff',
-                                border: 'none',
-                                padding: '5px 10px',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              Unirse
-                            </button>
-                          ) : (
-                            <span style={{ color: 'red' }}>Cupo completo</span>
-                          )
-                        ) : null}
-                      </div>
-                    ))}
+                          {usuario?.rol === 'jugador' ? (
+                            reserva.yaEstoyUnido ? (
+                              <span style={{ color: 'green' }}>✅ Ya estás unido</span>
+                            ) : reserva.anotados < reserva.capacidad ? (
+                              <button
+                                onClick={() => manejarUnirse(reserva.id)}
+                                style={{
+                                  marginTop: '5px',
+                                  backgroundColor: '#28a745',
+                                  color: '#fff',
+                                  border: 'none',
+                                  padding: '5px 10px',
+                                  borderRadius: '5px',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                Unirse
+                              </button>
+                            ) : (
+                              <span style={{ color: 'red' }}>Cupo completo</span>
+                            )
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
                   </Popup>
                 </Marker>
               );
             })}
           </MapContainer>
         </div>
-
 
         {localStorage.getItem('rol') !== 'establecimiento' ? (
           <div className="crear-reserva-container">
@@ -354,7 +423,7 @@ const Home = () => {
                   <strong>{reserva.nombreCancha} ({reserva.tipo})</strong>
                   <p>Ubicación: {reserva.resolvedUbicacion || reserva.ubicacion || 'No informada'}</p>
                   <p>
-                    Fecha: {reserva.fechaHora 
+                    Fecha: {reserva.fechaHora
                       ? new Date(reserva.fechaHora).toLocaleString('es-AR', {
                           hour12: false,
                           year: 'numeric',
@@ -362,7 +431,7 @@ const Home = () => {
                           day: '2-digit',
                           hour: '2-digit',
                           minute: '2-digit'
-                        }) 
+                        })
                       : '-'}
                   </p>
                   <p>Jugadores: {reserva.anotados} / {reserva.capacidad}</p>
@@ -392,18 +461,23 @@ const Home = () => {
 
         <div className="paginacion">
           {[...Array(totalPaginas)].map((_, i) => (
-            <button key={i} className={paginaActual === i + 1 ? 'activo' : ''} onClick={() => setPaginaActual(i + 1)}>
+            <button
+              key={i}
+              className={paginaActual === i + 1 ? 'activo' : ''}
+              onClick={() => setPaginaActual(i + 1)}
+            >
               {i + 1}
             </button>
           ))}
         </div>
       </div>
+
       {chatReservaId && (
-  <ChatFlotante
-    reservaId={chatReservaId}
-    onClose={() => setChatReservaId(null)}
-  />
-)}
+        <ChatFlotante
+          reservaId={chatReservaId}
+          onClose={() => setChatReservaId(null)}
+        />
+      )}
 
     </div>
   );
