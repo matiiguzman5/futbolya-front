@@ -27,6 +27,14 @@ const defaultMarkerIcon = L.icon({
   iconAnchor: [12, 41],
 });
 
+const userMarkerIcon = L.icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+
 const loadGeocodeCache = () => {
   try { return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || '{}'); } catch { return {}; }
 };
@@ -309,12 +317,13 @@ const Home = () => {
 
             {/* 🔹 Marker de ubicación actual del usuario */}
             {userPosition && (
-              <CircleMarker
-                center={[userPosition.lat, userPosition.lng]}
-                radius={8}
-                pathOptions={{ color: '#007bff', fillColor: '#007bff', fillOpacity: 0.7 }}
+              <Marker
+                position={[userPosition.lat, userPosition.lng]}
+                icon={userMarkerIcon}
               />
             )}
+
+
 
             {/** Agrupar reservas por latitud/longitud como clave */}
             {Object.entries(
