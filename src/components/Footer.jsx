@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "../assets/styles/footer.css";
 
 const Footer = () => (
@@ -6,10 +7,10 @@ const Footer = () => (
     <div className="home-footer__inner">
       <p>&copy; 2025 FutbolYa</p>
       <div className="footer-links">
-        <a href="#">CONTACTO</a>
-        <a href="#">AYUDA</a>
-        <a href="#">SOBRE NOSOTROS</a>
-        <a href="#">METODOS DE PAGO</a>
+        <Link to="/contacto">CONTACTO</Link>
+        <Link to="/ayuda">AYUDA</Link>
+        <Link to="/sobre-nosotros">SOBRE NOSOTROS</Link>
+        <Link to="/metodos-de-pago">METODOS DE PAGO</Link>
       </div>
       <div className="footer-icons">
         <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer">
