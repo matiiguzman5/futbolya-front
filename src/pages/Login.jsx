@@ -33,7 +33,10 @@ const Login = () => {
 
       if (token) {
         localStorage.setItem('token', token);
-        localStorage.setItem('usuario', JSON.stringify(usuario));
+        localStorage.setItem('usuario', JSON.stringify({
+          ...usuario,
+          correo: email     // 👈 AGREGAMOS EL EMAIL MANUALMENTE
+      }));      
         localStorage.setItem('rol', usuario.rol);
         navigate('/home');
       } else {
