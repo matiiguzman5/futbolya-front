@@ -1,0 +1,137 @@
+﻿.welcome-page {
+  min-height: 100vh;
+  padding: 3.5rem 1.5rem 3rem;
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at top, #202f52 0%, #0c172d 45%, #040912 100%);
+  color: #f5f6fb;
+  display: flex;
+  justify-content: center;
+}
+
+.welcome-content {
+  width: min(1100px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 2.75rem;
+}
+
+.welcome-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 1rem;
+}
+
+.welcome-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.welcome-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.welcome-top h1 {
+  color: #ffffff;
+  margin: 0;
+  font-size: clamp(3rem, 6vw, 4.8rem);
+  letter-spacing: -0.01em;
+}
+
+.welcome-cta {
+  background: linear-gradient(120deg, #19c37d, #00a86b);
+  color: #041627;
+  border: none;
+  border-radius: 999px;
+  padding: 0.55rem 1.15rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.welcome-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+.welcome-hero {
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.welcome-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.85rem;
+  color: #8ab4ff;
+  margin: 0;
+}
+
+.welcome-lead {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #cfd7ff;
+  margin: 0;
+}
+
+.welcome-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.welcome-highlights article {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1.6rem;
+  min-height: 220px;
+  backdrop-filter: blur(8px);
+}
+
+.welcome-highlights h2 {
+  font-size: 1.25rem;
+  margin: 0 0 0.6rem;
+  color: #8ab4ff;
+}
+
+.welcome-highlights p {
+  line-height: 1.5;
+  color: #dfe6ff;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .welcome-page {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .welcome-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .welcome-action {
+    justify-content: flex-start;
+  }
+
+  .welcome-cta {
+    width: auto;
+  }
+
+  .welcome-highlights {
+    grid-template-columns: 1fr;
+  }
+}
