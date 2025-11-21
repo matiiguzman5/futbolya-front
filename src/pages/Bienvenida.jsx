@@ -5,16 +5,17 @@ import '../assets/styles/bienvenida.css';
 const Bienvenida = () => {
   const navigate = useNavigate();
   const irAlLogin = () => navigate('/login');
+  const bannerImage = `${process.env.PUBLIC_URL}/Banner Bienvenida.png`;
 
   return (
-    <div className="welcome-page">
+    <div className="welcome-page" style={{ '--welcome-banner': `url("${bannerImage}")` }}>
       <div className="welcome-content">
         <div className="welcome-top">
           <div className="welcome-title">
             <h1>FutbolYa</h1>
           </div>
           <div className="welcome-action">
-            <button className="welcome-cta" onClick={irAlLogin}>login</button>
+            <button className="welcome-cta" onClick={irAlLogin}>Login</button>
           </div>
         </div>
 
