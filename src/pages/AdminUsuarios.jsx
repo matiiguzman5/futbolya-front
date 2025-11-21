@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import '../assets/styles/adminUsuarios.css';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
 
-const API_BASE = 'https://localhost:7055/api';
+const API_BASE = API_URL;
 const PASSWORD_FIELD = 'Contrasena';
 
 const estadoInicialUsuario = {
@@ -31,7 +32,6 @@ const AdminUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [filtro, setFiltro] = useState('');
 
-  // 🔥 PAGINACIÓN
   const [paginaActual, setPaginaActual] = useState(1);
   const usuariosPorPagina = 10;
 
@@ -60,7 +60,6 @@ const AdminUsuarios = () => {
     cargarUsuarios();
   }, [cargarUsuarios]);
 
-  // 🔥 FILTRO + PAGINACIÓN
   const usuariosFiltrados = usuarios.filter(u =>
     u.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
     u.correo.toLowerCase().includes(filtro.toLowerCase())
@@ -273,7 +272,6 @@ const AdminUsuarios = () => {
         </button>
       </div>
 
-      {/* 🔥 INPUT CENTRADO */}
       <div style={{ width: "100%", display: "flex", justifyContent: "center", marginBottom: "15px" }}>
         <input
           type="text"
@@ -324,7 +322,6 @@ const AdminUsuarios = () => {
           </tbody>
         </table>
 
-        {/* 🔥 BARRA DE PAGINACIÓN */}
         <div style={{
           marginTop: "20px",
           display: "flex",
@@ -336,8 +333,8 @@ const AdminUsuarios = () => {
               key={num}
               onClick={() => setPaginaActual(num)}
               style={{
-                width: "60px",            // 🔥 ancho fijo más chico
-                height: "30px",           // 🔥 alto fijo
+                width: "60px",            
+                height: "30px",           
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

@@ -5,9 +5,8 @@ import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaf
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import ChatFlotante from "../components/ChatFlotante";
-// <title>Futbol Ya login</title>
+import { API_URL, BACKEND_URL } from "../config";
 
-const BASE_URL = 'https://localhost:7055';
 const DEFAULT_CENTER = { lat: -34.6037, lng: -58.3816 };
 const MAP_STYLE = { width: '100%', height: '320px' };
 const GEOCODE_CACHE_KEY = 'geocodeCache_v1';
@@ -34,7 +33,6 @@ const userMarkerIcon = L.icon({
   iconAnchor: [12, 41],
 });
 
-
 const loadGeocodeCache = () => {
   try { return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || '{}'); } catch { return {}; }
 };
@@ -58,10 +56,8 @@ const Home = () => {
     const normalizeKey = (s) => s.trim().toLowerCase();
     const key = normalizeKey(direccion);
 
-    // if cached and looks good, return
     if (cache[key]) return cache[key];
 
-    // helper para parsear componentes básicos de la dirección
     const parseAddress = (addr) => {
       const parts = addr.split(',').map(p => p.trim()).filter(Boolean);
       const street = parts[0] || addr;
@@ -75,7 +71,6 @@ const Home = () => {
     const parsed = parseAddress(direccion);
 
     try {
-      // 1) Intento: búsqueda estructurada restringida a Argentina
       const paramsStruct = new URLSearchParams({
         format: 'json',
         street: parsed.street,
@@ -96,8 +91,6 @@ const Home = () => {
         return coords;
       }
 
-      // 2) Fallback: búsqueda libre pero forzando Argentina y añadiendo "Argentina" al query
-      // Antes de reintentar, borrar cache para esta clave por si estaba mal
       try { delete cache[key]; saveGeocodeCache(cache); } catch (e) {}
 
       const q = `${direccion}${direccion.toLowerCase().includes('argentina') ? '' : ', Argentina'}`;
@@ -137,11 +130,13 @@ const Home = () => {
     const token = localStorage.getItem('token');
     const fetchAll = async () => {
       try {
-        const resEst = await fetch('https://localhost:7055/api/Usuarios/establecimientos', { headers: { Authorization: `Bearer ${token}` } });
+        const resEst = await fetch(`${API_URL}/Usuarios/establecimientos`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         const estList = resEst.ok ? await resEst.json() : [];
         setEstablecimientos(estList);
 
-        const res = await fetch('https://localhost:7055/api/reservas/disponibles', { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(`${API_URL}/reservas/disponibles`, { headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) { console.error('Error reservas', res.status); return; }
         const data = await res.json();
         setReservas(data);
@@ -190,10 +185,8 @@ const Home = () => {
       } catch (err) { console.error('fetchAll error', err); }
     };
     fetchAll();
-    // eslint-disable-next-line
   }, []);
 
-  // 🔹 Obtener ubicación actual del usuario
   useEffect(() => {
     if (!navigator.geolocation) {
       console.warn('Geolocalización no soportada por el navegador');
@@ -220,12 +213,10 @@ const Home = () => {
     );
   }, []);
 
-  // Centrado del mapa: prioriza la ubicación del usuario, si no, usa las reservas
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    // Si tenemos ubicación del usuario, centramos ahí
     if (userPosition) {
       try {
         map.setView([userPosition.lat, userPosition.lng], 14);
@@ -235,7 +226,6 @@ const Home = () => {
       return;
     }
 
-    // Si no hay userPosition, usamos las reservas como antes
     const pts = reservasConCoords
       .filter(r => r.latitud != null && r.longitud != null)
       .map(r => [Number(r.latitud), Number(r.longitud)]);
@@ -256,7 +246,6 @@ const Home = () => {
     }
   }, [reservasConCoords, userPosition]);
 
-  // Use reservasConCoords for filtering and pagination so cards display resolvedUbicacion
   const reservasFiltradas = reservasConCoords.filter(
     (reserva) =>
       reserva.nombreCancha?.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -270,7 +259,7 @@ const Home = () => {
   const manejarUnirse = async (reservaId) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`https://localhost:7055/api/reservas/${reservaId}/unirse`, {
+      const res = await fetch(`${API_URL}/reservas/${reservaId}/unirse`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -315,7 +304,6 @@ const Home = () => {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {/* 🔹 Marker de ubicación actual del usuario */}
             {userPosition && (
               <Marker
                 position={[userPosition.lat, userPosition.lng]}
@@ -323,9 +311,6 @@ const Home = () => {
               />
             )}
 
-
-
-            {/** Agrupar reservas por latitud/longitud como clave */}
             {Object.entries(
               reservasConCoords.reduce((acc, reserva) => {
                 if (reserva.latitud != null && reserva.longitud != null) {
@@ -339,7 +324,6 @@ const Home = () => {
               const [lat, lng] = coordStr.split(',').map(Number);
               return (
                 <Marker key={coordStr} position={[lat, lng]} icon={defaultMarkerIcon}>
-                  {/* 🔹 Popup con scroll cuando hay muchas reservas */}
                   <Popup maxWidth={300}>
                     <div style={{ maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }}>
                       {reservasGrupo.map((reserva) => (
@@ -421,7 +405,7 @@ const Home = () => {
                 <img
                   src={
                     reserva.fotoEstablecimiento
-                      ? `${BASE_URL}${reserva.fotoEstablecimiento}`
+                      ? `${BACKEND_URL}${reserva.fotoEstablecimiento}`
                       : "/imagenes/cancha_default.jpg"
                   }
                   alt="Establecimiento"

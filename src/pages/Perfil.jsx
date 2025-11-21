@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../assets/styles/perfil.css';
+import { API_URL, BACKEND_URL } from "../config";
+
 
 const Perfil = () => {
   const [usuario, setUsuario] = useState(null);
@@ -19,12 +21,11 @@ const Perfil = () => {
         document.title = 'Mi perfil';
       }, []);
 
-  // Cargar datos del usuario
   useEffect(() => {
     const fetchUsuario = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('https://localhost:7055/api/usuarios/yo', {
+        const res = await fetch(`${API_URL}/usuarios/yo`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) {
@@ -48,14 +49,13 @@ const Perfil = () => {
     fetchUsuario();
   }, []);
 
-  // Cargar valoraciones recibidas (solo si es Jugador)
   useEffect(() => {
     if (!usuario || usuario.rol !== 'Jugador') return;
 
     const fetchValoraciones = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('https://localhost:7055/api/calificaciones/mias', {
+        const res = await fetch(`${API_URL}/calificaciones/mias`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -70,12 +70,11 @@ const Perfil = () => {
     fetchValoraciones();
   }, [usuario]);
 
-  // Cargar estadísticas (partidos jugados + promedio)
   useEffect(() => {
     const fetchEstadisticas = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('https://localhost:7055/api/usuarios/estadisticas', {
+        const res = await fetch(`${API_URL}/usuarios/estadisticas`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -105,7 +104,7 @@ const Perfil = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('https://localhost:7055/api/usuarios/subir-foto', {
+      const res = await fetch(`${API_URL}/usuarios/subir-foto`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -137,7 +136,7 @@ const Perfil = () => {
         contraseña: form.contraseña,
       };
 
-      const res = await fetch('https://localhost:7055/api/usuarios/editar-perfil', {
+      const res = await fetch(`${API_URL}/usuarios/editar-perfil`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -165,7 +164,7 @@ const Perfil = () => {
   }
 
   const imagenPerfil = usuario.fotoPerfil
-    ? `https://localhost:7055${usuario.fotoPerfil}`
+    ? `${BACKEND_URL}${usuario.fotoPerfil}`
     : '/default-profile.png';
 
   const esEstablecimiento = String(usuario.rol || '').toLowerCase() === 'establecimiento';
@@ -186,7 +185,6 @@ const Perfil = () => {
       <div className="perfil-info">
         <p><strong>Correo:</strong> {usuario.correo}</p>
         <p><strong>Teléfono:</strong> {usuario.telefono || 'No informado'}</p>
-        {/* Mostrar ubicación para establecimientos o si el usuario tiene una ubicación */}
         {(esEstablecimiento || usuario.ubicacion) && (
           <p><strong>Ubicación:</strong> {usuario.ubicacion || 'No informada'}</p>
         )}
@@ -223,7 +221,6 @@ const Perfil = () => {
           <div className="modal-contenido">
             <h3>Editar Perfil</h3>
 
-            {/* Campos comunes / obligatorios para edición */}
             <input
               type="text"
               placeholder="Nombre"
@@ -245,8 +242,6 @@ const Perfil = () => {
               onChange={(e) => setForm({ ...form, telefono: e.target.value })}
             />
 
-            {/* Para establecimientos: mostrar ubicación.
-                Para jugadores u otros roles: mostrar posición. */}
             {esEstablecimiento ? (
               <input
                 type="text"
@@ -263,7 +258,6 @@ const Perfil = () => {
               />
             )}
 
-            {/* Contraseña (única vez) */}
             <input
               type="password"
               placeholder="Nueva contraseña (opcional)"

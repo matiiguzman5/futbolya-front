@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../assets/styles/contactoestablecimiento.css';
+import { API_URL } from "../config";
 
 const RestablecerPassword = () => {
   const [nueva, setNueva] = useState('');
@@ -55,7 +56,7 @@ const RestablecerPassword = () => {
     setEnviando(true);
 
     try {
-      const res = await fetch('https://localhost:7055/api/auth/restablecer-password', {
+      const res = await fetch(`${API_URL}/auth/restablecer-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

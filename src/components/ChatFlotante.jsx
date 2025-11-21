@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import "../assets/styles/chatflotante.css";
+import { API_URL, SIGNALR_URL } from "../config";
+
 
 const ChatFlotante = ({ reservaId, onClose }) => {
   const [connection, setConnection] = useState(null);
@@ -11,12 +13,11 @@ const ChatFlotante = ({ reservaId, onClose }) => {
   const token = localStorage.getItem("token");
   const chatRef = useRef(null);
 
-  // 🔹 1. Verificar si el usuario está inscripto
   useEffect(() => {
     const verificarInscripcion = async () => {
       try {
         const res = await fetch(
-          `https://localhost:7055/api/reservas/${reservaId}/esta-inscripto`,
+          `${API_URL}/reservas/${reservaId}/esta-inscripto`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -36,12 +37,11 @@ const ChatFlotante = ({ reservaId, onClose }) => {
     verificarInscripcion();
   }, [reservaId, token]);
 
-  // 🔹 2. Cargar mensajes previos (historial)
   useEffect(() => {
     const fetchMensajesPrevios = async () => {
       try {
         const res = await fetch(
-          `https://localhost:7055/api/mensajes/reserva/${reservaId}`,
+          `${API_URL}/mensajes/reserva/${reservaId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -58,21 +58,19 @@ const ChatFlotante = ({ reservaId, onClose }) => {
     fetchMensajesPrevios();
   }, [reservaId, token]);
 
-  // 🔹 3. Conectar con SignalR (solo si puede chatear)
   useEffect(() => {
     if (!puedeChatear) return;
 
     const connect = async () => {
       try {
-        const conn = new HubConnectionBuilder()
-          .withUrl("https://localhost:7055/hubs/chat", {
+          const conn = new HubConnectionBuilder()
+          .withUrl(SIGNALR_URL, {
             accessTokenFactory: () => token,
           })
           .configureLogging(LogLevel.Information)
           .withAutomaticReconnect()
           .build();
 
-        // 📥 Escuchar mensajes en tiempo real
         conn.on("RecibirMensaje", (usuarioNombre, contenido, fecha) => {
           console.log("📥 Recibido:", usuarioNombre, contenido);
           setMensajes((prev) => [
@@ -109,7 +107,6 @@ const ChatFlotante = ({ reservaId, onClose }) => {
     };
   }, [reservaId, puedeChatear]);
 
-  // 🔹 4. Enviar mensaje
 const enviarMensaje = async () => {
   if (!nuevoMensaje.trim()) return;
   try {
@@ -122,7 +119,6 @@ const enviarMensaje = async () => {
         nuevoMensaje
       );
       setNuevoMensaje("");
-      // Si querés loguear cuando termina:
       console.log("✅ Mensaje enviado al hub correctamente");
     } else {
       console.error("❌ No hay conexión activa con SignalR");
@@ -132,8 +128,6 @@ const enviarMensaje = async () => {
   }
 };
 
-
-  // 🔹 5. Auto-scroll al último mensaje
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;

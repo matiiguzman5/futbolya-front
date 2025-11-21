@@ -19,20 +19,18 @@ import ChatPartidoPage from './pages/ChatPartidoPage';
 import ContactoEstablecimiento from './pages/ContactoEstablecimiento';
 import OlvideContrasena from './pages/OlvideContrasena';
 import RestablecerPassword from './pages/RestablecerPassword';
+
+import ScrollToTop from './components/ScrollToTop';
 import Contacto from './pages/Contacto';
 import Ayuda from './pages/Ayuda';
 import SobreNosotros from './pages/SobreNosotros';
 import MetodosDePago from './pages/MetodosDePago';
-
-import ScrollToTop from './components/ScrollToTop';
-import './assets/styles/global.css';
 
 const App = () => (
   <Router>
     <ScrollToTop />
 
     <Routes>
-      {/* Rutas publicas sin header/footer */}
       <Route path="/" element={<Bienvenida />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -40,15 +38,13 @@ const App = () => (
       <Route path="/restablecer-password" element={<RestablecerPassword />} />
       <Route path="/contacto-establecimiento" element={<ContactoEstablecimiento />} />
 
-      {/* Rutas que muestran el layout principal */}
       <Route element={<Layout />}>
-        {/* Publicas con header/footer */}
+
         <Route path="/contacto" element={<Contacto />} />
         <Route path="/ayuda" element={<Ayuda />} />
         <Route path="/sobre-nosotros" element={<SobreNosotros />} />
         <Route path="/metodos-de-pago" element={<MetodosDePago />} />
 
-        {/* Privadas */}
         <Route
           path="/home"
           element={
@@ -104,7 +100,7 @@ const App = () => (
         />
 
         <Route
-          path="/agendaCanchas"
+          path="/agenda-canchas"
           element={
             <ProteccionRuta rolesPermitidos={['establecimiento']}>
               <AgendaReservas />

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/styles/crearReserva.css';
 import '../assets/styles/home.css';
+import { API_URL } from "../config";
+
 
 const safeParse = (value) => {
   if (!value) {
@@ -109,11 +111,10 @@ const CrearReserva = () => {
     }));
   };
 
-  // Traer establecimientos
   useEffect(() => {
     const fetchEstablecimientos = async () => {
       try {
-        const res = await fetch('https://localhost:7055/api/Usuarios/establecimientos');
+        const res = await fetch(`${API_URL}/establecimientos`);
         const data = await res.json();
         setEstablecimientos(data || []);
       } catch (error) {
@@ -123,7 +124,6 @@ const CrearReserva = () => {
     fetchEstablecimientos();
   }, []);
 
-  // Generar próximos 5 días (en horario local)
   useEffect(() => {
     const hoy = new Date();
     const opciones = [];
@@ -146,8 +146,6 @@ const CrearReserva = () => {
     setDias(opciones);
   }, []);
 
-
-  // Generar horas (09:00 a 23:00), filtrando las que ya pasaron si es hoy
   const generarHoras = () => {
     const horas = [];
     const ahora = new Date();
@@ -156,12 +154,11 @@ const CrearReserva = () => {
     for (let h = 9; h <= 23; h++) {
       const horaStr = `${h.toString().padStart(2, '0')}:00`;
 
-      // Si el día seleccionado es hoy, ocultar horas que ya pasaron
       if (diaSeleccionado === hoyISO) {
         const slot = new Date(`${diaSeleccionado}T${horaStr}:00`);
 
         if (slot <= ahora) {
-          continue; // saltar esta hora
+          continue; 
         }
       }
 
@@ -171,14 +168,13 @@ const CrearReserva = () => {
     return horas;
   };
 
-  // Traer canchas disponibles
   const fetchCanchasDisponibles = async (id, fechaHoraSeleccionada) => {
     try {
       const res = await fetch(
-        `https://localhost:7055/api/Canchas/de/${id}/disponibles?fechaHora=${fechaHoraSeleccionada}`
+        `${API_URL}/Canchas/de/${id}/disponibles?fechaHora=${fechaHoraSeleccionada}`
       );
       const data = await res.json();
-      setCanchas(data || []); // Solo se muestran las canchas libres
+      setCanchas(data || []);
     } catch (error) {
       console.error('Error al obtener canchas disponibles:', error);
     }
@@ -253,13 +249,11 @@ const CrearReserva = () => {
   const isSecurityValid = () => isExpiryValid() && (cvc.length === 3 || cvc.length === 4);
 
   const isReceiptEmailValid = () => {
-    // email opcional: si está vacío se considera válido; si se completó, debe ser válido
     if (!receiptEmail || receiptEmail.trim() === '') return true;
     return emailRegex.test(receiptEmail);
   };
 
   const isDocumentValid = () => {
-    // documento opcional: si está vacío se considera válido; si se completó, mínimo 6 dígitos
     if (!documentNumber || documentNumber.trim() === '') return true;
     return documentNumber.trim().length >= 6;
   };
@@ -278,8 +272,6 @@ const CrearReserva = () => {
     );
   };
 
-  // Ahora la validación principal requiere sólo los datos esenciales de la tarjeta.
-  // Los demás campos se validan solamente si el usuario los completó (ver funciones arriba).
   const isPaymentValid = () =>
     isCardDataValid() &&
     isSecurityValid() &&
@@ -355,12 +347,9 @@ const CrearReserva = () => {
     return `tok_${hash.toString(16)}`;
   };
 
-
-  // Confirmar reserva
   const handleSubmit = async () => {
     console.log('handleSubmit called', { isPaymentValid: isPaymentValid(), paymentForm });
     if (!isPaymentValid()) {
-      // Mostrar en consola motivos y en UI (ver getValidationErrors)
       const razones = getValidationErrors();
       console.warn('Validación de pago falló:', razones);
       alert('No se pueden enviar los datos. Revisa los campos requeridos: \n' + razones.join('\n'));
@@ -425,7 +414,7 @@ const CrearReserva = () => {
     }
 
     try {
-      const reservaResponse = await fetch('https://localhost:7055/api/Reservas', {
+      const reservaResponse = await fetch(`${API_URL}/Reservas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -488,7 +477,7 @@ const CrearReserva = () => {
         fechaPago: new Date().toISOString(),
       };
 
-      const pagoResponse = await fetch(`https://localhost:7055/api/reservas/pagar/${reservaId}`, {
+      const pagoResponse = await fetch(`${API_URL}/reservas/pagar/${reservaId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -531,7 +520,6 @@ const CrearReserva = () => {
     return errores;
   };
 
-  // Paso 1: Establecimiento
   const PasoEstablecimiento = () => (
     <div>
       <h3>Elige un establecimiento</h3>
@@ -575,12 +563,11 @@ const CrearReserva = () => {
       )}
     </div>
   );
-// Paso 2: Fecha y hora
+
   const PasoFechaHora = () => (
     <div>
       <h3>Elige la fecha y hora</h3>
 
-      {/* Botones de dias */}
       <div className="nav-buttons">
         {dias.map((d) => (
           <button
@@ -596,7 +583,6 @@ const CrearReserva = () => {
         ))}
       </div>
 
-      {/* Botones de horas */}
       {diaSeleccionado && (
         <div className="horas-grid">
           {generarHoras().map((hora) => (
@@ -630,7 +616,6 @@ const CrearReserva = () => {
     </div>
   );
 
-  // Paso 3: Cancha
   const PasoCancha = () => (
     <div>
       <h3>Elige la cancha</h3>
@@ -677,7 +662,6 @@ const CrearReserva = () => {
       </div>
     </div>
   );
-// Paso 4: Confirmar y pagar
 
 const PasoConfirmar = () => {
   const establecimientoSeleccionado = establecimientos.find(
@@ -1030,7 +1014,6 @@ const PasoConfirmar = () => {
         </div>
 
         <div className="payment-actions">
-          {/* Mostrar errores de validación para que sepas qué completar */}
           {(() => {
             const errores = getValidationErrors();
             if (errores.length === 0) return null;

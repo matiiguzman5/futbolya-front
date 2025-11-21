@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import "../assets/styles/valorarModal.css";
+import { API_URL } from "../config";
 
 const ValorarModal = ({ reservaId, onClose }) => {
   const [jugadores, setJugadores] = useState([]);
@@ -8,11 +9,13 @@ const ValorarModal = ({ reservaId, onClose }) => {
   const [puntaje, setPuntaje] = useState(0);
   const [comentario, setComentario] = useState("");
   const token = localStorage.getItem("token");
+  const API = process.env.REACT_APP_API_URL;
+
 
   useEffect(() => {
     const fetchJugadores = async () => {
       try {
-        const res = await fetch(`https://localhost:7055/api/reservas/${reservaId}/jugadores`, {
+        const res = await fetch(`${API_URL}/reservas/${reservaId}/jugadores`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -37,7 +40,7 @@ const ValorarModal = ({ reservaId, onClose }) => {
     }
 
     try {
-      const res = await fetch("https://localhost:7055/api/calificaciones", {
+      const res = await fetch(`${API_URL}/calificaciones`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

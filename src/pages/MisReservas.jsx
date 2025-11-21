@@ -4,6 +4,7 @@ import '../assets/styles/misReservas.css';
 import ShareReserva from '../components/ShareReserva';
 import ValorarModal from '../components/ValorarModal';
 import ConfirmActionModal from '../components/ConfirmActionModal';
+import { API_URL } from "../config";
 
 const ACCION_RESERVA_CONFIG = {
   salir: {
@@ -57,7 +58,7 @@ const MisReservas = () => {
     if (!token) return;
 
     try {
-      const res = await fetch('https://localhost:7055/api/reservas/mis', {
+      const res = await fetch(`${API_URL}/reservas/mis`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -107,15 +108,18 @@ const MisReservas = () => {
 
     const configuracion = ACCION_RESERVA_CONFIG[confirmacion.tipo];
     const reservaId = confirmacion.reserva?.id;
-    if (!configuracion || !reservaId) return;
+
+    if (!configuracion || !reservaId) {
+      return;
+    }
 
     setProcesandoAccion(true);
 
     try {
       const endpoint =
         confirmacion.tipo === 'salir'
-          ? `https://localhost:7055/api/reservas/${reservaId}/salir`
-          : `https://localhost:7055/api/reservas/${reservaId}`;
+          ? `${API_URL}/reservas/${reservaId}/salir`
+          : `${API_URL}/reservas/${reservaId}`;
 
       const response = await fetch(endpoint, {
         method: 'DELETE',
@@ -253,6 +257,8 @@ const MisReservas = () => {
     <div className="home-wrapper page-shell">
       <div className="home-content">
         <div className="mis-reservas-container">
+          
+
           <section className="reserva-seccion">
             <div className="reserva-seccion-header">
               <h3>Próximas reservas</h3>

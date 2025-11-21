@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/styles/contactoestablecimiento.css';
+import { API_URL } from "../config";
+
 
 const ContactoEstablecimiento = () => {
   const [nombre, setNombre] = useState('');
@@ -8,6 +10,8 @@ const ContactoEstablecimiento = () => {
   const [telefono, setTelefono] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const API = process.env.REACT_APP_API_URL;
+
 
   const navigate = useNavigate();
 
@@ -26,7 +30,7 @@ const ContactoEstablecimiento = () => {
     setEnviando(true);
 
     try {
-      const res = await fetch('https://localhost:7055/api/contacto/establecimiento', {
+      const res = await fetch(`${API_URL}/contacto/establecimiento`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

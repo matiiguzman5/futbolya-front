@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../assets/styles/contactoestablecimiento.css'; // o uno nuevo si querés
+import '../assets/styles/contactoestablecimiento.css';
+import { API_URL } from "../config";
 
 const OlvideContrasena = () => {
   const [correo, setCorreo] = useState('');
@@ -22,13 +23,12 @@ const OlvideContrasena = () => {
     setEnviando(true);
 
     try {
-      const res = await fetch('https://localhost:7055/api/auth/olvide-password', {
+      const res = await fetch(`${API_URL}/auth/olvide-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ correo })
       });
 
-      // No importa si el mail existe o no, el mensaje es el mismo
       if (res.ok) {
         alert('Si el correo está registrado, te enviamos un mail para restablecer la contraseña.');
         navigate('/login');

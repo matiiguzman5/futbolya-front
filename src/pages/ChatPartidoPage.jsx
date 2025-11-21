@@ -1,23 +1,24 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../assets/styles/chat.css";
+import { API_URL } from "../config";
 
 const ChatPartidoPage = () => {
-  const { id } = useParams(); // id del partido en la URL
+  const { id } = useParams();
   const [mensajes, setMensajes] = useState([]);
   const [nuevoMensaje, setNuevoMensaje] = useState("");
   const token = localStorage.getItem("token");
   const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
   const navigate = useNavigate();
   const chatRef = useRef(null);
+  const API = process.env.REACT_APP_API_URL;
 
-  // === Cargar mensajes y refrescar cada 10 segundos ===
   useEffect(() => {
     if (!id) return;
 
     const fetchMensajes = async () => {
       try {
-        const res = await fetch(`https://localhost:7055/api/mensajes/partido/${id}`, {
+        const res = await fetch(`${API_URL}/mensajes/partido/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
@@ -30,14 +31,14 @@ const ChatPartidoPage = () => {
     };
 
     fetchMensajes();
-    const intervalo = setInterval(fetchMensajes, 10000);
+    const intervalo = setInterval(fetchMensajes, 5000);
     return () => clearInterval(intervalo);
   }, [id, token]);
 
 const enviarMensaje = async () => {
   if (!nuevoMensaje.trim()) return;
   try {
-    const res = await fetch("https://localhost:7055/api/mensajes", {
+    const res = await fetch(`${API_URL}/mensajes`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -62,8 +63,6 @@ const enviarMensaje = async () => {
   }
 };
 
-
-  // === Auto-scroll al último mensaje ===
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;

@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 const ChatPartido = ({ partidoId }) => {
   const [mensajes, setMensajes] = useState([]);
   const [nuevoMensaje, setNuevoMensaje] = useState("");
   const token = localStorage.getItem("token");
+  const API = process.env.REACT_APP_API_URL;
 
-  // Cargar mensajes al montar el componente
 useEffect(() => {
   if (!partidoId) return;
 
   const fetchMensajes = async () => {
     try {
-      const res = await fetch(`https://localhost:7055/api/mensajes/partido/${partidoId}`, {
+      const res = await fetch(`${API_URL}/mensajes/partido/${partidoId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -23,13 +24,8 @@ useEffect(() => {
     }
   };
 
-  // Llamada inicial
   fetchMensajes();
-
-  // 🕐 Llamar cada 10 segundos
   const intervalo = setInterval(fetchMensajes, 10000);
-
-  // ❌ Limpieza: cuando el componente se desmonta, eliminamos el intervalo
   return () => clearInterval(intervalo);
 
 }, [partidoId, token]);
@@ -38,7 +34,7 @@ useEffect(() => {
   const enviarMensaje = async () => {
     if (!nuevoMensaje.trim()) return;
     try {
-      const res = await fetch("https://localhost:7055/api/mensajes", {
+      const res = await fetch(`${API_URL}/mensajes`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,7 +44,6 @@ useEffect(() => {
       });
       if (res.ok) {
         setNuevoMensaje("");
-        // Refrescar chat
         const data = await res.json();
         setMensajes((prev) => [...prev, data]);
       }

@@ -15,7 +15,6 @@ const Login = () => {
     document.title = 'Iniciar sesión - FutbolYa';
   }, []);
 
-  // Leer ?confirmado=1 del query string para mostrar mensaje
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('confirmado') === '1') {
