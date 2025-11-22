@@ -1,81 +1,408 @@
+/* Asegurar que el header esté por encima del mapa y definir la altura usada por el layout */
 :root {
-  --header-bg: #0b2340;
-  --header-text: #f5f7fb;
-  --header-height: 72px;
+  --header-height: 72px; /* ajustar si tu header mide distinto */
+}
+
+/* selector del header (ajusta si tu proyecto usa otra clase/ID) */
+header, .site-header, .app-header {
+  position: fixed; /* mantiene el header en la parte superior */
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  z-index: 2000; /* suficientemente alto para estar sobre leaflet */
+  background: var(--header-bg, #fff); /* mantener fondo para ocultar mapa debajo */
 }
 
 .home-header {
-  position: sticky;
+  /* fixed so content is always pushed under it using padding-top on the page */
+  position: fixed;
   top: 0;
-  width: 100%;
-  background-color: var(--header-bg);
-  color: var(--header-text);
-  z-index: 1000;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  z-index: 3000; /* must be above leaflet controls */
+  background: linear-gradient(135deg, rgba(12, 33, 66, 0.92), rgba(46, 105, 255, 0.9));
+  color: #ffffff;
+  box-shadow: 0 18px 40px rgba(10, 25, 56, 0.28);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
 }
 
 .home-header__inner {
-  min-height: var(--header-height);
+
+  width: 100%;
+
+  margin: 0;
+
+  display: grid;
+
+  grid-template-columns: auto 1fr auto;
+
+  align-items: center;
+
+  gap: 18px;
+
+  padding: 8px clamp(12px, 3vw, 24px) 8px 14px;
+
+  box-sizing: border-box;
+
+}
+
+
+
+.header-left {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+
+}
+
+
+
+.header-logo {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: nowrap;
-  gap: 16px;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 clamp(16px, 4vw, 48px);
-  box-sizing: border-box;
-}
-
-.brand-title {
-  flex: 1 1 auto;
-  margin: 0;
-  font-size: clamp(1.4rem, 2.3vw, 2.2rem);
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  gap: 10px;
   color: inherit;
-  white-space: nowrap;
-}
-
-.login-button {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 0.5rem 1.7rem;
   font-weight: 600;
-  font-size: 1rem;
-  text-decoration: none;
-  color: #0b2340;
-  background-color: #ffffff;
-  border-radius: 6px;
-  border: none;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-.login-button:hover {
-  background-color: #f5f7fb;
+.header-logo:hover {
   transform: translateY(-1px);
+  opacity: 0.92;
 }
 
-.login-button:focus-visible {
-  outline: 2px solid #f5f7fb;
-  outline-offset: 2px;
+.logo {
+
+  width: 36px;
+
+  height: 36px;
+
+  border-radius: 12px;
+
+  object-fit: cover;
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+
 }
 
-@media (max-width: 520px) {
+
+
+.brand-text {
+
+  font-size: 0.85rem;
+
+  letter-spacing: 1px;
+
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.25);
+
+}
+
+
+
+.user-card {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 4px 12px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  box-shadow: 0 8px 20px rgba(10, 25, 56, 0.18);
+
+}
+
+
+
+.user-avatar {
+
+  width: 30px;
+
+  height: 30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.2);
+
+  font-weight: 700;
+
+  letter-spacing: 0.7px;
+
+  font-size: 0.75rem;
+
+}
+
+
+
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.user-nombre {
+
+  font-size: 0.78rem;
+
+  font-weight: 600;
+
+}
+
+
+
+.user-rol {
+
+  font-size: 0.62rem;
+
+  text-transform: uppercase;
+
+  letter-spacing: 1.4px;
+
+  opacity: 0.7;
+
+}
+
+
+
+.header-center {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  flex-wrap: wrap;
+
+  gap: 12px;
+
+  font-size: 0.78rem;
+
+  letter-spacing: 0.35px;
+
+}
+
+
+
+.header-center a {
+
+  color: rgba(255, 255, 255, 0.82);
+
+  padding: 5px 10px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.05);
+
+  border: 1px solid transparent;
+
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+
+}
+
+
+
+.header-center a:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 12px 24px rgba(10, 25, 56, 0.2);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.btnlogout {
+
+  background: rgba(255, 255, 255, 0.92);
+
+  color: var(--color-primary);
+
+  border: 1px solid rgba(255, 255, 255, 0.46);
+
+  padding: 6px 14px;
+
+  border-radius: 999px;
+
+  font-weight: 600;
+
+  font-size: 0.72rem;
+
+  letter-spacing: 0.5px;
+
+  white-space: nowrap;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+
+  box-shadow: 0 10px 24px rgba(10, 25, 56, 0.18);
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
+}
+
+
+
+
+
+.btnlogout:hover {
+
+  background: #ffffff;
+
+  transform: translateY(-1px);
+
+  box-shadow: 0 16px 28px rgba(10, 25, 56, 0.24);
+
+}
+
+
+
+@media (max-width: 960px) {
+
   .home-header__inner {
-    padding: 0 16px;
+
+    grid-template-columns: 1fr;
+
+    text-align: center;
+
+    gap: 16px;
+
+    padding: 14px 20px;
+
   }
 
-  .brand-title {
-    font-size: 1.25rem;
+
+
+  .header-left {
+
+    justify-content: center;
+
+    flex-wrap: wrap;
+
   }
 
-  .login-button {
-    padding: 0.4rem 1.2rem;
-    font-size: 0.9rem;
+
+
+  .header-right {
+
+    justify-content: center;
+
   }
+
+
+
+  .user-card {
+
+    margin-inline: auto;
+
+  }
+
+}
+
+
+
+@media (max-width: 600px) {
+
+  .home-header__inner {
+
+    padding: 12px 10px;
+
+  }
+
+
+
+  .logo {
+
+    width: 32px;
+
+    height: 32px;
+
+  }
+
+
+
+  .header-center {
+
+    gap: 8px;
+
+    font-size: 0.72rem;
+
+  }
+
+
+
+  .header-center a {
+
+    padding: 4px 8px;
+
+  }
+
+
+
+  .user-card {
+
+    padding: 4px 10px;
+
+    gap: 8px;
+
+  }
+
+
+
+  .user-nombre {
+
+    font-size: 0.74rem;
+
+  }
+
+
+
+  .user-rol {
+
+    font-size: 0.6rem;
+
+  }
+
+
+
+  .btnlogout {
+
+    width: 100%;
+
+  }
+
 }

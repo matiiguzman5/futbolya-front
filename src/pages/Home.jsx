@@ -7,6 +7,22 @@ import 'leaflet/dist/leaflet.css';
 import ChatFlotante from "../components/ChatFlotante";
 import { API_URL, BACKEND_URL } from "../config";
 
+const calcularDistanciaKm = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // Radio de la tierra en km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+
 const DEFAULT_CENTER = { lat: -34.6037, lng: -58.3816 };
 const MAP_STYLE = { width: '100%', height: '320px' };
 const GEOCODE_CACHE_KEY = 'geocodeCache_v1';
@@ -19,16 +35,15 @@ L.Icon.Default.mergeOptions({
 });
 
 const defaultMarkerIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
 
 const userMarkerIcon = L.icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
@@ -203,7 +218,11 @@ const Home = () => {
 
         const map = mapRef.current;
         if (map) {
-          map.setView([coords.lat, coords.lng], 14);
+          setTimeout(() => {
+            map.flyTo([userPosition.lat, userPosition.lng], 15, {
+              duration: 1.2
+            });
+          }, 300);
         }
       },
       (err) => {
@@ -292,25 +311,36 @@ const Home = () => {
         <div className="map-wrapper">
           <MapContainer
             center={[DEFAULT_CENTER.lat, DEFAULT_CENTER.lng]}
-            zoom={11}
+            zoom={12}
             style={MAP_STYLE}
             whenCreated={(mapInstance) => {
               mapRef.current = mapInstance;
               setTimeout(() => mapInstance.invalidateSize?.(), 200);
             }}
           >
+
+            {/* MAPA ESTILO GOOGLE */}
             <TileLayer
-              attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+              attribution='&copy; OpenStreetMap contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
+            {/* UBICACIÓN DEL USUARIO */}
             {userPosition && (
-              <Marker
-                position={[userPosition.lat, userPosition.lng]}
-                icon={userMarkerIcon}
-              />
+              <>
+                <Marker
+                  position={[userPosition.lat, userPosition.lng]}
+                  icon={userMarkerIcon}
+                />
+                <CircleMarker
+                  center={[userPosition.lat, userPosition.lng]}
+                  radius={10}
+                  pathOptions={{ color: "#1E90FF", fillColor: "#1E90FF", fillOpacity: 0.25 }}
+                />
+              </>
             )}
 
+            {/* MARCADORES DE RESERVAS */}
             {Object.entries(
               reservasConCoords.reduce((acc, reserva) => {
                 if (reserva.latitud != null && reserva.longitud != null) {
@@ -321,61 +351,99 @@ const Home = () => {
                 return acc;
               }, {})
             ).map(([coordStr, reservasGrupo]) => {
-              const [lat, lng] = coordStr.split(',').map(Number);
+              const [lat, lng] = coordStr.split(",").map(Number);
               return (
                 <Marker key={coordStr} position={[lat, lng]} icon={defaultMarkerIcon}>
                   <Popup maxWidth={300}>
                     <div style={{ maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }}>
-                      {reservasGrupo.map((reserva) => (
-                        <div
-                          key={reserva.id}
-                          style={{
-                            marginBottom: '10px',
-                            borderBottom: '1px solid #ccc',
-                            paddingBottom: '5px'
-                          }}
-                        >
-                          <strong>{reserva.nombreCancha}</strong><br />
-                          {reserva.resolvedUbicacion || reserva.ubicacion || 'Ubicación sin resolver'}<br />
-                          Fecha:{' '}
-                          {reserva.fechaHora
-                            ? new Date(reserva.fechaHora).toLocaleString('es-AR', {
-                                hour12: false,
-                                year: 'numeric',
-                                month: '2-digit',
-                                day: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })
-                            : '-'}
-                          <br />
-                          Jugadores: {reserva.anotados} / {reserva.capacidad}<br />
-                          Observaciones: {reserva.observaciones || 'Ninguna'}<br />
+                      {reservasGrupo.map((reserva) => {
+                        const lat = reserva.latitud;
+                        const lon = reserva.longitud;
 
-                          {usuario?.rol === 'jugador' ? (
-                            reserva.yaEstoyUnido ? (
-                              <span style={{ color: 'green' }}>✅ Ya estás unido</span>
-                            ) : reserva.anotados < reserva.capacidad ? (
-                              <button
-                                onClick={() => manejarUnirse(reserva.id)}
-                                style={{
-                                  marginTop: '5px',
-                                  backgroundColor: '#28a745',
-                                  color: '#fff',
-                                  border: 'none',
-                                  padding: '5px 10px',
-                                  borderRadius: '5px',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                Unirse
-                              </button>
+                        // Calcular distancia si tenemos posición del usuario
+                        let distancia = null;
+                        if (userPosition && lat && lon) {
+                          distancia = calcularDistanciaKm(
+                            userPosition.lat,
+                            userPosition.lng,
+                            lat,
+                            lon
+                          ).toFixed(1);
+                        }
+
+                        return (
+                          <div
+                            key={reserva.id}
+                            style={{
+                              marginBottom: '10px',
+                              borderBottom: '1px solid #ccc',
+                              paddingBottom: '8px',
+                            }}
+                          >
+                            <strong>{reserva.nombreCancha}</strong><br />
+
+                            {/* Distancia */}
+                            {distancia ? (
+                              <span style={{ color: '#555', fontSize: '0.9em' }}>
+                                📍 A {distancia} km de tu ubicación
+                              </span>
                             ) : (
-                              <span style={{ color: 'red' }}>Cupo completo</span>
-                            )
-                          ) : null}
-                        </div>
-                      ))}
+                              <span style={{ color: '#999', fontSize: '0.9em' }}>
+                                📍 Distancia no disponible
+                              </span>
+                            )}
+                            <br />
+
+                            {reserva.resolvedUbicacion || reserva.ubicacion || 'Ubicación sin resolver'}
+                            <br />
+
+                            Fecha:{' '}
+                            {reserva.fechaHora
+                              ? new Date(reserva.fechaHora).toLocaleString('es-AR', {
+                                  hour12: false,
+                                  year: 'numeric',
+                                  month: '2-digit',
+                                  day: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                              : '-'}
+                            <br />
+
+                            Jugadores: {reserva.anotados} / {reserva.capacidad}<br />
+
+                            Observaciones: {reserva.observaciones || 'Ninguna'}<br />
+
+                            {/* ACCIONES */}
+                            {usuario?.rol === 'jugador' && (
+                              <>
+                                {reserva.yaEstoyUnido ? (
+                                  <span style={{ color: 'green' }}>✔ Ya estás unido</span>
+                                ) : reserva.anotados < reserva.capacidad ? (
+                                  <button
+                                    onClick={() => manejarUnirse(reserva.id)}
+                                    style={{
+                                      marginTop: '8px',
+                                      width: '100%',
+                                      backgroundColor: '#28a745',
+                                      color: '#fff',
+                                      border: 'none',
+                                      padding: '6px 10px',
+                                      borderRadius: '5px',
+                                      cursor: 'pointer',
+                                      fontWeight: 'bold',
+                                    }}
+                                  >
+                                    Unirse
+                                  </button>
+                                ) : (
+                                  <span style={{ color: 'red' }}>Cupo completo</span>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </Popup>
                 </Marker>
@@ -383,6 +451,7 @@ const Home = () => {
             })}
           </MapContainer>
         </div>
+
 
         {localStorage.getItem('rol') !== 'establecimiento' ? (
           <div className="crear-reserva-container">
