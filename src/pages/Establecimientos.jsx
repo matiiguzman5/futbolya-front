@@ -21,7 +21,7 @@ const Establecimientos = () => {
     document.title = 'Establecimientos disponibles ';
     const fetchEstablecimientos = async () => {
       try {
-        const res = await fetch(`${API_URL}/establecimientos`);
+        const res = await fetch(`${API_URL}/usuarios/establecimientos`);
 
         if (!res.ok) {
           console.error('Error al cargar los establecimientos', res.status);

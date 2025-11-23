@@ -114,7 +114,7 @@ const CrearReserva = () => {
   useEffect(() => {
     const fetchEstablecimientos = async () => {
       try {
-        const res = await fetch(`${API_URL}/establecimientos`);
+        const res = await fetch(`${API_URL}/usuarios/establecimientos`);
         const data = await res.json();
         setEstablecimientos(data || []);
       } catch (error) {

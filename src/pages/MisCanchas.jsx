@@ -25,7 +25,7 @@ const MisCanchas = () => {
   }
 
   const obtenerCanchas = async () => {
-    const res = await fetch(`${API_URL}/canchas/mias`, {
+    const res = await fetch(`${API_URL}/canchas/mis-canchas`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     const data = await res.json();
