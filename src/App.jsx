@@ -13,13 +13,14 @@ import AgendaReservas from './pages/AgendaReservas';
 import Establecimientos from './pages/Establecimientos';
 import ProteccionRuta from './ProteccionRuta';
 import Layout from './components/Layout';
+import Bienvenida from './pages/Bienvenida';
 import './assets/styles/global.css';
 
 const App = () => (
   <Router>
     <Routes>
       {/* Publicas */}
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<Bienvenida />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
