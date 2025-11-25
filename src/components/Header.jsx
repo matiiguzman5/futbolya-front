@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "../assets/styles/header.css";
 
@@ -14,6 +14,8 @@ const Header = () => {
 
   const esAdmin = usuario?.rol === "administrador";
   const esEstablecimiento = usuario?.rol === "establecimiento";
+
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   const nombreUsuario = usuario?.nombre?.trim() || "Usuario";
   const rolUsuario = usuario?.rol?.trim() || "Rol";
@@ -35,8 +37,36 @@ const Header = () => {
     window.location.href = "/login";
   };
 
+  const enlacesMenu = [
+    { to: "/home", label: "Inicio" },
+    { to: "/establecimientos", label: "Establecimientos" },
+    { to: "/perfil", label: "Perfil" },
+  ];
+
+  if (usuario?.rol !== "establecimiento") {
+    enlacesMenu.push({ to: "/mis-reservas", label: "Mis Reservas" });
+  }
+
+  if (esEstablecimiento) {
+    enlacesMenu.push(
+      { to: "/abm-canchas", label: "Administrar Canchas" },
+      { to: "/agendaCanchas", label: "Agenda" }
+    );
+  }
+
+  if (esAdmin) {
+    enlacesMenu.push({ to: "/admin-usuarios", label: "Administrar Usuarios" });
+  }
+
+  const toggleMenu = () => setMenuAbierto((prev) => !prev);
+  const handleLinkClick = () => setMenuAbierto(false);
+  const handleCerrarSesion = () => {
+    setMenuAbierto(false);
+    cerrarSesion();
+  };
+
   return (
-    <header className="home-header">
+    <header className={`home-header ${menuAbierto ? "menu-open" : ""}`}>
       <div className="home-header__inner">
         <div className="header-left">
           <Link to="/home" className="header-logo">
@@ -55,30 +85,51 @@ const Header = () => {
           </div>
         </div>
 
-        <nav className="header-center" aria-label="Menu principal">
-          <Link to="/home">Inicio</Link>
-          <Link to="/establecimientos">Establecimientos</Link>
-          <Link to="/perfil">Perfil</Link>
-          {usuario?.rol !== "establecimiento" && (
-            <Link to="/mis-reservas">Mis Reservas</Link>
-          )}
-          {esEstablecimiento && (
-            <>
-              <Link to="/abm-canchas">Administrar Canchas</Link>
-              <Link to="/agendaCanchas">Agenda</Link>
-            </>
-          )}
-          {esAdmin && <Link to="/admin-usuarios">Administrar Usuarios</Link>}
+        <button
+          type="button"
+          className={`menu-toggle ${menuAbierto ? "is-open" : ""}`}
+          aria-label={menuAbierto ? "Cerrar menu" : "Abrir menu"}
+          aria-expanded={menuAbierto}
+          aria-controls="menu-principal"
+          onClick={toggleMenu}
+        >
+          <img src="/hamburguesa.png" alt="" aria-hidden="true" />
+        </button>
+
+        <nav
+          id="menu-principal"
+          className="header-center"
+          aria-label="Menu principal"
+        >
+          {enlacesMenu.map((link) => (
+            <Link key={link.to} to={link.to} onClick={handleLinkClick}>
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
         <div className="header-right">
-          <button className="btnlogout" onClick={cerrarSesion}>
+          <button className="btnlogout" onClick={handleCerrarSesion}>
             Cerrar sesion
           </button>
         </div>
+      </div>
+
+      <div className={`mobile-menu ${menuAbierto ? "open" : ""}`}>
+        <nav aria-label="Menu principal mobile">
+          {enlacesMenu.map((link) => (
+            <Link key={`mobile-${link.to}`} to={link.to} onClick={handleLinkClick}>
+              {link.label}
+            </Link>
+          ))}
+          <button className="btnlogout" onClick={handleCerrarSesion}>
+            Cerrar sesion
+          </button>
+        </nav>
       </div>
     </header>
   );
 };
 
 export default Header;
+

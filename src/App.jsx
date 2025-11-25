@@ -28,7 +28,7 @@ import MetodosDePago from './pages/MetodosDePago';
 
 import ProteccionRuta from './ProteccionRuta';
 import Layout from './components/Layout';
-import ScrollToTop from './components/ScrollToTop';
+import Bienvenida from './pages/Bienvenida';
 import './assets/styles/global.css';
 
 const App = () => (
@@ -36,11 +36,8 @@ const App = () => (
     <ScrollToTop />
 
     <Routes>
-
-      {/* Redirigir "/" al login */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-
-      {/* Rutas públicas sin layout */}
+      {/* Publicas */}
+      <Route path="/" element={<Bienvenida />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/olvide-mi-contrasena" element={<OlvideContrasena />} />
