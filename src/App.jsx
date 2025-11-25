@@ -1,15 +1,13 @@
-﻿// src/App.jsx
+﻿
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-// Páginas públicas
 import Login from './pages/Login';
 import Register from './pages/Register';
 import OlvideContrasena from './pages/OlvideContrasena';
 import RestablecerPassword from './pages/RestablecerPassword';
 import ContactoEstablecimiento from './pages/ContactoEstablecimiento';
 
-// Páginas privadas con Layout
 import Home from './pages/Home';
 import Perfil from './pages/Perfil';
 import AdminUsuarios from './pages/AdminUsuarios';
@@ -19,8 +17,8 @@ import MisReservas from './pages/MisReservas';
 import AgendaReservas from './pages/AgendaReservas';
 import Establecimientos from './pages/Establecimientos';
 import ChatPartidoPage from "./pages/ChatPartidoPage";
+import ScrollToTop from "./components/ScrollToTop";
 
-// Páginas informativas
 import Contacto from './pages/Contacto';
 import Ayuda from './pages/Ayuda';
 import SobreNosotros from './pages/SobreNosotros';
@@ -36,7 +34,6 @@ const App = () => (
     <ScrollToTop />
 
     <Routes>
-      {/* Publicas */}
       <Route path="/" element={<Bienvenida />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -44,15 +41,12 @@ const App = () => (
       <Route path="/restablecer-password" element={<RestablecerPassword />} />
       <Route path="/contacto-establecimiento" element={<ContactoEstablecimiento />} />
 
-      {/* Rutas que muestran el layout principal */}
       <Route element={<Layout />}>
-        {/* Publicas con header/footer */}
         <Route path="/contacto" element={<Contacto />} />
         <Route path="/ayuda" element={<Ayuda />} />
         <Route path="/sobre-nosotros" element={<SobreNosotros />} />
         <Route path="/metodos-de-pago" element={<MetodosDePago />} />
 
-        {/* Privadas */}
         <Route
           path="/home"
           element={

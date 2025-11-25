@@ -202,11 +202,8 @@ const Home = () => {
     fetchAll();
   }, []);
 
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      console.warn('Geolocalización no soportada por el navegador');
-      return;
-    }
+    useEffect(() => {
+    if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -214,55 +211,55 @@ const Home = () => {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude
         };
+
         setUserPosition(coords);
 
         const map = mapRef.current;
         if (map) {
           setTimeout(() => {
-            map.flyTo([userPosition.lat, userPosition.lng], 15, {
-              duration: 1.2
+            map.flyTo([coords.lat, coords.lng], 15, {
+              duration: 1.2,
             });
           }, 300);
         }
       },
-      (err) => {
-        console.error('Error al obtener ubicación del usuario', err);
-      },
+      (err) => console.error("No se pudo obtener ubicación", err),
       { enableHighAccuracy: true }
     );
   }, []);
+
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
+    // 🟢 SI HAY UBICACIÓN DEL USUARIO → IGNORAR TODO LO DEMÁS
     if (userPosition) {
-      try {
-        map.setView([userPosition.lat, userPosition.lng], 14);
-      } catch (e) {
-        console.error('Error al centrar en userPosition', e);
-      }
-      return;
+      map.flyTo([userPosition.lat, userPosition.lng], 15, {
+        duration: 1.0
+      });
+      return; // 🔥 ESTA LÍNEA ES LA QUE SALVA TODO
     }
 
+    // 🟠 SI NO HAY UBICACIÓN → USAR BOUNDS DE RESERVAS
     const pts = reservasConCoords
       .filter(r => r.latitud != null && r.longitud != null)
       .map(r => [Number(r.latitud), Number(r.longitud)]);
 
-    try {
-      if (pts.length === 0) {
-        map.setView([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], 11);
-        return;
-      }
-      if (pts.length === 1) {
-        map.setView(pts[0], 13);
-        return;
-      }
-      const bounds = L.latLngBounds(pts);
-      map.fitBounds(bounds.pad ? bounds.pad(0.2) : bounds, { padding: [50, 50] });
-    } catch (e) {
-      console.error('bounds error', e);
+    if (pts.length === 0) {
+      map.setView([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], 11);
+      return;
     }
+
+    if (pts.length === 1) {
+      map.setView(pts[0], 13);
+      return;
+    }
+
+    const bounds = L.latLngBounds(pts);
+    map.fitBounds(bounds.pad ? bounds.pad(0.2) : bounds, {
+      padding: [50, 50]
+    });
   }, [reservasConCoords, userPosition]);
 
   const reservasFiltradas = reservasConCoords.filter(
@@ -310,8 +307,8 @@ const Home = () => {
 
         <div className="map-wrapper">
           <MapContainer
-            center={[DEFAULT_CENTER.lat, DEFAULT_CENTER.lng]}
-            zoom={12}
+            center={userPosition ? [userPosition.lat, userPosition.lng] : [DEFAULT_CENTER.lat, DEFAULT_CENTER.lng]}
+            zoom={userPosition ? 14 : 12}
             style={MAP_STYLE}
             whenCreated={(mapInstance) => {
               mapRef.current = mapInstance;
