@@ -5,22 +5,24 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { useNavigate } from "react-router-dom";
 import esLocale from "@fullcalendar/core/locales/es";
 import "../assets/styles/agenda.css";
+import { API_URL } from "../config";
+
 
 const AgendaReservas = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [canchas, setCanchas] = useState([]);
   const [canchaId, setCanchaId] = useState("");
+  const API = process.env.REACT_APP_API_URL;
 
-  // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [reservaSeleccionada, setReservaSeleccionada] = useState(null);
 
-  // traer canchas del establecimiento
   useEffect(() => {
+    document.title = 'Mi agenda';
     const fetchCanchas = async () => {
       const token = localStorage.getItem("token");
-      const res = await fetch("https://localhost:7055/api/reservas/mias", {
+      const res = await fetch(`${API_URL}/reservas/mias`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
@@ -33,11 +35,10 @@ const AgendaReservas = () => {
     fetchCanchas();
   }, []);
 
-  // traer reservas filtradas
   useEffect(() => {
     const fetchAgenda = async () => {
       const token = localStorage.getItem("token");
-      let url = "https://localhost:7055/api/reservas/agenda?semana=true";
+      let url = `${API_URL}/reservas/agenda?semana=true`;
       if (canchaId) url += `&canchaId=${canchaId}`;
 
       const response = await fetch(url, {
@@ -56,14 +57,12 @@ const AgendaReservas = () => {
 
   return (
     <div className="agenda-container page-shell">
-      {/* Botón volver */}
       <button onClick={() => navigate("/home")} className="btn-volver">
         ← Volver
       </button>
 
       <h2 className="agenda-titulo">Agenda de Reservas</h2>
 
-      {/* Filtro de cancha */}
       <select
         value={canchaId}
         onChange={(e) => setCanchaId(e.target.value)}
@@ -77,7 +76,6 @@ const AgendaReservas = () => {
         ))}
       </select>
 
-      {/* Calendario */}
       <div className="agenda-card">
         <FullCalendar
           plugins={[timeGridPlugin, interactionPlugin]}
@@ -135,7 +133,6 @@ const AgendaReservas = () => {
         />
       </div>
 
-      {/* Modal */}
       {modalOpen && reservaSeleccionada && (
         <div className="modal-overlay">
           <div className="modal-content">

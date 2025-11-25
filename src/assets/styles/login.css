@@ -6,6 +6,19 @@
   justify-content: center;
   align-items: center;
 }
+.forgot-password-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #1e88e5;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.forgot-password-link:hover {
+  color: #0d47a1;
+}
 
 
 .login-box {
@@ -16,6 +29,21 @@
   width: 90%;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   text-align: center;
+}
+.establecimiento-cta {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.establecimiento-link {
+  font-size: 0.9rem;
+  color: #1e88e5;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.establecimiento-link:hover {
+  color: #0d47a1;
 }
 
 .login-header img {

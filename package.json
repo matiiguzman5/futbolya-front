@@ -8,14 +8,15 @@
     "@fullcalendar/interaction": "^6.1.19",
     "@fullcalendar/react": "^6.1.19",
     "@fullcalendar/timegrid": "^6.1.19",
-    "axios": "^1.12.2",
+    "@microsoft/signalr": "^9.0.6",
+    "@react-google-maps/api": "^2.20.7",
+    "axios": "^1.6.8",
     "framer-motion": "^12.23.24",
     "leaflet": "^1.9.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.23.0",
-    "react-scripts": "5.0.1",
     "web-vitals": "^3.5.2"
   },
   "scripts": {
@@ -35,5 +36,13 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "devDependencies": {
+    "react-scripts": "^5.0.1"
   }
 }

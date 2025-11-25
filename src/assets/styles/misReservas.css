@@ -278,29 +278,25 @@
 
 /* === BOTÓN CANCELAR === */
 .btn-cancelar {
-  display: inline-block;
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  color: #fff;
+  background-color: #ff4d4f; /* rojo */
+  color: #fff;               /* ← TEXTO BLANCO */
   border: none;
-  padding: 10px 25px;
-  border-radius: 30px;
+  padding: 10px 18px;
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
-  text-align: center;
-  box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4);
-  transition: all 0.25s ease-in-out;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .btn-cancelar:hover {
-  background: linear-gradient(135deg, #ff5b4d, #c0392b);
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 6px 14px rgba(231, 76, 60, 0.5);
+  background-color: #e04445; /* un rojo más oscuro */
 }
 
-/* === EFECTO PULSE (opcional pero recomendado) === */
-.btn-salir:hover {
-  animation: pulse 1s infinite alternate;
+.btn-cancelar:active {
+  transform: scale(0.96);
 }
+
+
 
 @keyframes pulse {
   0% { box-shadow: 0 0 0 0 rgba(255,165,0, 0.5); }
@@ -347,5 +343,127 @@
   to { transform: scale(1); opacity: 1; }
 }
 
+.share-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #2563eb;
+  border-radius: 14px;
+  padding: 10px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.15);
+  width: fit-content;
+  min-width: 240px;
+  position: absolute;
+  right: 0;
+  z-index: 20;
+}
 
+.share-opciones button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #2563eb;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.95rem;
+  text-align: left;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
 
+.share-opciones button:hover {
+  background: #1e50c1;
+  transform: translateX(2px);
+}
+
+.share-opciones button:not(:first-child):not(:last-child) {
+  border-radius: 10px;
+}
+
+.share-opciones button:first-child {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.share-opciones button:last-child {
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+.reserva-card {
+  background: #fff !important;
+  border: none !important;
+  border-radius: 18px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06) !important;
+  overflow: visible !important;
+  position: relative;
+}
+
+.reserva-card-header {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  z-index: 2;
+}
+
+.reserva-card-header *,
+.reserva-card-header::before,
+.reserva-card-header::after {
+  background: transparent !important;
+}
+.home-wrapper.page-shell {
+  padding-top: 20px !important;
+}
+.reserva-card {
+  position: relative;
+  background-color: #ffffff !important;
+  border: none !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06) !important;
+  overflow: visible !important;
+}
+.reserva-card-header {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding-top: 0 !important;
+  margin-top: -4px !important;
+  position: relative;
+  z-index: 2;
+}
+
+.reserva-card-header * {
+  background: transparent !important;
+}
+
+.reserva-card-meta {
+  margin-top: 2px !important;
+  display: block;
+}
+
+/* === BOTÓN CANCELAR (forzado en rojo) === */
+.reserva-card-footer .btn-cancelar {
+  background: linear-gradient(135deg, #ff6b6b, #ef4444) !important;
+  color: #ffffff !important;
+  border: none !important;
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+  transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.reserva-card-footer .btn-cancelar:hover {
+  background: linear-gradient(135deg, #f97373, #dc2626) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(220, 38, 38, 0.5);
+}
+
+.reserva-card-footer .btn-cancelar:active {
+  transform: scale(0.96);
+}

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/styles/crearReserva.css';
 import '../assets/styles/home.css';
+import { API_URL } from "../config";
+
 
 const safeParse = (value) => {
   if (!value) {
@@ -61,8 +63,16 @@ const CrearReserva = () => {
     return initial;
   });
   const hasHydrated = useRef(false);
+  const toLocalISODate = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`; // ej: 2025-11-20
+  };
+
 
   useEffect(() => {
+    document.title = 'Creá tu reserva';
     if (hasHydrated.current) {
       return;
     }
@@ -101,11 +111,10 @@ const CrearReserva = () => {
     }));
   };
 
-  // Traer establecimientos
   useEffect(() => {
     const fetchEstablecimientos = async () => {
       try {
-        const res = await fetch('https://localhost:7055/api/Usuarios/establecimientos');
+        const res = await fetch(`${API_URL}/usuarios/establecimientos`);
         const data = await res.json();
         setEstablecimientos(data || []);
       } catch (error) {
@@ -115,38 +124,57 @@ const CrearReserva = () => {
     fetchEstablecimientos();
   }, []);
 
-  // Generar proximos 5 dias
   useEffect(() => {
     const hoy = new Date();
     const opciones = [];
+
     for (let i = 0; i < 5; i++) {
       const d = new Date(hoy);
       d.setDate(hoy.getDate() + i);
+
       opciones.push({
-        fecha: d.toISOString().split('T')[0],
-        label: i === 0 ? 'Hoy' : i === 1 ? 'Manana' : d.toLocaleDateString('es-ES', { weekday: 'long' }),
+        fecha: toLocalISODate(d),
+        label:
+          i === 0
+            ? 'Hoy'
+            : i === 1
+            ? 'Manana'
+            : d.toLocaleDateString('es-ES', { weekday: 'long' }),
       });
     }
+
     setDias(opciones);
   }, []);
 
-  // Generar horas (09:00 a 23:00)
   const generarHoras = () => {
     const horas = [];
+    const ahora = new Date();
+    const hoyISO = toLocalISODate(new Date());
+
     for (let h = 9; h <= 23; h++) {
-      horas.push(`${h.toString().padStart(2, '0')}:00`);
+      const horaStr = `${h.toString().padStart(2, '0')}:00`;
+
+      if (diaSeleccionado === hoyISO) {
+        const slot = new Date(`${diaSeleccionado}T${horaStr}:00`);
+
+        if (slot <= ahora) {
+          continue; 
+        }
+      }
+
+      horas.push(horaStr);
     }
+
     return horas;
   };
 
-  // Traer canchas disponibles
   const fetchCanchasDisponibles = async (id, fechaHoraSeleccionada) => {
     try {
       const res = await fetch(
-        `https://localhost:7055/api/Canchas/de/${id}/disponibles?fechaHora=${fechaHoraSeleccionada}`
+        `${API_URL}/Canchas/de/${id}/disponibles?fechaHora=${fechaHoraSeleccionada}`
       );
       const data = await res.json();
-      setCanchas(data || []); // Solo se muestran las canchas libres
+      setCanchas(data || []);
     } catch (error) {
       console.error('Error al obtener canchas disponibles:', error);
     }
@@ -220,9 +248,15 @@ const CrearReserva = () => {
 
   const isSecurityValid = () => isExpiryValid() && (cvc.length === 3 || cvc.length === 4);
 
-  const isReceiptEmailValid = () => emailRegex.test(receiptEmail);
+  const isReceiptEmailValid = () => {
+    if (!receiptEmail || receiptEmail.trim() === '') return true;
+    return emailRegex.test(receiptEmail);
+  };
 
-  const isDocumentValid = () => documentNumber.trim().length >= 6;
+  const isDocumentValid = () => {
+    if (!documentNumber || documentNumber.trim() === '') return true;
+    return documentNumber.trim().length >= 6;
+  };
 
   const isBillingValid = () => {
     const fields = [billingStreet, billingNumber, billingCity, billingZip];
@@ -236,15 +270,6 @@ const CrearReserva = () => {
       billingCity.trim().length >= 3 &&
       billingZip.trim().length >= 4
     );
-  };
-
-  const simulateTokenization = (cardNumberValue, expiryMonthValue, expiryYearValue) => {
-    const normalized = [cardNumberValue.replace(/\s/g, ''), expiryMonthValue, expiryYearValue].join('|');
-    let hash = 0;
-    for (let i = 0; i < normalized.length; i += 1) {
-      hash = (hash * 31 + normalized.charCodeAt(i)) % 1000000007;
-    }
-    return `tok_${hash.toString(16)}`;
   };
 
   const isPaymentValid = () =>
@@ -308,11 +333,26 @@ const CrearReserva = () => {
     return `$${numero.toLocaleString('es-AR')}`;
   };
 
+  // Simula tokenización de tarjeta (genera token determinista a partir de datos)
+  const simulateTokenization = (cardNumberValue, expiryMonthValue, expiryYearValue) => {
+    const normalized = [
+      (cardNumberValue || '').replace(/\s/g, ''),
+      expiryMonthValue || '',
+      expiryYearValue || ''
+    ].join('|');
+    let hash = 0;
+    for (let i = 0; i < normalized.length; i += 1) {
+      hash = (hash * 31 + normalized.charCodeAt(i)) % 1000000007;
+    }
+    return `tok_${hash.toString(16)}`;
+  };
 
-  // Confirmar reserva
   const handleSubmit = async () => {
+    console.log('handleSubmit called', { isPaymentValid: isPaymentValid(), paymentForm });
     if (!isPaymentValid()) {
-      alert('Completa los datos de pago antes de confirmar.');
+      const razones = getValidationErrors();
+      console.warn('Validación de pago falló:', razones);
+      alert('No se pueden enviar los datos. Revisa los campos requeridos: \n' + razones.join('\n'));
       return;
     }
 
@@ -374,7 +414,7 @@ const CrearReserva = () => {
     }
 
     try {
-      const reservaResponse = await fetch('https://localhost:7055/api/Reservas', {
+      const reservaResponse = await fetch(`${API_URL}/Reservas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -437,7 +477,7 @@ const CrearReserva = () => {
         fechaPago: new Date().toISOString(),
       };
 
-      const pagoResponse = await fetch(`https://localhost:7055/api/reservas/pagar/${reservaId}`, {
+      const pagoResponse = await fetch(`${API_URL}/reservas/pagar/${reservaId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -460,7 +500,26 @@ const CrearReserva = () => {
     }
   };
 
-  // Paso 1: Establecimiento
+  const getValidationErrors = () => {
+    const errores = [];
+    if (!isCardDataValid()) {
+      errores.push('Nombre del titular (>=3 chars) o número de tarjeta (13-19 dígitos) incompletos');
+    }
+    if (!isSecurityValid()) {
+      errores.push('Fecha de expiración o CVC inválidos');
+    }
+    if (!isReceiptEmailValid()) {
+      errores.push('Correo de comprobante inválido');
+    }
+    if (!isDocumentValid()) {
+      errores.push('Documento inválido (mín 6 dígitos si se completa)');
+    }
+    if (!isBillingValid()) {
+      errores.push('Domicilio incompleto (si completás algún campo, completá todos los obligatorios)');
+    }
+    return errores;
+  };
+
   const PasoEstablecimiento = () => (
     <div>
       <h3>Elige un establecimiento</h3>
@@ -504,12 +563,11 @@ const CrearReserva = () => {
       )}
     </div>
   );
-// Paso 2: Fecha y hora
+
   const PasoFechaHora = () => (
     <div>
       <h3>Elige la fecha y hora</h3>
 
-      {/* Botones de dias */}
       <div className="nav-buttons">
         {dias.map((d) => (
           <button
@@ -525,7 +583,6 @@ const CrearReserva = () => {
         ))}
       </div>
 
-      {/* Botones de horas */}
       {diaSeleccionado && (
         <div className="horas-grid">
           {generarHoras().map((hora) => (
@@ -559,7 +616,6 @@ const CrearReserva = () => {
     </div>
   );
 
-  // Paso 3: Cancha
   const PasoCancha = () => (
     <div>
       <h3>Elige la cancha</h3>
@@ -594,8 +650,7 @@ const CrearReserva = () => {
                   <strong>{c.nombre}</strong>
                   <p>Tipo: {c.tipo || 'No informado'}</p>
                   <p>Superficie: {c.superficie || 'No informada'}</p>
-                  <p>Precio base: {formatPrecio(getPrecioBase(c))}</p>
-                  <p>Fin de semana: {formatPrecio(getPrecioFinDeSemana(c))}</p>
+                  <p>Precio: {formatPrecio(getPrecioBase(c))}</p>
                 </div>
               </div>
             );
@@ -607,7 +662,6 @@ const CrearReserva = () => {
       </div>
     </div>
   );
-// Paso 4: Confirmar y pagar
 
 const PasoConfirmar = () => {
   const establecimientoSeleccionado = establecimientos.find(
@@ -743,7 +797,7 @@ const PasoConfirmar = () => {
                       onChange={handleCvcChange}
                       placeholder="123"
                       autoComplete="cc-csc"
-                      maxLength={4}
+                      maxLength={3}
                     />
                   </label>
                 </div>
@@ -788,6 +842,7 @@ const PasoConfirmar = () => {
                     inputMode="numeric"
                     className="payment-input"
                     value={documentNumber}
+                    maxLength={8}
                     onChange={(event) => {
                       const digitsOnly = event.target.value.replace(/[^0-9]/g, '');
                       updatePaymentFormField('documentNumber', digitsOnly);
@@ -843,6 +898,7 @@ const PasoConfirmar = () => {
                     inputMode="numeric"
                     className="payment-input"
                     value={billingNumber}
+                    maxLength={4}
                     onChange={(event) => {
                       const digitsOnly = event.target.value.replace(/[^0-9]/g, '');
                       updatePaymentFormField('billingNumber', digitsOnly);
@@ -958,11 +1014,27 @@ const PasoConfirmar = () => {
         </div>
 
         <div className="payment-actions">
+          {(() => {
+            const errores = getValidationErrors();
+            if (errores.length === 0) return null;
+            return (
+              <div className="payment-errors" style={{ color: '#b00', marginBottom: 8 }}>
+                <strong>Faltan campos:</strong>
+                <ul style={{ margin: '6px 0 0 18px' }}>
+                  {errores.map((e, i) => (
+                    <li key={i}>{e}</li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
+
           <button className="btn-back" onClick={() => setStep(3)}>Atras</button>
           <button
             className="btn-confirm"
             onClick={handleSubmit}
             disabled={!isPaymentValid()}
+            title={!isPaymentValid() ? getValidationErrors().join(' · ') : 'Confirmar pago'}
           >
             Confirmar pago
           </button>
@@ -978,12 +1050,12 @@ const PasoConfirmar = () => {
       <div className="home-content">
         <h2>Crear Nueva Reserva</h2>
         {step === 1 ? (
-          <PasoEstablecimiento />
+          PasoEstablecimiento()
         ) : (
           <div className="crear-reserva-container">
-            {step === 2 && <PasoFechaHora />}
-            {step === 3 && <PasoCancha />}
-            {step === 4 && <PasoConfirmar />}
+            {step === 2 && PasoFechaHora()}
+            {step === 3 && PasoCancha()}
+            {step === 4 && PasoConfirmar()}
           </div>
         )}
       </div>

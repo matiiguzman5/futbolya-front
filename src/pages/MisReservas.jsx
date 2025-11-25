@@ -1,23 +1,23 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import '../assets/styles/home.css';
 import '../assets/styles/misReservas.css';
 import ShareReserva from '../components/ShareReserva';
 import ValorarModal from '../components/ValorarModal';
 import ConfirmActionModal from '../components/ConfirmActionModal';
+import { API_URL } from "../config";
 
 const ACCION_RESERVA_CONFIG = {
   salir: {
-    title: '�Salir del partido?',
-    description: 'Vas a abandonar el partido y liberar tu lugar. Esta acci�n no se puede deshacer.',
-    confirmLabel: 'S�, salir',
+    title: '¿Salir del partido?',
+    description: 'Vas a abandonar el partido y liberar tu lugar. Esta acción no se puede deshacer.',
+    confirmLabel: 'Sí, salir',
     successMessage: 'Saliste del partido correctamente.',
     tone: 'warning'
   },
   cancelar: {
-    title: '�Cancelar la reserva?',
-    description: 'Se liberar� el turno y avisaremos al establecimiento. Esta acci�n no se puede deshacer.',
-    confirmLabel: 'S�, cancelar',
+    title: '¿Cancelar la reserva?',
+    description: 'Se liberará el turno y avisaremos al establecimiento. Esta acción no se puede deshacer.',
+    confirmLabel: 'Sí, cancelar',
     successMessage: 'Reserva cancelada correctamente.',
     tone: 'danger'
   }
@@ -31,26 +31,34 @@ const MisReservas = () => {
   const [confirmacion, setConfirmacion] = useState(null);
   const [procesandoAccion, setProcesandoAccion] = useState(false);
 
-  const navigate = useNavigate();
   const token = localStorage.getItem('token');
+  const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+
+  // ⬅️ CORRECCIÓN FINAL
+  const esDuenioReserva = (reserva) => {
+    if (!usuario || !reserva) return false;
+
+    const emailReserva = reserva.clienteEmail?.trim().toLowerCase();
+    const emailUsuario = usuario.correo?.trim().toLowerCase();
+
+    console.log("Comparando emails:", { emailReserva, emailUsuario });
+
+    return emailReserva && emailUsuario && emailReserva === emailUsuario;
+  };
 
   const obtenerFecha = (reserva) => {
     const valor = reserva.fechaHora || reserva.fecha;
-    if (!valor) {
-      return null;
-    }
+    if (!valor) return null;
 
     const fecha = new Date(valor);
     return Number.isNaN(fecha.getTime()) ? null : fecha;
   };
 
   const obtenerReservas = useCallback(async () => {
-    if (!token) {
-      return;
-    }
+    if (!token) return;
 
     try {
-      const res = await fetch('https://localhost:7055/api/reservas/mis', {
+      const res = await fetch(`${API_URL}/reservas/mis`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -62,6 +70,9 @@ const MisReservas = () => {
       const data = await res.json();
       const ahora = new Date();
 
+      // LOG para ver qué datos llegan
+      console.log("Reservas recibidas:", data);
+
       const activas = data.filter((reserva) => {
         const fecha = obtenerFecha(reserva);
         return fecha ? fecha > ahora : false;
@@ -72,7 +83,6 @@ const MisReservas = () => {
         return fecha ? fecha <= ahora : false;
       });
 
-
       setReservasActivas(activas);
       setReservasPasadas(pasadas);
     } catch (error) {
@@ -82,6 +92,7 @@ const MisReservas = () => {
 
   useEffect(() => {
     obtenerReservas();
+    document.title = 'Mis Reservas';
   }, [obtenerReservas]);
 
   const abrirConfirmacionAccion = (tipo, reserva) => {
@@ -89,15 +100,11 @@ const MisReservas = () => {
   };
 
   const cerrarConfirmacionAccion = () => {
-    if (!procesandoAccion) {
-      setConfirmacion(null);
-    }
+    if (!procesandoAccion) setConfirmacion(null);
   };
 
   const ejecutarAccionConfirmada = async () => {
-    if (!confirmacion) {
-      return;
-    }
+    if (!confirmacion) return;
 
     const configuracion = ACCION_RESERVA_CONFIG[confirmacion.tipo];
     const reservaId = confirmacion.reserva?.id;
@@ -111,14 +118,12 @@ const MisReservas = () => {
     try {
       const endpoint =
         confirmacion.tipo === 'salir'
-          ? `https://localhost:7055/api/reservas/${reservaId}/salir`
-          : `https://localhost:7055/api/reservas/${reservaId}`;
+          ? `${API_URL}/reservas/${reservaId}/salir`
+          : `${API_URL}/reservas/${reservaId}`;
 
       const response = await fetch(endpoint, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.ok) {
@@ -130,8 +135,8 @@ const MisReservas = () => {
         alert(`Error: ${error}`);
       }
     } catch (error) {
-      console.error('Error al realizar accion:', error);
-      alert('Hubo un error al procesar la accion.');
+      console.error('Error al realizar acción:', error);
+      alert('Hubo un error al procesar la acción.');
     } finally {
       setProcesandoAccion(false);
     }
@@ -139,16 +144,14 @@ const MisReservas = () => {
 
   const formatearFecha = (reserva) => {
     const fecha = obtenerFecha(reserva);
-    if (!fecha) {
-      return 'Sin fecha';
-    }
+    if (!fecha) return 'Sin fecha';
 
     try {
       return fecha.toLocaleString('es-AR', {
         dateStyle: 'full',
         timeStyle: 'short'
       });
-    } catch (error) {
+    } catch {
       return fecha.toLocaleString('es-AR');
     }
   };
@@ -209,25 +212,24 @@ const MisReservas = () => {
           <div className="botones-acciones">
             {esActiva ? (
               <>
-                <button
-                  className="btn-salir"
-                  onClick={() => abrirConfirmacionAccion('salir', reserva)}
-                >
+                <button className="btn-salir" onClick={() => abrirConfirmacionAccion('salir', reserva)}>
                   Salir del partido
                 </button>
-                <button
-                  className="btn-cancelar"
-                  onClick={() => abrirConfirmacionAccion('cancelar', reserva)}
-                >
-                  Cancelar reserva
-                </button>
+
+                {/* BOTÓN CANCELAR — AHORA FUNCIONA */}
+                {esDuenioReserva(reserva) && (
+                  <button
+                    className="btn-cancelar"
+                    onClick={() => abrirConfirmacionAccion('cancelar', reserva)}
+                  >
+                    Cancelar reserva
+                  </button>
+                )}
+
                 <ShareReserva reserva={reserva} />
               </>
             ) : (
-              <button
-                className="btn-salir"
-                onClick={() => abrirModalValoracion(reserva.id)}
-              >
+              <button className="btn-salir" onClick={() => abrirModalValoracion(reserva.id)}>
                 Valorar jugadores
               </button>
             )}
@@ -245,45 +247,27 @@ const MisReservas = () => {
           { label: 'Reserva', value: `#${confirmacion.reserva.id}` },
           {
             label: 'Cancha',
-            value:
-              confirmacion.reserva.canchaNombre ||
-              confirmacion.reserva.cancha ||
-              'Sin datos'
+            value: confirmacion.reserva.canchaNombre || confirmacion.reserva.cancha || 'Sin datos'
           },
-          {
-            label: 'Fecha',
-            value: formatearFecha(confirmacion.reserva)
-          }
-        ].filter((item) => item.value && item.value !== '')
+          { label: 'Fecha', value: formatearFecha(confirmacion.reserva) }
+        ]
       : [];
 
   return (
     <div className="home-wrapper page-shell">
       <div className="home-content">
         <div className="mis-reservas-container">
-          <header className="mis-reservas-header">
-            <div>
-              <h2 className="titulo">Mis Reservas</h2>
-              <p className="mis-reservas-subtitulo">
-                Consulta tus proximas reservas y tu historial en un panel mas claro y ordenado.
-              </p>
-            </div>
-            <button className="btn-volver" onClick={() => navigate('/home')}>
-              Volver al Home
-            </button>
-          </header>
+          
 
           <section className="reserva-seccion">
             <div className="reserva-seccion-header">
-              <h3>Proximas reservas</h3>
+              <h3>Próximas reservas</h3>
               <span className="reserva-cantidad">{reservasActivas.length}</span>
             </div>
             {reservasActivas.length === 0 ? (
-              <p className="reserva-vacia">No tenes reservas activas.</p>
+              <p className="reserva-vacia">No tenés reservas activas.</p>
             ) : (
-              <div className="reserva-lista">
-                {reservasActivas.map((reserva) => renderReservaCard(reserva, 'activa'))}
-              </div>
+              <div className="reserva-lista">{reservasActivas.map((r) => renderReservaCard(r, 'activa'))}</div>
             )}
           </section>
 
@@ -295,19 +279,14 @@ const MisReservas = () => {
             {reservasPasadas.length === 0 ? (
               <p className="reserva-vacia">No hay reservas pasadas.</p>
             ) : (
-              <div className="reserva-lista">
-                {reservasPasadas.map((reserva) => renderReservaCard(reserva, 'pasada'))}
-              </div>
+              <div className="reserva-lista">{reservasPasadas.map((r) => renderReservaCard(r, 'pasada'))}</div>
             )}
           </section>
         </div>
       </div>
 
       {showModal && (
-        <ValorarModal
-          reservaId={reservaSeleccionada}
-          onClose={() => setShowModal(false)}
-        />
+        <ValorarModal reservaId={reservaSeleccionada} onClose={() => setShowModal(false)} />
       )}
 
       {confirmacion && accionActual && (
@@ -329,4 +308,3 @@ const MisReservas = () => {
 };
 
 export default MisReservas;
-

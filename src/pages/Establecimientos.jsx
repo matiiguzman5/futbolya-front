@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../assets/styles/home.css";
+import { API_URL, BACKEND_URL } from "../config";
 
 const formatCurrency = (value) => {
   if (value === null || value === undefined) {
@@ -15,11 +16,12 @@ const formatCurrency = (value) => {
 const Establecimientos = () => {
   const [establecimientos, setEstablecimientos] = useState([]);
   const [selectedEstablecimiento, setSelectedEstablecimiento] = useState(null);
-
+  
   useEffect(() => {
+    document.title = 'Establecimientos disponibles ';
     const fetchEstablecimientos = async () => {
       try {
-        const res = await fetch('https://localhost:7055/api/usuarios/establecimientos');
+        const res = await fetch(`${API_URL}/usuarios/establecimientos`);
 
         if (!res.ok) {
           console.error('Error al cargar los establecimientos', res.status);
@@ -81,7 +83,11 @@ const Establecimientos = () => {
             establecimientos.map((establecimiento) => (
               <div key={establecimiento.id} className="reserva-card">
                 <img
-                  src={establecimiento.fotoPerfil ? `https://localhost:7055${establecimiento.fotoPerfil}` : '/cancha.jpg'}
+                  src={
+                    establecimiento.fotoPerfil
+                      ? `${BACKEND_URL}${establecimiento.fotoPerfil}`
+                      : "/cancha.jpg"
+                  }
                   alt="Establecimiento"
                 />
                 <div className="info">

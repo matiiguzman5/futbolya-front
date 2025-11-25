@@ -1,5 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import '../assets/styles/perfil.css';
+import { API_URL, BACKEND_URL } from "../config";
+
 
 const Perfil = () => {
   const [usuario, setUsuario] = useState(null);
@@ -15,13 +17,15 @@ const Perfil = () => {
     ubicacion: '',
     contrasena: ''
   });
+      useEffect(() => {
+        document.title = 'Mi perfil';
+      }, []);
 
-  // Cargar datos del usuario
   useEffect(() => {
     const fetchUsuario = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('https://localhost:7055/api/usuarios/yo', {
+        const res = await fetch(`${API_URL}/usuarios/yo`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) {
@@ -38,7 +42,6 @@ const Perfil = () => {
     fetchUsuario();
   }, []);
 
-  // Cargar valoraciones recibidas
   useEffect(() => {
     if (usuario?.rol !== 'Jugador') {
       return;
@@ -67,7 +70,7 @@ const Perfil = () => {
     const fetchEstadisticas = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('https://localhost:7055/api/usuarios/estadisticas', {
+        const res = await fetch(`${API_URL}/usuarios/estadisticas`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -97,7 +100,7 @@ const Perfil = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('https://localhost:7055/api/usuarios/subir-foto', {
+      const res = await fetch(`${API_URL}/usuarios/subir-foto`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -122,12 +125,13 @@ const Perfil = () => {
       const token = localStorage.getItem('token');
       const payload = {
         nombre: form.nombre,
+        correo: form.correo,
         telefono: form.telefono,
         posicion: form.posicion,
         contrasena: form.contrasena,
       };
 
-      const res = await fetch('https://localhost:7055/api/usuarios/editar-perfil', {
+      const res = await fetch(`${API_URL}/usuarios/editar-perfil`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -155,8 +159,10 @@ const Perfil = () => {
   }
 
   const imagenPerfil = usuario.fotoPerfil
-    ? `https://localhost:7055${usuario.fotoPerfil}`
+    ? `${BACKEND_URL}${usuario.fotoPerfil}`
     : '/default-profile.png';
+
+  const esEstablecimiento = String(usuario.rol || '').toLowerCase() === 'establecimiento';
 
   return (
     <div className="perfil-container">
@@ -177,12 +183,14 @@ const Perfil = () => {
         <p><strong>PosiciÃ³n:</strong> {usuario.posicion || 'No informada'}</p>
       </div>
 
-      <div className="perfil-estadisticas">
-        <div className="stat-card">
-          <img src="/pelotaIco.ico" alt="Partidos" />
-          <div>
-            <strong>Partidos jugados</strong>
-            <p>{estadisticas.partidosJugados}</p>
+      {!esEstablecimiento && (
+        <div className="perfil-estadisticas">
+          <div className="stat-card">
+            <img src="/pelotaIco.ico" alt="Partidos" />
+            <div>
+              <strong>Partidos jugados</strong>
+              <p>{estadisticas.partidosJugados}</p>
+            </div>
           </div>
         </div>
         <div className="stat-card">
@@ -190,6 +198,7 @@ const Perfil = () => {
           <div>
             <strong>ValoraciÃ³n promedio</strong>
               <p>{estadisticas.promedioValoraciones.toFixed(1)}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -202,24 +211,44 @@ const Perfil = () => {
         <div className="modal">
           <div className="modal-contenido">
             <h3>Editar Perfil</h3>
+
             <input
               type="text"
               placeholder="Nombre"
               value={form.nombre}
-              onChange={(event) => setForm({ ...form, nombre: event.target.value })}
+              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
             />
+
             <input
               type="text"
               placeholder="TelÃ©fono"
               value={form.telefono}
               onChange={(event) => setForm({ ...form, telefono: event.target.value })}
             />
+
             <input
               type="text"
               placeholder="PosiciÃ³n"
               value={form.posicion}
               onChange={(event) => setForm({ ...form, posicion: event.target.value })}
             />
+
+            {esEstablecimiento ? (
+              <input
+                type="text"
+                placeholder="Ubicación"
+                value={form.ubicacion}
+                onChange={(e) => setForm({ ...form, ubicacion: e.target.value })}
+              />
+            ) : (
+              <input
+                type="text"
+                placeholder="Posición"
+                value={form.posicion}
+                onChange={(e) => setForm({ ...form, posicion: e.target.value })}
+              />
+            )}
+
             <input
               type="password"
               placeholder="Nueva contrasena (opcional)"
