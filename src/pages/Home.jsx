@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import '../assets/styles/home.css';
 import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaflet';
@@ -64,6 +64,8 @@ const Home = () => {
   const reservasPorPagina = 4;
   const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
   const mapRef = useRef(null);
+  const lastBoundsKey = useRef('');
+  const hasCenteredOnUser = useRef(false);
   const cache = loadGeocodeCache();
 
   const obtenerCoordenadas = async (direccion) => {
@@ -237,8 +239,12 @@ const Home = () => {
     if (!map) return;
 
     if (userPosition) {
+      if (hasCenteredOnUser.current) {
+        return;
+      }
       try {
         map.setView([userPosition.lat, userPosition.lng], 14);
+        hasCenteredOnUser.current = true;
       } catch (e) {
         console.error('Error al centrar en userPosition', e);
       }
@@ -250,30 +256,44 @@ const Home = () => {
       .map(r => [Number(r.latitud), Number(r.longitud)]);
 
     try {
+      const key = pts.map((p) => p.join(',')).join('|');
+      if (lastBoundsKey.current === key) {
+        return;
+      }
       if (pts.length === 0) {
         map.setView([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], 11);
+        lastBoundsKey.current = 'default';
         return;
       }
       if (pts.length === 1) {
         map.setView(pts[0], 13);
+        lastBoundsKey.current = pts[0].join(',');
         return;
       }
       const bounds = L.latLngBounds(pts);
       map.fitBounds(bounds.pad ? bounds.pad(0.2) : bounds, { padding: [50, 50] });
+      lastBoundsKey.current = key;
     } catch (e) {
       console.error('bounds error', e);
     }
   }, [reservasConCoords, userPosition]);
 
-  const reservasFiltradas = reservasConCoords.filter(
-    (reserva) =>
-      reserva.nombreCancha?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      (reserva.resolvedUbicacion || reserva.establecimiento?.ubicacion || reserva.ubicacion || '').toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const reservasFiltradas = useMemo(() => {
+    const term = busqueda.trim().toLowerCase();
+    if (!term) return reservasConCoords;
+    return reservasConCoords.filter(
+      (reserva) =>
+        reserva.nombreCancha?.toLowerCase().includes(term) ||
+        (reserva.resolvedUbicacion || reserva.establecimiento?.ubicacion || reserva.ubicacion || '').toLowerCase().includes(term)
+    );
+  }, [reservasConCoords, busqueda]);
 
   const totalPaginas = Math.ceil(reservasFiltradas.length / reservasPorPagina);
   const indexInicio = (paginaActual - 1) * reservasPorPagina;
-  const reservasPaginadas = reservasFiltradas.slice(indexInicio, indexInicio + reservasPorPagina);
+  const reservasPaginadas = useMemo(
+    () => reservasFiltradas.slice(indexInicio, indexInicio + reservasPorPagina),
+    [reservasFiltradas, indexInicio, reservasPorPagina]
+  );
 
   const manejarUnirse = async (reservaId) => {
     try {
@@ -309,6 +329,12 @@ const Home = () => {
         </div>
 
         <div className="map-wrapper">
+          <div className="map-header">
+            <div>
+              <p className="eyebrow">Explora partidos cerca</p>
+              <h2>Mapa de reservas</h2>
+            </div>
+          </div>
           <MapContainer
             center={[DEFAULT_CENTER.lat, DEFAULT_CENTER.lng]}
             zoom={12}

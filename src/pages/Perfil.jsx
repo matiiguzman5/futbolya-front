@@ -15,11 +15,13 @@ const Perfil = () => {
     telefono: '',
     posicion: '',
     ubicacion: '',
-    contrasena: ''
+    contrasena: '',
   });
-      useEffect(() => {
-        document.title = 'Mi perfil';
-      }, []);
+  const esEstablecimiento = String(usuario?.rol || '').toLowerCase() === 'establecimiento';
+
+  useEffect(() => {
+    document.title = 'Mi perfil';
+  }, []);
 
   useEffect(() => {
     const fetchUsuario = async () => {
@@ -33,7 +35,14 @@ const Perfil = () => {
         }
         const data = await res.json();
         setUsuario(data);
-        setForm({ nombre: data.nombre || '', telefono: data.telefono || '', posicion: data.posicion || '', contrasena: '' });
+        setForm({
+          nombre: data.nombre || '',
+          correo: data.correo || '',
+          telefono: data.telefono || '',
+          posicion: data.posicion || '',
+          ubicacion: data.ubicacion || '',
+          contrasena: '',
+        });
       } catch (error) {
         console.error('Error al cargar perfil:', error);
       }
@@ -65,7 +74,7 @@ const Perfil = () => {
     fetchValoraciones();
   }, [usuario?.rol]);
 
-// Cargar estadÃ­sticas (partidos jugados + promedio)
+// Cargar estadisticas (partidos jugados + promedio)
   useEffect(() => {
     const fetchEstadisticas = async () => {
       try {
@@ -81,7 +90,7 @@ const Perfil = () => {
           });
         }
       } catch (error) {
-        console.error('Error al obtener estadÃ­sticas:', error);
+        console.error('Error al obtener estadisticas:', error);
       }
     };
 
@@ -122,14 +131,20 @@ const Perfil = () => {
 
   const handleGuardar = async () => {
     try {
+      const esEstablecimientoActual = String(usuario?.rol || '').toLowerCase() === 'establecimiento';
       const token = localStorage.getItem('token');
       const payload = {
         nombre: form.nombre,
         correo: form.correo,
         telefono: form.telefono,
-        posicion: form.posicion,
         contrasena: form.contrasena,
       };
+
+      if (esEstablecimientoActual) {
+        payload.ubicacion = form.ubicacion;
+      } else {
+        payload.posicion = form.posicion;
+      }
 
       const res = await fetch(`${API_URL}/usuarios/editar-perfil`, {
         method: 'PUT',
@@ -145,7 +160,18 @@ const Perfil = () => {
       }
 
       alert('Perfil actualizado correctamente');
-      setUsuario((prev) => (prev ? { ...prev, ...form } : prev));
+      setUsuario((prev) =>
+        prev
+          ? {
+              ...prev,
+              nombre: form.nombre,
+              correo: form.correo,
+              telefono: form.telefono,
+              posicion: esEstablecimientoActual ? prev?.posicion : form.posicion,
+              ubicacion: esEstablecimientoActual ? form.ubicacion : prev?.ubicacion,
+            }
+          : prev
+      );
       setModalAbierto(false);
       setForm((prev) => ({ ...prev, contrasena: '' }));
     } catch (error) {
@@ -162,8 +188,6 @@ const Perfil = () => {
     ? `${BACKEND_URL}${usuario.fotoPerfil}`
     : '/default-profile.png';
 
-  const esEstablecimiento = String(usuario.rol || '').toLowerCase() === 'establecimiento';
-
   return (
     <div className="perfil-container">
       <h2 className="perfil-nombre">{usuario.nombre?.toUpperCase?.() || usuario.nombre}</h2>
@@ -179,8 +203,8 @@ const Perfil = () => {
 
       <div className="perfil-info">
         <p><strong>Correo:</strong> {usuario.correo}</p>
-        <p><strong>TelÃ©fono:</strong> {usuario.telefono || 'No informado'}</p>
-        <p><strong>PosiciÃ³n:</strong> {usuario.posicion || 'No informada'}</p>
+        <p><strong>Telefono:</strong> {usuario.telefono || 'No informado'}</p>
+        <p><strong>Posicion:</strong> {usuario.posicion || 'No informada'}</p>
       </div>
 
       {!esEstablecimiento && (
@@ -192,16 +216,15 @@ const Perfil = () => {
               <p>{estadisticas.partidosJugados}</p>
             </div>
           </div>
-        </div>
-        <div className="stat-card">
-          <img src="/valoracion.ico" alt="ValoraciÃ³n" />
-          <div>
-            <strong>ValoraciÃ³n promedio</strong>
+          <div className="stat-card">
+            <img src="/valoracion.ico" alt="Valoracion" />
+            <div>
+              <strong>Valoracion promedio</strong>
               <p>{estadisticas.promedioValoraciones.toFixed(1)}</p>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       <button className="btn-editar" onClick={() => setModalAbierto(true)}>
         Editar perfil
@@ -211,52 +234,7 @@ const Perfil = () => {
         <div className="modal">
           <div className="modal-contenido">
             <h3>Editar Perfil</h3>
-
-            <input
-              type="text"
-              placeholder="Nombre"
-              value={form.nombre}
-              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-            />
-
-            <input
-              type="text"
-              placeholder="TelÃ©fono"
-              value={form.telefono}
-              onChange={(event) => setForm({ ...form, telefono: event.target.value })}
-            />
-
-            <input
-              type="text"
-              placeholder="PosiciÃ³n"
-              value={form.posicion}
-              onChange={(event) => setForm({ ...form, posicion: event.target.value })}
-            />
-
             {esEstablecimiento ? (
-              <input
-                type="text"
-                placeholder="Ubicación"
-                value={form.ubicacion}
-                onChange={(e) => setForm({ ...form, ubicacion: e.target.value })}
-              />
-            ) : (
-              <input
-                type="text"
-                placeholder="Posición"
-                value={form.posicion}
-                onChange={(e) => setForm({ ...form, posicion: e.target.value })}
-              />
-            )}
-
-            <input
-              type="password"
-              placeholder="Nueva contrasena (opcional)"
-              value={form.contrasena}
-              onChange={(event) => setForm({ ...form, contrasena: event.target.value })}
-            />
-
-            {usuario.rol === 'establecimiento' ? (
               <>
                 <input
                   type="text"
@@ -266,19 +244,19 @@ const Perfil = () => {
                 />
                 <input
                   type="email"
-                  placeholder="Correo electrÃ³nico"
+                  placeholder="Correo electronico"
                   value={form.correo}
                   onChange={(e) => setForm({ ...form, correo: e.target.value })}
                 />
                 <input
                   type="text"
-                  placeholder="TelÃ©fono"
+                  placeholder="Telefono"
                   value={form.telefono}
-                  onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+                  onChange={(event) => setForm({ ...form, telefono: event.target.value })}
                 />
                 <input
                   type="text"
-                  placeholder="UbicaciÃ³n"
+                  placeholder="Ubicacion"
                   value={form.ubicacion}
                   onChange={(e) => setForm({ ...form, ubicacion: e.target.value })}
                 />
@@ -286,7 +264,7 @@ const Perfil = () => {
                   type="password"
                   placeholder="Nueva contrasena (opcional)"
                   value={form.contrasena}
-                  onChange={(e) => setForm({ ...form, contrasena: e.target.value })}
+                  onChange={(event) => setForm({ ...form, contrasena: event.target.value })}
                 />
               </>
             ) : (
@@ -299,22 +277,27 @@ const Perfil = () => {
                 />
                 <input
                   type="email"
-                  placeholder="Correo electrÃ³nico"
+                  placeholder="Correo electronico"
                   value={form.correo}
                   onChange={(e) => setForm({ ...form, correo: e.target.value })}
                 />
                 <input
                   type="text"
-                  placeholder="TelÃ©fono"
+                  placeholder="Telefono"
                   value={form.telefono}
-                  onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+                  onChange={(event) => setForm({ ...form, telefono: event.target.value })}
                 />
-                
+                <input
+                  type="text"
+                  placeholder="Posicion"
+                  value={form.posicion}
+                  onChange={(event) => setForm({ ...form, posicion: event.target.value })}
+                />
                 <input
                   type="password"
                   placeholder="Nueva contrasena (opcional)"
                   value={form.contrasena}
-                  onChange={(e) => setForm({ ...form, contrasena: e.target.value })}
+                  onChange={(event) => setForm({ ...form, contrasena: event.target.value })}
                 />
               </>
             )}
@@ -333,7 +316,7 @@ const Perfil = () => {
 
       <h3 className="subtitulo">Mis valoraciones</h3>
       {valoraciones.length === 0 ? (
-        <p className="sin-valoraciones">TodavÃ­a no recibiste valoraciones.</p>
+        <p className="sin-valoraciones">Todavia no recibiste valoraciones.</p>
       ) : (
         valoraciones.map((valoracion, index) => (
           <div key={index} className="valoracion-card">
@@ -348,7 +331,7 @@ const Perfil = () => {
         ))
       )}
 
-      <footer className="footer-perfil">Â© 2025 FÃºtbolYa</footer>
+      <footer className="footer-perfil">(c) 2025 FutbolYa</footer>
     </div>
   );
 };

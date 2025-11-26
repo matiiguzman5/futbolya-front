@@ -28,6 +28,7 @@ import MetodosDePago from './pages/MetodosDePago';
 
 import ProteccionRuta from './ProteccionRuta';
 import Layout from './components/Layout';
+import ScrollToTop from './components/ScrollToTop';
 import Bienvenida from './pages/Bienvenida';
 import './assets/styles/global.css';
 

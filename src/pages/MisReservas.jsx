@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
 import '../assets/styles/home.css';
 import '../assets/styles/misReservas.css';
@@ -8,16 +9,16 @@ import { API_URL } from "../config";
 
 const ACCION_RESERVA_CONFIG = {
   salir: {
-    title: '¿Salir del partido?',
-    description: 'Vas a abandonar el partido y liberar tu lugar. Esta acción no se puede deshacer.',
-    confirmLabel: 'Sí, salir',
+    title: 'Salir del partido?',
+    description: 'Vas a abandonar el partido y liberar tu lugar. Esta accion no se puede deshacer.',
+    confirmLabel: 'Si, salir',
     successMessage: 'Saliste del partido correctamente.',
     tone: 'warning'
   },
   cancelar: {
-    title: '¿Cancelar la reserva?',
-    description: 'Se liberará el turno y avisaremos al establecimiento. Esta acción no se puede deshacer.',
-    confirmLabel: 'Sí, cancelar',
+    title: 'Cancelar la reserva?',
+    description: 'Se liberara el turno y avisaremos al establecimiento. Esta accion no se puede deshacer.',
+    confirmLabel: 'Si, cancelar',
     successMessage: 'Reserva cancelada correctamente.',
     tone: 'danger'
   }
@@ -30,19 +31,17 @@ const MisReservas = () => {
   const [reservaSeleccionada, setReservaSeleccionada] = useState(null);
   const [confirmacion, setConfirmacion] = useState(null);
   const [procesandoAccion, setProcesandoAccion] = useState(false);
+  const [filtroTexto, setFiltroTexto] = useState('');
+  const [filtroFecha, setFiltroFecha] = useState('');
 
   const token = localStorage.getItem('token');
   const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
 
-  // ⬅️ CORRECCIÓN FINAL
   const esDuenioReserva = (reserva) => {
     if (!usuario || !reserva) return false;
 
     const emailReserva = reserva.clienteEmail?.trim().toLowerCase();
     const emailUsuario = usuario.correo?.trim().toLowerCase();
-
-    console.log("Comparando emails:", { emailReserva, emailUsuario });
-
     return emailReserva && emailUsuario && emailReserva === emailUsuario;
   };
 
@@ -69,9 +68,6 @@ const MisReservas = () => {
 
       const data = await res.json();
       const ahora = new Date();
-
-      // LOG para ver qué datos llegan
-      console.log("Reservas recibidas:", data);
 
       const activas = data.filter((reserva) => {
         const fecha = obtenerFecha(reserva);
@@ -135,8 +131,8 @@ const MisReservas = () => {
         alert(`Error: ${error}`);
       }
     } catch (error) {
-      console.error('Error al realizar acción:', error);
-      alert('Hubo un error al procesar la acción.');
+      console.error('Error al realizar accion:', error);
+      alert('Hubo un error al procesar la accion.');
     } finally {
       setProcesandoAccion(false);
     }
@@ -161,80 +157,113 @@ const MisReservas = () => {
     setShowModal(true);
   };
 
+  const pasaFiltros = (reserva) => {
+    const texto = filtroTexto.trim().toLowerCase();
+    if (texto) {
+      const campos = [
+        reserva.canchaNombre,
+        reserva.cancha,
+        reserva.ubicacion,
+        reserva.establecimiento,
+        reserva.clienteNombre,
+        reserva.observaciones,
+      ]
+        .filter(Boolean)
+        .map((v) => String(v).toLowerCase());
+
+      const coincideTexto = campos.some((campo) => campo.includes(texto));
+      if (!coincideTexto) return false;
+    }
+
+    if (filtroFecha) {
+      const fecha = obtenerFecha(reserva);
+      const iso = fecha ? fecha.toISOString().slice(0, 10) : null;
+      if (iso !== filtroFecha) return false;
+    }
+
+    return true;
+  };
+
   const renderReservaCard = (reserva, tipo) => {
     const esActiva = tipo === 'activa';
     const estadoPago = reserva.estadoPago || 'Sin datos';
     const observaciones = reserva.observaciones || 'Ninguna';
     const etiquetaEstado = esActiva ? 'Proxima' : 'Historial';
+    const cancha = reserva.canchaNombre || reserva.cancha || 'Cancha sin nombre';
+    const ubicacion = reserva.ubicacion || reserva.establecimiento || 'Ubicacion a confirmar';
+    const jugadoresFaltantes = reserva.playersNeeded || reserva.jugadoresFaltantes;
+    const jugadoresTotales = reserva.totalPlayers || reserva.capacidad || null;
+    const nivel = reserva.level || reserva.nivel || 'General';
+    const precio = reserva.price || reserva.precio || null;
+    const organizador = reserva.organizer || reserva.organizador || reserva.clienteNombre || 'Organizador no informado';
+    const textoCupo =
+      jugadoresFaltantes != null
+        ? `${jugadoresFaltantes} lugares libres${jugadoresTotales ? ` de ${jugadoresTotales}` : ''}`
+        : jugadoresTotales
+        ? `Cupo total: ${jugadoresTotales}`
+        : 'Cupo no informado';
 
     return (
       <article
         key={reserva.id}
-        className={`reserva-card ${esActiva ? 'reserva-card--activa' : 'reserva-card--pasada'}`}
+        className={`booking-row ${esActiva ? 'booking-row--active' : 'booking-row--past'}`}
       >
-        <header className="reserva-card-header">
-          <div>
-            <h4 className="reserva-card-cancha">{reserva.canchaNombre || reserva.cancha}</h4>
-            <p className="reserva-card-meta">Reserva #{reserva.id}</p>
+        <div className="booking-row__info">
+          <div className="booking-row__head">
+            <h4 className="booking-row__title">{cancha}</h4>
+            <span className={`pill ${esActiva ? 'pill--active' : 'pill--muted'}`}>{etiquetaEstado}</span>
           </div>
-          <span className={`reserva-estado ${esActiva ? 'reserva-estado--activa' : 'reserva-estado--pasada'}`}>
-            {etiquetaEstado}
-          </span>
-        </header>
 
-        <div className="reserva-card-body">
-          <dl className="reserva-info-grid">
-            <div className="reserva-info-item">
-              <dt className="reserva-info-label">Fecha y hora</dt>
-              <dd className="reserva-info-value">{formatearFecha(reserva)}</dd>
-            </div>
-            <div className="reserva-info-item">
-              <dt className="reserva-info-label">Cliente</dt>
-              <dd className="reserva-info-value">{reserva.clienteNombre}</dd>
-            </div>
-            <div className="reserva-info-item">
-              <dt className="reserva-info-label">Estado de pago</dt>
-              <dd className="reserva-info-value">
-                <span className={`reserva-chip ${estadoPago === 'Pagado' ? 'reserva-chip--ok' : ''}`}>
-                  {estadoPago}
-                </span>
-              </dd>
-            </div>
-          </dl>
-
-          <div className="reserva-observaciones">
-            <span className="reserva-info-label">Observaciones</span>
-            <p className="reserva-observaciones-texto">{observaciones}</p>
+          <div className="info-line">
+            <span className="info-item">
+              <span className="info-icon" aria-hidden="true">📍</span>
+              {ubicacion}
+            </span>
+            <span className="info-item">
+              <span className="info-icon" aria-hidden="true">📅</span>
+              {formatearFecha(reserva)}
+            </span>
           </div>
+
+          <div className="info-line">
+            <span className="info-item">
+              <span className="info-icon" aria-hidden="true">👥</span>
+              {textoCupo}
+            </span>
+          </div>
+
+          <div className="booking-row__organizer">Organizado por {organizador}</div>
+          {observaciones && <p className="booking-row__notes">Obs: {observaciones}</p>}
         </div>
 
-        <footer className="reserva-card-footer">
-          <div className="botones-acciones">
+        <div className="booking-row__actions">
+          <span className="pill pill--level">{nivel}</span>
+          <div className="price-block">
+            <div className="price-main">{precio ? `$${precio}` : '--'}</div>
+            <div className="price-sub">por persona</div>
+          </div>
+          <button className="btn-join" type="button">Unirse al Partido</button>
+
+          <div className="booking-row__extra">
             {esActiva ? (
               <>
-                <button className="btn-salir" onClick={() => abrirConfirmacionAccion('salir', reserva)}>
-                  Salir del partido
+                <button className="btn-link" onClick={() => abrirConfirmacionAccion('salir', reserva)}>
+                  Salir
                 </button>
-
-                {/* BOTÓN CANCELAR — AHORA FUNCIONA */}
                 {esDuenioReserva(reserva) && (
-                  <button
-                    className="btn-cancelar"
-                    onClick={() => abrirConfirmacionAccion('cancelar', reserva)}
-                  >
-                    Cancelar reserva
+                  <button className="btn-link btn-link--danger" onClick={() => abrirConfirmacionAccion('cancelar', reserva)}>
+                    Cancelar
                   </button>
                 )}
-
                 <ShareReserva reserva={reserva} />
               </>
             ) : (
-              <button className="btn-salir" onClick={() => abrirModalValoracion(reserva.id)}>
-                Valorar jugadores
+              <button className="btn-link" onClick={() => abrirModalValoracion(reserva.id)}>
+                Valorar
               </button>
             )}
           </div>
-        </footer>
+        </div>
       </article>
     );
   };
@@ -253,36 +282,118 @@ const MisReservas = () => {
         ]
       : [];
 
+  const proximaReserva = reservasActivas
+    .slice()
+    .sort((a, b) => {
+      const aFecha = obtenerFecha(a) || 0;
+      const bFecha = obtenerFecha(b) || 0;
+      return aFecha - bFecha;
+    })[0];
+
+  const reservasActivasFiltradas = reservasActivas.filter(pasaFiltros);
+  const reservasPasadasFiltradas = reservasPasadas.filter(pasaFiltros);
+  const proximaFiltrada = reservasActivasFiltradas
+    .slice()
+    .sort((a, b) => {
+      const aFecha = obtenerFecha(a) || 0;
+      const bFecha = obtenerFecha(b) || 0;
+      return aFecha - bFecha;
+    })[0];
+
   return (
     <div className="home-wrapper page-shell">
-      <div className="home-content">
-        <div className="mis-reservas-container">
-          
-
-          <section className="reserva-seccion">
-            <div className="reserva-seccion-header">
-              <h3>Próximas reservas</h3>
-              <span className="reserva-cantidad">{reservasActivas.length}</span>
+      <div className="bookings-page">
+        <header className="bookings-hero">
+          <div className="bookings-hero__text">
+            <p className="eyebrow">Tu agenda futbolera</p>
+            <h2>Mis reservas</h2>
+            <p className="hero-subtitle">
+              Gestiona los partidos que tenes por jugar y revisa el historial de encuentros.
+            </p>
+            <div className="hero-pills">
+              <span className="pill pill--active">{reservasActivasFiltradas.length} proximas</span>
+              <span className="pill pill--muted">{reservasPasadasFiltradas.length} en historial</span>
             </div>
-            {reservasActivas.length === 0 ? (
-              <p className="reserva-vacia">No tenés reservas activas.</p>
+          </div>
+          <div className="bookings-hero__card">
+            <p className="eyebrow">Proxima parada</p>
+            {proximaFiltrada ? (
+              <>
+                <h4>{proximaFiltrada.canchaNombre || proximaFiltrada.cancha || 'Cancha sin nombre'}</h4>
+                <p className="hero-meta">{formatearFecha(proximaFiltrada)}</p>
+                <p className="hero-meta hero-meta--muted">
+                  {proximaFiltrada.ubicacion || proximaFiltrada.establecimiento || 'Ubicacion a confirmar'}
+                </p>
+              </>
             ) : (
-              <div className="reserva-lista">{reservasActivas.map((r) => renderReservaCard(r, 'activa'))}</div>
+              <p className="hero-meta hero-meta--muted">No tenes partidos agendados.</p>
             )}
-          </section>
+          </div>
+        </header>
 
-          <section className="reserva-seccion">
-            <div className="reserva-seccion-header">
+        <section className="bookings-filters">
+          <div className="filters-grid">
+            <div className="filter-item">
+              <label className="filter-label">Buscar</label>
+              <input
+                className="filter-input"
+                placeholder="Por ubicacion o nombre"
+                value={filtroTexto}
+                onChange={(e) => setFiltroTexto(e.target.value)}
+              />
+            </div>
+            <div className="filter-item">
+              <label className="filter-label">Fecha</label>
+              <input
+                type="date"
+                className="filter-input"
+                value={filtroFecha}
+                onChange={(e) => setFiltroFecha(e.target.value)}
+              />
+            </div>
+            <div className="filter-item filter-item--button">
+              <button
+                className="btn-ghost"
+                onClick={() => {
+                  setFiltroTexto('');
+                  setFiltroFecha('');
+                }}
+              >
+                Limpiar filtros
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="bookings-section">
+          <div className="section-header">
+            <div>
+              <p className="eyebrow">En agenda</p>
+              <h3>Proximas reservas</h3>
+            </div>
+            <span className="pill pill--count">{reservasActivasFiltradas.length}</span>
+          </div>
+          {reservasActivasFiltradas.length === 0 ? (
+            <p className="reserva-vacia">No tenes reservas activas.</p>
+          ) : (
+            <div className="booking-grid">{reservasActivasFiltradas.map((r) => renderReservaCard(r, 'activa'))}</div>
+          )}
+        </section>
+
+        <section className="bookings-section">
+          <div className="section-header">
+            <div>
+              <p className="eyebrow">Jugados</p>
               <h3>Historial</h3>
-              <span className="reserva-cantidad">{reservasPasadas.length}</span>
             </div>
-            {reservasPasadas.length === 0 ? (
-              <p className="reserva-vacia">No hay reservas pasadas.</p>
-            ) : (
-              <div className="reserva-lista">{reservasPasadas.map((r) => renderReservaCard(r, 'pasada'))}</div>
-            )}
-          </section>
-        </div>
+            <span className="pill pill--count">{reservasPasadasFiltradas.length}</span>
+          </div>
+          {reservasPasadasFiltradas.length === 0 ? (
+            <p className="reserva-vacia">No hay reservas pasadas.</p>
+          ) : (
+            <div className="booking-grid">{reservasPasadasFiltradas.map((r) => renderReservaCard(r, 'pasada'))}</div>
+          )}
+        </section>
       </div>
 
       {showModal && (
