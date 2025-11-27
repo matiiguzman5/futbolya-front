@@ -1,25 +1,34 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import '../assets/styles/home.css';
-import '../assets/styles/misReservas.css';
-import ShareReserva from '../components/ShareReserva';
-import ValorarModal from '../components/ValorarModal';
-import ConfirmActionModal from '../components/ConfirmActionModal';
+// MisReservas.jsx
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useRef
+} from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import "../assets/styles/home.css";
+import "../assets/styles/misReservas.css";
+import ShareReserva from "../components/ShareReserva";
+import ValorarModal from "../components/ValorarModal";
+import ConfirmActionModal from "../components/ConfirmActionModal";
 import { API_URL } from "../config";
 
 const ACCION_RESERVA_CONFIG = {
   salir: {
-    title: '¿Salir del partido?',
-    description: 'Vas a abandonar el partido y liberar tu lugar. Esta acción no se puede deshacer.',
-    confirmLabel: 'Sí, salir',
-    successMessage: 'Saliste del partido correctamente.',
-    tone: 'warning'
+    title: "¿Salir del partido?",
+    description:
+      "Vas a abandonar el partido y liberar tu lugar. Esta acción no se puede deshacer.",
+    confirmLabel: "Sí, salir",
+    successMessage: "Saliste del partido correctamente.",
+    tone: "warning"
   },
   cancelar: {
-    title: '¿Cancelar la reserva?',
-    description: 'Se liberará el turno y avisaremos al establecimiento. Esta acción no se puede deshacer.',
-    confirmLabel: 'Sí, cancelar',
-    successMessage: 'Reserva cancelada correctamente.',
-    tone: 'danger'
+    title: "¿Cancelar la reserva?",
+    description:
+      "Se liberará el turno y avisaremos al establecimiento. Esta acción no se puede deshacer.",
+    confirmLabel: "Sí, cancelar",
+    successMessage: "Reserva cancelada correctamente.",
+    tone: "danger"
   }
 };
 
@@ -31,19 +40,31 @@ const MisReservas = () => {
   const [confirmacion, setConfirmacion] = useState(null);
   const [procesandoAccion, setProcesandoAccion] = useState(false);
 
-  const token = localStorage.getItem('token');
-  const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+  // estado opcional (si querés mostrar loading mientras se une)
+  const [procesandoCompartida, setProcesandoCompartida] = useState(false);
 
-  // ⬅️ CORRECCIÓN FINAL
+  const token = localStorage.getItem("token");
+  const usuario = JSON.parse(localStorage.getItem("usuario") || "null");
+
+  const location = useLocation();
+  const navigate = useNavigate();
+  const yaProcesoInvitacionRef = useRef(false); // evita duplicar la acción
+
+  // leer ?reserva=7 de la URL
+  const searchParams = new URLSearchParams(location.search);
+  const reservaCompartidaId = searchParams.get("reserva");
+
   const esDuenioReserva = (reserva) => {
     if (!usuario || !reserva) return false;
 
     const emailReserva = reserva.clienteEmail?.trim().toLowerCase();
     const emailUsuario = usuario.correo?.trim().toLowerCase();
 
-    console.log("Comparando emails:", { emailReserva, emailUsuario });
-
-    return emailReserva && emailUsuario && emailReserva === emailUsuario;
+    return (
+      !!emailReserva &&
+      !!emailUsuario &&
+      emailReserva === emailUsuario
+    );
   };
 
   const obtenerFecha = (reserva) => {
@@ -63,15 +84,12 @@ const MisReservas = () => {
       });
 
       if (!res.ok) {
-        console.error('Error al obtener reservas:', res.status);
+        console.error("Error al obtener reservas:", res.status);
         return;
       }
 
       const data = await res.json();
       const ahora = new Date();
-
-      // LOG para ver qué datos llegan
-      console.log("Reservas recibidas:", data);
 
       const activas = data.filter((reserva) => {
         const fecha = obtenerFecha(reserva);
@@ -86,14 +104,59 @@ const MisReservas = () => {
       setReservasActivas(activas);
       setReservasPasadas(pasadas);
     } catch (error) {
-      console.error('Error en obtenerReservas:', error);
+      console.error("Error en obtenerReservas:", error);
     }
   }, [token]);
 
   useEffect(() => {
     obtenerReservas();
-    document.title = 'Mis Reservas';
+    document.title = "Mis Reservas";
   }, [obtenerReservas]);
+
+  // ⭐ Auto-unirse a una reserva compartida: /mis-reservas?reserva=7
+  useEffect(() => {
+    if (!token) return;                     // si no hay token, el ProtectedRoute te manda al login
+    if (!reservaCompartidaId) return;       // no hay parámetro
+    if (yaProcesoInvitacionRef.current) return; // ya fue procesado
+
+    yaProcesoInvitacionRef.current = true;
+
+    const unirseAReservaCompartida = async () => {
+      try {
+        setProcesandoCompartida(true);
+
+        const res = await fetch(
+          `${API_URL}/reservas/${reservaCompartidaId}/unirse`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+
+        if (res.ok) {
+          alert("Te uniste a la reserva que te compartieron 👍");
+          await obtenerReservas();
+        } else {
+          const errorText = await res.text();
+          alert(
+            errorText ||
+              "No se pudo unir a la reserva compartida (cupo completo, horario o permisos)."
+          );
+        }
+      } catch (err) {
+        console.error("Error al unirse a reserva compartida:", err);
+        alert(
+          "Hubo un error al intentar unirte a la reserva compartida."
+        );
+      } finally {
+        setProcesandoCompartida(false);
+        // limpiar el parámetro de la URL para que no se repita nunca más
+        navigate("/mis-reservas", { replace: true });
+      }
+    };
+
+    unirseAReservaCompartida();
+  }, [reservaCompartidaId, token, obtenerReservas, navigate]);
 
   const abrirConfirmacionAccion = (tipo, reserva) => {
     setConfirmacion({ tipo, reserva });
@@ -109,20 +172,18 @@ const MisReservas = () => {
     const configuracion = ACCION_RESERVA_CONFIG[confirmacion.tipo];
     const reservaId = confirmacion.reserva?.id;
 
-    if (!configuracion || !reservaId) {
-      return;
-    }
+    if (!configuracion || !reservaId) return;
 
     setProcesandoAccion(true);
 
     try {
       const endpoint =
-        confirmacion.tipo === 'salir'
+        confirmacion.tipo === "salir"
           ? `${API_URL}/reservas/${reservaId}/salir`
           : `${API_URL}/reservas/${reservaId}`;
 
       const response = await fetch(endpoint, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -135,8 +196,8 @@ const MisReservas = () => {
         alert(`Error: ${error}`);
       }
     } catch (error) {
-      console.error('Error al realizar acción:', error);
-      alert('Hubo un error al procesar la acción.');
+      console.error("Error al realizar acción:", error);
+      alert("Hubo un error al procesar la acción.");
     } finally {
       setProcesandoAccion(false);
     }
@@ -144,15 +205,15 @@ const MisReservas = () => {
 
   const formatearFecha = (reserva) => {
     const fecha = obtenerFecha(reserva);
-    if (!fecha) return 'Sin fecha';
+    if (!fecha) return "Sin fecha";
 
     try {
-      return fecha.toLocaleString('es-AR', {
-        dateStyle: 'full',
-        timeStyle: 'short'
+      return fecha.toLocaleString("es-AR", {
+        dateStyle: "full",
+        timeStyle: "short"
       });
     } catch {
-      return fecha.toLocaleString('es-AR');
+      return fecha.toLocaleString("es-AR");
     }
   };
 
@@ -162,22 +223,30 @@ const MisReservas = () => {
   };
 
   const renderReservaCard = (reserva, tipo) => {
-    const esActiva = tipo === 'activa';
-    const estadoPago = reserva.estadoPago || 'Sin datos';
-    const observaciones = reserva.observaciones || 'Ninguna';
-    const etiquetaEstado = esActiva ? 'Proxima' : 'Historial';
+    const esActiva = tipo === "activa";
+    const estadoPago = reserva.estadoPago || "Sin datos";
+    const observaciones = reserva.observaciones || "Ninguna";
+    const etiquetaEstado = esActiva ? "Proxima" : "Historial";
 
     return (
       <article
         key={reserva.id}
-        className={`reserva-card ${esActiva ? 'reserva-card--activa' : 'reserva-card--pasada'}`}
+        className={`reserva-card ${
+          esActiva ? "reserva-card--activa" : "reserva-card--pasada"
+        }`}
       >
         <header className="reserva-card-header">
           <div>
-            <h4 className="reserva-card-cancha">{reserva.canchaNombre || reserva.cancha}</h4>
+            <h4 className="reserva-card-cancha">
+              {reserva.canchaNombre || reserva.cancha}
+            </h4>
             <p className="reserva-card-meta">Reserva #{reserva.id}</p>
           </div>
-          <span className={`reserva-estado ${esActiva ? 'reserva-estado--activa' : 'reserva-estado--pasada'}`}>
+          <span
+            className={`reserva-estado ${
+              esActiva ? "reserva-estado--activa" : "reserva-estado--pasada"
+            }`}
+          >
             {etiquetaEstado}
           </span>
         </header>
@@ -186,16 +255,24 @@ const MisReservas = () => {
           <dl className="reserva-info-grid">
             <div className="reserva-info-item">
               <dt className="reserva-info-label">Fecha y hora</dt>
-              <dd className="reserva-info-value">{formatearFecha(reserva)}</dd>
+              <dd className="reserva-info-value">
+                {formatearFecha(reserva)}
+              </dd>
             </div>
             <div className="reserva-info-item">
               <dt className="reserva-info-label">Cliente</dt>
-              <dd className="reserva-info-value">{reserva.clienteNombre}</dd>
+              <dd className="reserva-info-value">
+                {reserva.clienteNombre}
+              </dd>
             </div>
             <div className="reserva-info-item">
               <dt className="reserva-info-label">Estado de pago</dt>
               <dd className="reserva-info-value">
-                <span className={`reserva-chip ${estadoPago === 'Pagado' ? 'reserva-chip--ok' : ''}`}>
+                <span
+                  className={`reserva-chip ${
+                    estadoPago === "Pagado" ? "reserva-chip--ok" : ""
+                  }`}
+                >
                   {estadoPago}
                 </span>
               </dd>
@@ -204,7 +281,9 @@ const MisReservas = () => {
 
           <div className="reserva-observaciones">
             <span className="reserva-info-label">Observaciones</span>
-            <p className="reserva-observaciones-texto">{observaciones}</p>
+            <p className="reserva-observaciones-texto">
+              {observaciones}
+            </p>
           </div>
         </div>
 
@@ -212,15 +291,21 @@ const MisReservas = () => {
           <div className="botones-acciones">
             {esActiva ? (
               <>
-                <button className="btn-salir" onClick={() => abrirConfirmacionAccion('salir', reserva)}>
+                <button
+                  className="btn-salir"
+                  onClick={() =>
+                    abrirConfirmacionAccion("salir", reserva)
+                  }
+                >
                   Salir del partido
                 </button>
 
-                {/* BOTÓN CANCELAR — AHORA FUNCIONA */}
                 {esDuenioReserva(reserva) && (
                   <button
                     className="btn-cancelar"
-                    onClick={() => abrirConfirmacionAccion('cancelar', reserva)}
+                    onClick={() =>
+                      abrirConfirmacionAccion("cancelar", reserva)
+                    }
                   >
                     Cancelar reserva
                   </button>
@@ -229,7 +314,10 @@ const MisReservas = () => {
                 <ShareReserva reserva={reserva} />
               </>
             ) : (
-              <button className="btn-salir" onClick={() => abrirModalValoracion(reserva.id)}>
+              <button
+                className="btn-salir"
+                onClick={() => abrirModalValoracion(reserva.id)}
+              >
                 Valorar jugadores
               </button>
             )}
@@ -239,17 +327,22 @@ const MisReservas = () => {
     );
   };
 
-  const accionActual = confirmacion ? ACCION_RESERVA_CONFIG[confirmacion.tipo] : null;
+  const accionActual = confirmacion
+    ? ACCION_RESERVA_CONFIG[confirmacion.tipo]
+    : null;
 
   const detallesModal =
     confirmacion && confirmacion.reserva
       ? [
-          { label: 'Reserva', value: `#${confirmacion.reserva.id}` },
+          { label: "Reserva", value: `#${confirmacion.reserva.id}` },
           {
-            label: 'Cancha',
-            value: confirmacion.reserva.canchaNombre || confirmacion.reserva.cancha || 'Sin datos'
+            label: "Cancha",
+            value:
+              confirmacion.reserva.canchaNombre ||
+              confirmacion.reserva.cancha ||
+              "Sin datos"
           },
-          { label: 'Fecha', value: formatearFecha(confirmacion.reserva) }
+          { label: "Fecha", value: formatearFecha(confirmacion.reserva) }
         ]
       : [];
 
@@ -257,36 +350,49 @@ const MisReservas = () => {
     <div className="home-wrapper page-shell">
       <div className="home-content">
         <div className="mis-reservas-container">
-          
-
           <section className="reserva-seccion">
             <div className="reserva-seccion-header">
               <h3>Próximas reservas</h3>
-              <span className="reserva-cantidad">{reservasActivas.length}</span>
+              <span className="reserva-cantidad">
+                {reservasActivas.length}
+              </span>
             </div>
             {reservasActivas.length === 0 ? (
               <p className="reserva-vacia">No tenés reservas activas.</p>
             ) : (
-              <div className="reserva-lista">{reservasActivas.map((r) => renderReservaCard(r, 'activa'))}</div>
+              <div className="reserva-lista">
+                {reservasActivas.map((r) =>
+                  renderReservaCard(r, "activa")
+                )}
+              </div>
             )}
           </section>
 
           <section className="reserva-seccion">
             <div className="reserva-seccion-header">
               <h3>Historial</h3>
-              <span className="reserva-cantidad">{reservasPasadas.length}</span>
+              <span className="reserva-cantidad">
+                {reservasPasadas.length}
+              </span>
             </div>
             {reservasPasadas.length === 0 ? (
               <p className="reserva-vacia">No hay reservas pasadas.</p>
             ) : (
-              <div className="reserva-lista">{reservasPasadas.map((r) => renderReservaCard(r, 'pasada'))}</div>
+              <div className="reserva-lista">
+                {reservasPasadas.map((r) =>
+                  renderReservaCard(r, "pasada")
+                )}
+              </div>
             )}
           </section>
         </div>
       </div>
 
       {showModal && (
-        <ValorarModal reservaId={reservaSeleccionada} onClose={() => setShowModal(false)} />
+        <ValorarModal
+          reservaId={reservaSeleccionada}
+          onClose={() => setShowModal(false)}
+        />
       )}
 
       {confirmacion && accionActual && (

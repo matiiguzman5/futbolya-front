@@ -138,7 +138,7 @@ const CrearReserva = () => {
           i === 0
             ? 'Hoy'
             : i === 1
-            ? 'Manana'
+            ? 'Mañana'
             : d.toLocaleDateString('es-ES', { weekday: 'long' }),
       });
     }
