@@ -11,6 +11,9 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // 👉 de dónde venía el usuario antes de que ProteccionRuta lo mande al login
+  const from = location.state?.from || null;
+
   useEffect(() => {
     document.title = 'Iniciar sesión - FutbolYa';
   }, []);
@@ -31,13 +34,26 @@ const Login = () => {
       const { token, usuario } = response.data;
 
       if (token) {
+        // Guardar token y usuario en localStorage
         localStorage.setItem('token', token);
-        localStorage.setItem('usuario', JSON.stringify({
-          ...usuario,
-          correo: email     // 👈 AGREGAMOS EL EMAIL MANUALMENTE
-      }));      
+        localStorage.setItem(
+          'usuario',
+          JSON.stringify({
+            ...usuario,
+            correo: email, // aseguramos que tenga el correo
+          })
+        );
         localStorage.setItem('rol', usuario.rol);
-        navigate('/home');
+
+        // 🔥 LÓGICA DE REDIRECCIÓN INTELIGENTE
+        // Si venimos redirigidos desde ProteccionRuta (por ejemplo /mis-reservas?reserva=7),
+        // volvemos exactamente ahí. Si no, vamos al /home como siempre.
+        if (from && typeof from === 'object') {
+          const destino = `${from.pathname}${from.search || ''}`;
+          navigate(destino, { replace: true });
+        } else {
+          navigate('/home', { replace: true });
+        }
       } else {
         alert('Inicio de sesión sin token recibido.');
       }
@@ -77,7 +93,6 @@ const Login = () => {
   };
 
   const irAContactoEstablecimiento = () => {
-    console.log('Ir a contacto establecimiento');
     navigate('/contacto-establecimiento');
   };
 
@@ -125,20 +140,18 @@ const Login = () => {
           Crear Cuenta
         </button>
 
-
         {/* CTA para establecimientos */}
         <div className="establecimiento-cta">
-        <div className="forgot-password">
-          <button
-            type="button"
-            className="forgot-password-link"
-            onClick={() => navigate('/olvide-mi-contrasena')}
-          >
-            ¿Olvidaste tu contraseña?
-          </button>
-        </div>
+          <div className="forgot-password">
+            <button
+              type="button"
+              className="forgot-password-link"
+              onClick={() => navigate('/olvide-mi-contrasena')}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
           <span
-          
             className="establecimiento-link"
             onClick={irAContactoEstablecimiento}
           >
