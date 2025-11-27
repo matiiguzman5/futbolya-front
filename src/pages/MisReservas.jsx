@@ -184,6 +184,17 @@ const MisReservas = () => {
     return true;
   };
 
+  const toNumberSafe = (value) => {
+    if (value == null) return null;
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      const cleaned = value.replace(/[^0-9.,-]/g, '').replace(',', '.');
+      const n = Number(cleaned);
+      return Number.isFinite(n) ? n : null;
+    }
+    return null;
+  };
+
   const renderReservaCard = (reserva, tipo) => {
     const esActiva = tipo === 'activa';
     const estadoPago = reserva.estadoPago || 'Sin datos';
@@ -194,7 +205,28 @@ const MisReservas = () => {
     const jugadoresFaltantes = reserva.playersNeeded || reserva.jugadoresFaltantes;
     const jugadoresTotales = reserva.totalPlayers || reserva.capacidad || null;
     const nivel = reserva.level || reserva.nivel || 'General';
-    const precio = reserva.price || reserva.precio || null;
+    const precio = toNumberSafe(
+      reserva.price ??
+      reserva.precio ??
+      reserva.costoCancha ??
+      reserva.precioCancha ??
+      reserva.monto ??
+      reserva.montoTotal ??
+      null
+    );
+    const costoPersonaBackend = toNumberSafe(
+      reserva.costoPorPersona ??
+      reserva.precioPorPersona ??
+      reserva.costoJugador ??
+      reserva.precioJugador ??
+      reserva.costoPorJugador ??
+      reserva.precioPorJugador ??
+      reserva.costoCanchaPorJugador ??
+      reserva.precioCanchaPorJugador ??
+      reserva.pricePerPlayer ??
+      reserva.costPerPlayer ??
+      null
+    );
     const organizador = reserva.organizer || reserva.organizador || reserva.clienteNombre || 'Organizador no informado';
     const textoCupo =
       jugadoresFaltantes != null
@@ -202,6 +234,25 @@ const MisReservas = () => {
         : jugadoresTotales
         ? `Cupo total: ${jugadoresTotales}`
         : 'Cupo no informado';
+
+    const obtenerDivisorPorTipo = () => {
+      const tipoCancha = (reserva.tipo || reserva.canchaTipo || '').toString().toLowerCase();
+      if (tipoCancha.includes('f5') || /\b5\b/.test(tipoCancha)) return 10;
+      if (tipoCancha.includes('f7') || /\b7\b/.test(tipoCancha)) return 14;
+      if (tipoCancha.includes('f11') || /\b11\b/.test(tipoCancha)) return 22;
+      return jugadoresTotales || null;
+    };
+
+    const calcularCostoPorPersona = () => {
+      const total = Number(precio ?? reserva.costo ?? reserva.precioTotal ?? null);
+      const divisor = obtenerDivisorPorTipo();
+      if (!Number.isFinite(total) || !divisor || divisor <= 0) return null;
+      return total / divisor;
+    };
+
+    const costoPorPersona = Number.isFinite(costoPersonaBackend) && costoPersonaBackend > 0
+      ? costoPersonaBackend
+      : calcularCostoPorPersona();
 
     return (
       <article
@@ -211,7 +262,10 @@ const MisReservas = () => {
         <div className="booking-row__info">
           <div className="booking-row__head">
             <h4 className="booking-row__title">{cancha}</h4>
-            <span className={`pill ${esActiva ? 'pill--active' : 'pill--muted'}`}>{etiquetaEstado}</span>
+            <div className="booking-row__badges">
+              <span className={`pill ${esActiva ? 'pill--active' : 'pill--muted'}`}>{etiquetaEstado}</span>
+              <span className="pill pill--level">{nivel}</span>
+            </div>
           </div>
 
           <div className="info-line">
@@ -237,12 +291,19 @@ const MisReservas = () => {
         </div>
 
         <div className="booking-row__actions">
-          <span className="pill pill--level">{nivel}</span>
           <div className="price-block">
-            <div className="price-main">{precio ? `$${precio}` : '--'}</div>
+            <div className="price-main">
+              {costoPorPersona != null ? `$${costoPorPersona.toLocaleString('es-AR', { maximumFractionDigits: 0 })}` : '--'}
+            </div>
             <div className="price-sub">por persona</div>
           </div>
-          <button className="btn-join" type="button">Unirse al Partido</button>
+          {esActiva && (
+            <button className="btn-join" type="button">Unirse al Partido</button>
+          )}
+
+          {esActiva && (
+            <ShareReserva reserva={reserva} />
+          )}
 
           <div className="booking-row__extra">
             {esActiva ? (
@@ -255,10 +316,9 @@ const MisReservas = () => {
                     Cancelar
                   </button>
                 )}
-                <ShareReserva reserva={reserva} />
               </>
             ) : (
-              <button className="btn-link" onClick={() => abrirModalValoracion(reserva.id)}>
+              <button className="btn-rate" onClick={() => abrirModalValoracion(reserva.id)}>
                 Valorar
               </button>
             )}
@@ -352,6 +412,7 @@ const MisReservas = () => {
               />
             </div>
             <div className="filter-item filter-item--button">
+              <div className="filter-actions">
               <button
                 className="btn-ghost"
                 onClick={() => {
@@ -361,6 +422,7 @@ const MisReservas = () => {
               >
                 Limpiar filtros
               </button>
+              </div>
             </div>
           </div>
         </section>

@@ -189,118 +189,177 @@ const Perfil = () => {
     : '/default-profile.png';
 
   return (
-    <div className="perfil-container">
-      <h2 className="perfil-nombre">{usuario.nombre?.toUpperCase?.() || usuario.nombre}</h2>
-      <img src={imagenPerfil} alt="Foto perfil" className="perfil-foto" />
-
-      <div className="perfil-subir-foto">
-        <label className="btn-subir-foto">
-          Cambiar foto
-          <input type="file" accept=".jpg,.jpeg,.png" hidden onChange={handleFotoChange} />
-        </label>
-        {fotoCargando && <p>Subiendo imagen...</p>}
-      </div>
-
-      <div className="perfil-info">
-        <p><strong>Correo:</strong> {usuario.correo}</p>
-        <p><strong>Telefono:</strong> {usuario.telefono || 'No informado'}</p>
-        <p><strong>Posicion:</strong> {usuario.posicion || 'No informada'}</p>
-      </div>
-
-      {!esEstablecimiento && (
-        <div className="perfil-estadisticas">
-          <div className="stat-card">
-            <img src="/pelotaIco.ico" alt="Partidos" />
-            <div>
-              <strong>Partidos jugados</strong>
-              <p>{estadisticas.partidosJugados}</p>
-            </div>
+    <div className="perfil-page">
+      <section className="perfil-hero">
+        <div className="perfil-hero__main">
+          <div className="perfil-avatar-wrap">
+            <img src={imagenPerfil} alt="Foto perfil" className="perfil-avatar" />
+            <label className="btn-subir-foto">
+              Cambiar foto
+              <input type="file" accept=".jpg,.jpeg,.png" hidden onChange={handleFotoChange} />
+            </label>
+            {fotoCargando && <span className="perfil-hint">Subiendo imagen...</span>}
           </div>
-          <div className="stat-card">
-            <img src="/valoracion.ico" alt="Valoracion" />
+
+          <div className="perfil-meta">
+            <span className="perfil-chip">{usuario.rol || 'Usuario'}</span>
+            <h1 className="perfil-nombre">{usuario.nombre || 'Mi perfil'}</h1>
+            <button className="btn-editar" onClick={() => setModalAbierto(true)}>
+              Editar perfil
+            </button>
+          </div>
+        </div>
+
+        <div className="perfil-hero__stats">
+          {!esEstablecimiento ? (
+            <>
+              <div className="stat-tile">
+                <p className="stat-label">Partidos jugados</p>
+                <p className="stat-value">{estadisticas.partidosJugados}</p>
+              </div>
+              <div className="stat-tile">
+                <p className="stat-label">Valoracion promedio</p>
+                <p className="stat-value">{estadisticas.promedioValoraciones.toFixed(1)}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="stat-tile">
+                <p className="stat-label">Correo</p>
+                <p className="stat-value">{usuario.correo}</p>
+              </div>
+              <div className="stat-tile">
+                <p className="stat-label">Telefono</p>
+                <p className="stat-value">{usuario.telefono || 'No informado'}</p>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      <section className="perfil-grid">
+        <div className="perfil-card">
+          <div className="perfil-card__header">
+            <p className="eyebrow">Datos</p>
+            <h3>Informacion basica</h3>
+          </div>
+          <div className="perfil-list">
+            <div className="perfil-list__item">
+              <span>Correo</span>
+              <strong>{usuario.correo}</strong>
+            </div>
+            <div className="perfil-list__item">
+              <span>Telefono</span>
+              <strong>{usuario.telefono || 'No informado'}</strong>
+            </div>
+            {!esEstablecimiento && (
+              <div className="perfil-list__item">
+                <span>Posicion</span>
+                <strong>{usuario.posicion || 'No informada'}</strong>
+              </div>
+            )}
+            {esEstablecimiento && (
+              <div className="perfil-list__item">
+                <span>Ubicacion</span>
+                <strong>{usuario.ubicacion || 'No informada'}</strong>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="perfil-card">
+          <div className="perfil-card__header">
+            <p className="eyebrow">Actividad</p>
+            <h3>Resumen</h3>
+          </div>
+          <div className="perfil-summary">
             <div>
-              <strong>Valoracion promedio</strong>
-              <p>{estadisticas.promedioValoraciones.toFixed(1)}</p>
+              <p className="summary-label">Rol</p>
+              <p className="summary-value">{usuario.rol || 'Usuario'}</p>
+            </div>
+            <div>
+              <p className="summary-label">Ultima actualizacion</p>
+              <p className="summary-value">Hoy</p>
             </div>
           </div>
         </div>
-      )}
+      </section>
 
-      <button className="btn-editar" onClick={() => setModalAbierto(true)}>
-        Editar perfil
-      </button>
+      <section className="perfil-card">
+        <div className="perfil-card__header">
+          <p className="eyebrow">Feedback</p>
+          <h3>Mis valoraciones</h3>
+        </div>
+        {valoraciones.length === 0 ? (
+          <p className="sin-valoraciones">Todavia no recibiste valoraciones.</p>
+        ) : (
+          <div className="valoraciones-grid">
+            {valoraciones.map((valoracion, index) => (
+              <div key={index} className="valoracion-card">
+                <div className="valoracion-score">
+                  <span>{valoracion.puntaje}/5</span>
+                </div>
+                <div className="valoracion-body">
+                  <p className="valoracion-texto">{valoracion.comentario}</p>
+                  <small>
+                    De {valoracion.evaluador?.nombre || 'Desconocido'} el{' '}
+                    {valoracion.fecha ? new Date(valoracion.fecha).toLocaleDateString('es-AR') : 'sin fecha'}
+                  </small>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {modalAbierto && (
         <div className="modal">
           <div className="modal-contenido">
-            <h3>Editar Perfil</h3>
-            {esEstablecimiento ? (
-              <>
-                <input
-                  type="text"
-                  placeholder="Nombre"
-                  value={form.nombre}
-                  onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                />
-                <input
-                  type="email"
-                  placeholder="Correo electronico"
-                  value={form.correo}
-                  onChange={(e) => setForm({ ...form, correo: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="Telefono"
-                  value={form.telefono}
-                  onChange={(event) => setForm({ ...form, telefono: event.target.value })}
-                />
+            <div className="modal-header">
+              <h3>Editar Perfil</h3>
+              <button className="modal-close" onClick={() => setModalAbierto(false)}>×</button>
+            </div>
+            <div className="modal-grid">
+              <input
+                type="text"
+                placeholder="Nombre"
+                value={form.nombre}
+                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+              />
+              <input
+                type="email"
+                placeholder="Correo electronico"
+                value={form.correo}
+                onChange={(e) => setForm({ ...form, correo: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Telefono"
+                value={form.telefono}
+                onChange={(event) => setForm({ ...form, telefono: event.target.value })}
+              />
+              {esEstablecimiento ? (
                 <input
                   type="text"
                   placeholder="Ubicacion"
                   value={form.ubicacion}
                   onChange={(e) => setForm({ ...form, ubicacion: e.target.value })}
                 />
-                <input
-                  type="password"
-                  placeholder="Nueva contrasena (opcional)"
-                  value={form.contrasena}
-                  onChange={(event) => setForm({ ...form, contrasena: event.target.value })}
-                />
-              </>
-            ) : (
-              <>
-                <input
-                  type="text"
-                  placeholder="Nombre"
-                  value={form.nombre}
-                  onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                />
-                <input
-                  type="email"
-                  placeholder="Correo electronico"
-                  value={form.correo}
-                  onChange={(e) => setForm({ ...form, correo: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="Telefono"
-                  value={form.telefono}
-                  onChange={(event) => setForm({ ...form, telefono: event.target.value })}
-                />
+              ) : (
                 <input
                   type="text"
                   placeholder="Posicion"
                   value={form.posicion}
                   onChange={(event) => setForm({ ...form, posicion: event.target.value })}
                 />
-                <input
-                  type="password"
-                  placeholder="Nueva contrasena (opcional)"
-                  value={form.contrasena}
-                  onChange={(event) => setForm({ ...form, contrasena: event.target.value })}
-                />
-              </>
-            )}
+              )}
+              <input
+                type="password"
+                placeholder="Nueva contrasena (opcional)"
+                value={form.contrasena}
+                onChange={(event) => setForm({ ...form, contrasena: event.target.value })}
+              />
+            </div>
 
             <div className="modal-botones">
               <button className="btn-guardar" onClick={handleGuardar}>
@@ -313,25 +372,6 @@ const Perfil = () => {
           </div>
         </div>
       )}
-
-      <h3 className="subtitulo">Mis valoraciones</h3>
-      {valoraciones.length === 0 ? (
-        <p className="sin-valoraciones">Todavia no recibiste valoraciones.</p>
-      ) : (
-        valoraciones.map((valoracion, index) => (
-          <div key={index} className="valoracion-card">
-            <p>
-              <strong>{valoracion.puntaje}/5</strong> - {valoracion.comentario}
-            </p>
-            <small>
-              De {valoracion.evaluador?.nombre || 'Desconocido'} el{' '}
-              {valoracion.fecha ? new Date(valoracion.fecha).toLocaleDateString('es-AR') : 'sin fecha'}
-            </small>
-          </div>
-        ))
-      )}
-
-      <footer className="footer-perfil">(c) 2025 FutbolYa</footer>
     </div>
   );
 };

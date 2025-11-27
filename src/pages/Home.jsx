@@ -54,7 +54,6 @@ const loadGeocodeCache = () => {
 const saveGeocodeCache = (cache) => { try { localStorage.setItem(GEOCODE_CACHE_KEY, JSON.stringify(cache)); } catch {} };
 
 const Home = () => {
-  const [reservas, setReservas] = useState([]);
   const [reservasConCoords, setReservasConCoords] = useState([]);
   const [establecimientos, setEstablecimientos] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1);
@@ -66,10 +65,13 @@ const Home = () => {
   const mapRef = useRef(null);
   const lastBoundsKey = useRef('');
   const hasCenteredOnUser = useRef(false);
-  const cache = loadGeocodeCache();
+  const cacheRef = useRef(loadGeocodeCache());
+  const hasFetchedDataRef = useRef(false);
+  const geolocationRequestedRef = useRef(false);
 
   const obtenerCoordenadas = async (direccion) => {
     if (!direccion) return null;
+    const cache = cacheRef.current;
     const normalizeKey = (s) => s.trim().toLowerCase();
     const key = normalizeKey(direccion);
 
@@ -144,6 +146,10 @@ const Home = () => {
   };
 
   useEffect(() => {
+    if (hasFetchedDataRef.current) return;
+    hasFetchedDataRef.current = true;
+    let cancelado = false;
+
     const token = localStorage.getItem('token');
     const fetchAll = async () => {
       try {
@@ -151,12 +157,13 @@ const Home = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         const estList = resEst.ok ? await resEst.json() : [];
+        if (cancelado) return;
         setEstablecimientos(estList);
 
         const res = await fetch(`${API_URL}/reservas/disponibles`, { headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) { console.error('Error reservas', res.status); return; }
         const data = await res.json();
-        setReservas(data);
+        if (cancelado) return;
 
         const canchaToEstMap = new Map();
         estList.forEach(est => {
@@ -198,13 +205,19 @@ const Home = () => {
           };
         }));
 
-        setReservasConCoords(dataConCoords);
+        if (!cancelado) {
+          setReservasConCoords(dataConCoords);
+        }
       } catch (err) { console.error('fetchAll error', err); }
     };
     fetchAll();
+    return () => { cancelado = true; };
   }, []);
 
   useEffect(() => {
+    if (geolocationRequestedRef.current) return;
+    geolocationRequestedRef.current = true;
+
     if (!navigator.geolocation) {
       console.warn('Geolocalización no soportada por el navegador');
       return;
@@ -221,7 +234,7 @@ const Home = () => {
         const map = mapRef.current;
         if (map) {
           setTimeout(() => {
-            map.flyTo([userPosition.lat, userPosition.lng], 15, {
+            map.flyTo([coords.lat, coords.lng], 15, {
               duration: 1.2
             });
           }, 300);

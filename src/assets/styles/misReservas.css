@@ -105,6 +105,15 @@
   align-self: flex-end;
 }
 
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  width: 100%;
+  padding-top: 0;
+  margin-top: -12px;
+}
+
 .filter-label {
   font-weight: 700;
   font-size: 13px;
@@ -124,19 +133,22 @@
 }
 
 .btn-ghost {
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  background: #f8fafc;
-  color: #0f172a;
-  padding: 10px 12px;
-  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  background: linear-gradient(135deg, #e8f0ff, #f4f7ff);
+  color: #1d4ed8;
+  padding: 10px 22px;
+  border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.12);
 }
 
 .btn-ghost:hover {
-  background: #eef2f7;
-  border-color: rgba(13, 71, 161, 0.3);
+  background: #e0e9ff;
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 14px 24px rgba(37, 99, 235, 0.18);
+  transform: translateY(-1px);
 }
 
 .section-header {
@@ -294,6 +306,12 @@
   min-width: 230px;
 }
 
+.booking-row__actions .btn-join,
+.booking-row__actions .btn-compartir,
+.booking-row__actions .share-reserva {
+  align-self: flex-end;
+}
+
 .price-block {
   text-align: right;
 }
@@ -313,13 +331,16 @@
   background: linear-gradient(135deg, #10b981, #059669);
   color: #ffffff;
   border: none;
-  padding: 10px 16px;
-  border-radius: 999px;
+  padding: 8px 14px;
+  border-radius: 12px;
   font-weight: 700;
+  font-size: 14px;
   cursor: pointer;
   box-shadow: 0 12px 24px rgba(16, 185, 129, 0.24);
   transition: transform 0.1s ease, box-shadow 0.2s ease;
-  width: 100%;
+  width: auto;
+  min-width: 160px;
+  text-align: center;
 }
 
 .btn-join:hover {
@@ -330,8 +351,9 @@
 .booking-row__extra {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 100%;
 }
 
 .btn-link {
@@ -345,6 +367,27 @@
 
 .btn-link--danger {
   color: #b91c1c;
+}
+
+.btn-rate {
+  background: linear-gradient(135deg, #fff9e6, #fff4d6);
+  border: 1px solid rgba(234, 179, 8, 0.25);
+  color: #92400e;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
+  transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease;
+  width: 100%;
+  max-width: 220px;
+  text-align: center;
+}
+
+.btn-rate:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.12);
+  background: #eef1f5;
 }
 
 .booking-meta {
@@ -467,6 +510,46 @@
 .share-opciones button:hover {
   background: #1e50c1;
   transform: translateX(2px);
+}
+
+.share-reserva {
+  position: relative;
+  width: 100%;
+  max-width: 200px;
+}
+
+.btn-compartir {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb, #1e3a8a);
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
+  transition: transform 0.1s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  min-width: 160px;
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-compartir:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.24);
+  filter: brightness(1.05);
+}
+
+.btn-compartir-icon,
+.btn-compartir-chevron {
+  display: inline-flex;
+}
+
+.btn-compartir-texto {
+  white-space: nowrap;
 }
 
 @media (max-width: 900px) {
