@@ -57,10 +57,11 @@ const Home = () => {
   const [reservas, setReservas] = useState([]);
   const [reservasConCoords, setReservasConCoords] = useState([]);
   const [establecimientos, setEstablecimientos] = useState([]);
+  const [mapReady, setMapReady] = useState(false);
   const [paginaActual, setPaginaActual] = useState(1);
   const [busqueda, setBusqueda] = useState('');
   const [chatReservaId, setChatReservaId] = useState(null);
-  const [userPosition, setUserPosition] = useState(null); // 🔹 ubicación actual
+  const [userPosition, setUserPosition] = useState(null);
   const reservasPorPagina = 4;
   const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
   const mapRef = useRef(null);
@@ -202,46 +203,43 @@ const Home = () => {
     fetchAll();
   }, []);
 
-    useEffect(() => {
-    if (!navigator.geolocation) return;
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setMapReady(true);
+      return;
+    }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const coords = {
           lat: pos.coords.latitude,
-          lng: pos.coords.longitude
+          lng: pos.coords.longitude,
         };
 
         setUserPosition(coords);
-
-        const map = mapRef.current;
-        if (map) {
-          setTimeout(() => {
-            map.flyTo([coords.lat, coords.lng], 15, {
-              duration: 1.2,
-            });
-          }, 300);
-        }
+        setMapReady(true);
       },
-      (err) => console.error("No se pudo obtener ubicación", err),
-      { enableHighAccuracy: true }
+      () => {
+        console.warn("No se pudo obtener ubicación. Usando default.");
+        setMapReady(true);
+      },
+      { enableHighAccuracy: true, timeout: 6000 }
     );
   }, []);
 
-
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map || !mapReady) return;
 
-    // 🟢 SI HAY UBICACIÓN DEL USUARIO → IGNORAR TODO LO DEMÁS
+    // Usuario tiene ubicación: mover ahí SIEMPRE
     if (userPosition) {
-      map.flyTo([userPosition.lat, userPosition.lng], 15, {
-        duration: 1.0
-      });
-      return; // 🔥 ESTA LÍNEA ES LA QUE SALVA TODO
+      setTimeout(() => {
+        map.flyTo([userPosition.lat, userPosition.lng], 15, { duration: 1 });
+      }, 300);
+      return;
     }
 
-    // 🟠 SI NO HAY UBICACIÓN → USAR BOUNDS DE RESERVAS
+    // Si no hay ubicación, usar las reservas
     const pts = reservasConCoords
       .filter(r => r.latitud != null && r.longitud != null)
       .map(r => [Number(r.latitud), Number(r.longitud)]);
@@ -257,10 +255,9 @@ const Home = () => {
     }
 
     const bounds = L.latLngBounds(pts);
-    map.fitBounds(bounds.pad ? bounds.pad(0.2) : bounds, {
-      padding: [50, 50]
-    });
-  }, [reservasConCoords, userPosition]);
+    map.fitBounds(bounds.pad(0.2), { padding: [50, 50] });
+
+  }, [userPosition, reservasConCoords, mapReady]);
 
   const reservasFiltradas = reservasConCoords.filter(
     (reserva) =>
@@ -304,10 +301,33 @@ const Home = () => {
             />
           </div>
         </div>
+      <div className="map-wrapper">
 
-        <div className="map-wrapper">
+        {/* LOADER MIENTRAS ESPERA UBICACIÓN */}
+        {!mapReady && (
+          <div style={{
+            width: "100%",
+            height: "320px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "18px",
+            color: "#555",
+            background: "#f5f5f5",
+            borderRadius: "8px"
+          }}>
+            📍 Obteniendo tu ubicación...
+          </div>
+        )}
+
+        {/* MAPA (solo cuando mapReady === true) */}
+        {mapReady && (
           <MapContainer
-            center={userPosition ? [userPosition.lat, userPosition.lng] : [DEFAULT_CENTER.lat, DEFAULT_CENTER.lng]}
+            center={
+              userPosition
+                ? [userPosition.lat, userPosition.lng]
+                : [DEFAULT_CENTER.lat, DEFAULT_CENTER.lng]
+            }
             zoom={userPosition ? 14 : 12}
             style={MAP_STYLE}
             whenCreated={(mapInstance) => {
@@ -316,7 +336,7 @@ const Home = () => {
             }}
           >
 
-            {/* MAPA ESTILO GOOGLE */}
+            {/* MAPA BASE */}
             <TileLayer
               attribution='&copy; OpenStreetMap contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -332,12 +352,16 @@ const Home = () => {
                 <CircleMarker
                   center={[userPosition.lat, userPosition.lng]}
                   radius={10}
-                  pathOptions={{ color: "#1E90FF", fillColor: "#1E90FF", fillOpacity: 0.25 }}
+                  pathOptions={{
+                    color: "#1E90FF",
+                    fillColor: "#1E90FF",
+                    fillOpacity: 0.25
+                  }}
                 />
               </>
             )}
 
-            {/* MARCADORES DE RESERVAS */}
+            {/* RESERVAS */}
             {Object.entries(
               reservasConCoords.reduce((acc, reserva) => {
                 if (reserva.latitud != null && reserva.longitud != null) {
@@ -354,17 +378,14 @@ const Home = () => {
                   <Popup maxWidth={300}>
                     <div style={{ maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }}>
                       {reservasGrupo.map((reserva) => {
-                        const lat = reserva.latitud;
-                        const lon = reserva.longitud;
-
-                        // Calcular distancia si tenemos posición del usuario
+                        
                         let distancia = null;
-                        if (userPosition && lat && lon) {
+                        if (userPosition && reserva.latitud && reserva.longitud) {
                           distancia = calcularDistanciaKm(
                             userPosition.lat,
                             userPosition.lng,
-                            lat,
-                            lon
+                            reserva.latitud,
+                            reserva.longitud
                           ).toFixed(1);
                         }
 
@@ -379,7 +400,6 @@ const Home = () => {
                           >
                             <strong>{reserva.nombreCancha}</strong><br />
 
-                            {/* Distancia */}
                             {distancia ? (
                               <span style={{ color: '#555', fontSize: '0.9em' }}>
                                 📍 A {distancia} km de tu ubicación
@@ -408,10 +428,8 @@ const Home = () => {
                             <br />
 
                             Jugadores: {reserva.anotados} / {reserva.capacidad}<br />
-
                             Observaciones: {reserva.observaciones || 'Ninguna'}<br />
 
-                            {/* ACCIONES */}
                             {usuario?.rol === 'jugador' && (
                               <>
                                 {reserva.yaEstoyUnido ? (
@@ -447,7 +465,9 @@ const Home = () => {
               );
             })}
           </MapContainer>
-        </div>
+        )}
+
+      </div>
 
 
         {localStorage.getItem('rol') !== 'establecimiento' ? (
