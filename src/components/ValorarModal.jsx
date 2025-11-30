@@ -40,14 +40,14 @@ const ValorarModal = ({ reservaId, onClose }) => {
     }
 
     try {
-      const res = await fetch(`${API_URL}/calificaciones`, {
+      const res = await fetch(`${API_URL}/Calificaciones`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          partidoId: reservaId,
+          reservaId: reservaId,
           evaluadoId: Number(evaluadoId),
           puntaje,
           comentario

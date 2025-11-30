@@ -306,8 +306,10 @@ const Perfil = () => {
             valoraciones.map((v, i) => (
               <div key={i} className="valoracion-card">
                 <p><strong>{v.puntaje}/5</strong> – {v.comentario}</p>
+
                 <small>
-                  De {v.evaluador?.nombre || "Desconocido"} el{" "}
+                  De {v.evaluador?.nombre || "Desconocido"} —{" "}
+                  {v.reservaInfo || "Reserva desconocida"} —{" "}
                   {v.fecha ? new Date(v.fecha).toLocaleDateString("es-AR") : ""}
                 </small>
               </div>
