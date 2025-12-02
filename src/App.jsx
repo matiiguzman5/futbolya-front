@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import OlvideContrasena from './pages/OlvideContrasena';
 import RestablecerPassword from './pages/RestablecerPassword';
 import ContactoEstablecimiento from './pages/ContactoEstablecimiento';
+import InstalarApp from './components/InstalarApp';
 
 import Home from './pages/Home';
 import Perfil from './pages/Perfil';
@@ -31,6 +32,7 @@ import './assets/styles/global.css';
 
 const App = () => (
   <Router>
+    <InstalarApp />
     <ScrollToTop />
 
     <Routes>

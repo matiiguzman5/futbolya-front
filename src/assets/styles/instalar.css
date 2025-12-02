@@ -1,0 +1,74 @@
+.instalar-popup {
+  position: fixed;
+  bottom: env(safe-area-inset-bottom, 20px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 420px;
+
+  z-index: 99999;
+
+  /* Fondo sólido, sin blur */
+  background: linear-gradient(
+    135deg,
+    #1e3b7a,
+    #3964d4
+  );
+
+  color: #ffffff; /* TEXTO BLANCO FUERTE */
+  padding: 20px 24px 26px;
+  border-radius: 20px;
+
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
+  text-align: center;
+  font-size: 17px;
+  font-weight: 500;
+
+  animation: slideIn 0.35s ease-out;
+}
+
+/* Texto con mejor contraste */
+.instalar-popup p {
+  color: #ffffff;
+  line-height: 1.35;
+}
+
+.instalar-popup strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Botón cerrar */
+.cerrar-btn {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  width: 32px;
+  height: 32px;
+
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Botón instalar */
+.btn-instalar {
+  margin-top: 16px;
+  background: #ffffff;
+  color: #3964d4;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+  width: 100%;
+}

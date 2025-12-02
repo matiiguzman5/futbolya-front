@@ -1,6 +1,8 @@
 ﻿import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "../assets/styles/header.css";
+import NotificacionesIcon from "./NotificacionesIcon";
+
 
 const Header = () => {
   const rawUsuario = localStorage.getItem("usuario");
@@ -109,6 +111,7 @@ const Header = () => {
         </nav>
 
         <div className="header-right">
+          <NotificacionesIcon />
           <button className="btnlogout" onClick={handleCerrarSesion}>
             Cerrar sesion
           </button>

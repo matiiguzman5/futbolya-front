@@ -76,7 +76,7 @@ const Login = () => {
           error.request
         );
         alertMessage =
-          'No hubo respuesta del servidor. Verificá que la API esté ejecutándose y acepte solicitudes desde este origen.';
+          'No hubo respuesta del servidor. Si este error sigue ocurriendo, contactanos en soporte@futbolya.com.ar';
       } else {
         console.error('Login falló antes de enviar la solicitud:', error);
         alertMessage = `Error inesperado: ${
