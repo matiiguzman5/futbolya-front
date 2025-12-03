@@ -45,9 +45,9 @@ const Bienvenida = () => {
               <Link className="btn-primary" to="/login">
                 Iniciar Sesión
               </Link>
-              <a className="btn-secondary" href="#beneficios">
-                Conocer más
-              </a>
+              <Link className="btn-secondary" to="/register">
+                Crea tu cuenta
+              </Link>
             </div>
             <div className="hero-stats">
               <div>
