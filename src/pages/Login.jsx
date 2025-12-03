@@ -11,7 +11,6 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 👉 de dónde venía el usuario antes de que ProteccionRuta lo mande al login
   const from = location.state?.from || null;
 
   useEffect(() => {
@@ -34,20 +33,16 @@ const Login = () => {
       const { token, usuario } = response.data;
 
       if (token) {
-        // Guardar token y usuario en localStorage
         localStorage.setItem('token', token);
         localStorage.setItem(
           'usuario',
           JSON.stringify({
             ...usuario,
-            correo: email, // aseguramos que tenga el correo
+            correo: email,
           })
         );
         localStorage.setItem('rol', usuario.rol);
 
-        // 🔥 LÓGICA DE REDIRECCIÓN INTELIGENTE
-        // Si venimos redirigidos desde ProteccionRuta (por ejemplo /mis-reservas?reserva=7),
-        // volvemos exactamente ahí. Si no, vamos al /home como siempre.
         if (from && typeof from === 'object') {
           const destino = `${from.pathname}${from.search || ''}`;
           navigate(destino, { replace: true });
@@ -140,7 +135,6 @@ const Login = () => {
           Crear Cuenta
         </button>
 
-        {/* CTA para establecimientos */}
         <div className="establecimiento-cta">
           <div className="forgot-password">
             <button

@@ -67,7 +67,7 @@ const CrearReserva = () => {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`; // ej: 2025-11-20
+  return `${y}-${m}-${d}`; 
   };
 
 
@@ -333,7 +333,6 @@ const CrearReserva = () => {
     return `$${numero.toLocaleString('es-AR')}`;
   };
 
-  // Simula tokenización de tarjeta (genera token determinista a partir de datos)
   const simulateTokenization = (cardNumberValue, expiryMonthValue, expiryYearValue) => {
     const normalized = [
       (cardNumberValue || '').replace(/\s/g, ''),
@@ -597,14 +596,13 @@ const CrearReserva = () => {
         </div>
       )}
 
-      {/* Navegacion */}
       <div className="nav-buttons">
         <button className="btn-back" onClick={() => setStep(1)}>Atras</button>
         <button
           className="btn-next"
           onClick={() => {
             const fechaSeleccionada = `${diaSeleccionado}T${horaSeleccionada}`;
-            fetchCanchasDisponibles(establecimientoId, fechaSeleccionada); // Pedimos solo canchas disponibles
+            fetchCanchasDisponibles(establecimientoId, fechaSeleccionada); 
             setFechaHora(fechaSeleccionada);
             setStep(3);
           }}
@@ -688,10 +686,7 @@ const PasoConfirmar = () => {
     return { value: yearValue, label: yearValue };
   });
   const installmentOptions = [
-    { value: '1', label: 'Pago unico (sin interes)' },
-    { value: '3', label: '3 cuotas fijas' },
-    { value: '6', label: '6 cuotas sin interes' },
-    { value: '12', label: '12 cuotas bancarias' },
+    { value: '1', label: 'Pago unico' },
   ];
   const documentTypeOptions = ['DNI', 'CUIT', 'Pasaporte'];
   const formattedExpiry = formatExpiryDisplay(expiryMonth, expiryYear);

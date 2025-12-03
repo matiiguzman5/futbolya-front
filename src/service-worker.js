@@ -10,10 +10,8 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Precaching del build
 workbox.precaching.precacheAndRoute(self.__WB_MANIFEST || []);
 
-// Página offline personalizada
 workbox.routing.setCatchHandler(({ event }) => {
   if (event.request.destination === 'document') {
     return caches.match('/offline.html');
@@ -21,7 +19,6 @@ workbox.routing.setCatchHandler(({ event }) => {
   return Response.error();
 });
 
-// Cache para imágenes
 workbox.routing.registerRoute(
   ({ request }) => request.destination === 'image',
   new workbox.strategies.CacheFirst({
@@ -35,7 +32,6 @@ workbox.routing.registerRoute(
   })
 );
 
-// Cache para API de reservas (read-only)
 workbox.routing.registerRoute(
   ({ url }) => url.pathname.startsWith('/api/reservas/'),
   new workbox.strategies.NetworkFirst({
@@ -44,13 +40,12 @@ workbox.routing.registerRoute(
     plugins: [
       new workbox.expiration.ExpirationPlugin({
         maxEntries: 20,
-        maxAgeSeconds: 5 * 60 // 5 minutos
+        maxAgeSeconds: 5 * 60 
       })
     ]
   })
 );
 
-// JS/CSS static
 workbox.routing.registerRoute(
   ({ request }) =>
     request.destination === 'script' ||

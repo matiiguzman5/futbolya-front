@@ -10,13 +10,11 @@ export default function InstalarApp() {
   const mostrarIOS = esIOS() && !estaInstaladaIOS();
   const mostrarAndroid = puedeInstalar;
 
-  // ❗useEffect SIEMPRE al tope del componente
   useEffect(() => {
     const timer = setTimeout(() => setVisible(false), 8000);
     return () => clearTimeout(timer);
   }, []);
 
-  // ❗NO retornamos null antes del hook, solo escondemos visualmente
   const deberiaMostrar = visible && (mostrarIOS || mostrarAndroid);
 
   if (!deberiaMostrar) return null;

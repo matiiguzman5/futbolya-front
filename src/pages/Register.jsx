@@ -10,6 +10,9 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarConfirmPassword, setMostrarConfirmPassword] = useState(false);
+
+  const [cargando, setCargando] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,8 +22,12 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
 
+    if (cargando) return;       
+    setCargando(true);
+
     if (password !== confirmPassword) {
       alert('Las contraseñas no coinciden.');
+      setCargando(false);
       return;
     }
 
@@ -46,10 +53,14 @@ const Register = () => {
             ? data
             : data?.mensaje || data?.message || data?.title || data?.detail;
 
-        msg = `Error ${status}: ${serverMessage || 'No se pudo completar el registro.'}`;
+        msg = `Error ${status}: ${
+          serverMessage || 'No se pudo completar el registro.'
+        }`;
       }
 
       alert(msg);
+    } finally {
+      setCargando(false);
     }
   };
 
@@ -60,6 +71,7 @@ const Register = () => {
           <img src="/IconoFYa.jpeg" alt="Logo FútbolYa" />
           <h2>REGISTRO</h2>
         </div>
+
         <form onSubmit={handleRegister}>
           <input
             type="text"
@@ -68,6 +80,7 @@ const Register = () => {
             placeholder="Nombre"
             required
           />
+
           <input
             type="email"
             value={email}
@@ -108,7 +121,9 @@ const Register = () => {
             </span>
           </div>
 
-          <button type="submit">Registrarme</button>
+          <button type="submit" disabled={cargando}>
+            {cargando ? "Registrando..." : "Registrarme"}
+          </button>
         </form>
 
         <button className="buttonC" onClick={() => navigate('/login')}>

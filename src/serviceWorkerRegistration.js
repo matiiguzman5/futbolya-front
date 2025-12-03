@@ -35,7 +35,6 @@ function registerValidSW(swUrl, config) {
 
       console.log("Service worker registrado.");
 
-      // 🔥 AUTO-UPDATE
       registration.onupdatefound = () => {
         const installingWorker = registration.installing;
 
@@ -44,12 +43,10 @@ function registerValidSW(swUrl, config) {
             if (navigator.serviceWorker.controller) {
               console.log("🔥 Nueva versión disponible, actualizando…");
 
-              // Salteamos waiting y activamos inmediatamente
               if (registration.waiting) {
                 registration.waiting.postMessage({ type: "SKIP_WAITING" });
               }
 
-              // Recargar la app automáticamente
               window.location.reload();
             }
           }

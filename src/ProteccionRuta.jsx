@@ -1,4 +1,3 @@
-// ProteccionRuta.jsx
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
@@ -7,12 +6,11 @@ const ProteccionRuta = ({ children, rolesPermitidos }) => {
   const rol = localStorage.getItem('rol');
   const location = useLocation();
 
-  // No logueado: mandamos al login guardando la URL original
   if (!token) {
     return (
       <Navigate
         to="/login"
-        state={{ from: location }}  // acá viaja pathname + search
+        state={{ from: location }}  
         replace
       />
     );

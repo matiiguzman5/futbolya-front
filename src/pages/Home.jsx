@@ -8,7 +8,7 @@ import ChatFlotante from "../components/ChatFlotante";
 import { API_URL, BACKEND_URL } from "../config";
 
 const calcularDistanciaKm = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // Radio de la tierra en km
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
 
@@ -231,7 +231,6 @@ const Home = () => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
 
-    // Usuario tiene ubicación: mover ahí SIEMPRE
     if (userPosition) {
       setTimeout(() => {
         map.flyTo([userPosition.lat, userPosition.lng], 15, { duration: 1 });
@@ -239,7 +238,6 @@ const Home = () => {
       return;
     }
 
-    // Si no hay ubicación, usar las reservas
     const pts = reservasConCoords
       .filter(r => r.latitud != null && r.longitud != null)
       .map(r => [Number(r.latitud), Number(r.longitud)]);
@@ -303,7 +301,6 @@ const Home = () => {
         </div>
       <div className="map-wrapper">
 
-        {/* LOADER MIENTRAS ESPERA UBICACIÓN */}
         {!mapReady && (
           <div style={{
             width: "100%",
@@ -320,7 +317,6 @@ const Home = () => {
           </div>
         )}
 
-        {/* MAPA (solo cuando mapReady === true) */}
         {mapReady && (
           <MapContainer
             center={
@@ -336,13 +332,11 @@ const Home = () => {
             }}
           >
 
-            {/* MAPA BASE */}
             <TileLayer
               attribution='&copy; OpenStreetMap contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {/* UBICACIÓN DEL USUARIO */}
             {userPosition && (
               <>
                 <Marker
@@ -361,7 +355,6 @@ const Home = () => {
               </>
             )}
 
-            {/* RESERVAS */}
             {Object.entries(
               reservasConCoords.reduce((acc, reserva) => {
                 if (reserva.latitud != null && reserva.longitud != null) {

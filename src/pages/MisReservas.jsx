@@ -1,4 +1,3 @@
-// MisReservas.jsx
 import React, {
   useEffect,
   useState,
@@ -40,7 +39,6 @@ const MisReservas = () => {
   const [confirmacion, setConfirmacion] = useState(null);
   const [procesandoAccion, setProcesandoAccion] = useState(false);
 
-  // estado opcional (si querés mostrar loading mientras se une)
   const [procesandoCompartida, setProcesandoCompartida] = useState(false);
 
   const token = localStorage.getItem("token");
@@ -48,9 +46,8 @@ const MisReservas = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const yaProcesoInvitacionRef = useRef(false); // evita duplicar la acción
+  const yaProcesoInvitacionRef = useRef(false); 
 
-  // leer ?reserva=7 de la URL
   const searchParams = new URLSearchParams(location.search);
   const reservaCompartidaId = searchParams.get("reserva");
 
@@ -113,11 +110,10 @@ const MisReservas = () => {
     document.title = "Mis Reservas";
   }, [obtenerReservas]);
 
-  // ⭐ Auto-unirse a una reserva compartida: /mis-reservas?reserva=7
   useEffect(() => {
-    if (!token) return;                     // si no hay token, el ProtectedRoute te manda al login
-    if (!reservaCompartidaId) return;       // no hay parámetro
-    if (yaProcesoInvitacionRef.current) return; // ya fue procesado
+    if (!token) return;                     
+    if (!reservaCompartidaId) return;       
+    if (yaProcesoInvitacionRef.current) return; 
 
     yaProcesoInvitacionRef.current = true;
 
@@ -150,7 +146,6 @@ const MisReservas = () => {
         );
       } finally {
         setProcesandoCompartida(false);
-        // limpiar el parámetro de la URL para que no se repita nunca más
         navigate("/mis-reservas", { replace: true });
       }
     };

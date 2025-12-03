@@ -17,7 +17,6 @@ const Contacto = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Acá después podés integrar con tu API
     alert("¡Gracias por escribirnos! Nos vamos a contactar a la brevedad.");
     setForm({ nombre: "", email: "", tipo: "soporte", mensaje: "" });
   };
@@ -33,7 +32,6 @@ const Contacto = () => {
           completá el formulario y te respondemos a la brevedad.
         </p>
 
-        {/* Uso la misma grilla de tarjetas que en Home */}
         <div className="partidos-grid">
           <div className="reserva-card">
             <div className="info">

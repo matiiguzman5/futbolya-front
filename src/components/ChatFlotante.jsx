@@ -13,7 +13,6 @@ const ChatFlotante = ({ reservaId, onClose }) => {
   const token = localStorage.getItem("token");
   const chatRef = useRef(null);
 
-  // 1) Verificar si el usuario está inscripto en la reserva
   useEffect(() => {
     const verificarInscripcion = async () => {
       if (!token || !reservaId) return;
@@ -42,7 +41,6 @@ const ChatFlotante = ({ reservaId, onClose }) => {
     verificarInscripcion();
   }, [reservaId, token]);
 
-  // 2) Traer mensajes previos de la reserva
   useEffect(() => {
     const fetchMensajesPrevios = async () => {
       if (!token || !reservaId) return;
@@ -66,11 +64,10 @@ const ChatFlotante = ({ reservaId, onClose }) => {
     fetchMensajesPrevios();
   }, [reservaId, token]);
 
-  // 3) Conectar con SignalR, unirse al grupo y escuchar mensajes nuevos
   useEffect(() => {
     if (!puedeChatear || !token || !reservaId) return;
 
-    let conn; // importante: usar variable local para el cleanup
+    let conn; 
 
     const connect = async () => {
       try {
@@ -82,7 +79,6 @@ const ChatFlotante = ({ reservaId, onClose }) => {
           .withAutomaticReconnect()
           .build();
 
-        // Cuando llega un mensaje desde el servidor
         conn.on("RecibirMensaje", (usuarioNombre, contenido, fecha) => {
           console.log("📥 Recibido:", usuarioNombre, contenido);
           setMensajes((prev) => [
@@ -95,7 +91,6 @@ const ChatFlotante = ({ reservaId, onClose }) => {
           ]);
         });
 
-        // Si se reconecta, nos volvemos a unir al grupo de esta reserva
         conn.onreconnected(async () => {
           console.log("🔁 Reconectado. Volviendo a unirse al grupo...");
           try {
@@ -116,7 +111,6 @@ const ChatFlotante = ({ reservaId, onClose }) => {
 
     connect();
 
-    // Cleanup: salir del grupo y cerrar conexión
     return () => {
       if (conn) {
         conn
@@ -127,7 +121,6 @@ const ChatFlotante = ({ reservaId, onClose }) => {
     };
   }, [reservaId, puedeChatear, token]);
 
-  // 4) Enviar mensaje por SignalR
   const enviarMensaje = async () => {
     const texto = nuevoMensaje.trim();
     if (!texto) return;
@@ -140,8 +133,6 @@ const ChatFlotante = ({ reservaId, onClose }) => {
     try {
       console.log("📤 Enviando mensaje:", texto);
 
-      // IMPORTANTE: estos parámetros deben coincidir con la firma del Hub:
-      // public async Task EnviarMensaje(string reservaId, string usuarioNombre, string contenido)
       await connection.invoke(
         "EnviarMensaje",
         reservaId.toString(),
@@ -157,7 +148,6 @@ const ChatFlotante = ({ reservaId, onClose }) => {
     }
   };
 
-  // 5) Auto scroll hacia el último mensaje
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
